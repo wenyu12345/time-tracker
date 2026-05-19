@@ -53,6 +53,13 @@ try:
 except ImportError:
     pass
 
+# 注册版本管理蓝图
+try:
+    from app.routes.version_management import version_management_bp
+    app.register_blueprint(version_management_bp)
+except ImportError:
+    pass
+
 def create_app():
     """Flask应用工厂（与现有系统兼容）"""
     return app
