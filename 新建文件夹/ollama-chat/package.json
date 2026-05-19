@@ -1,0 +1,27 @@
+{
+  "name": "ollama-chat",
+  "version": "1.0.0",
+  "description": "Modern web interface for Ollama local AI models",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "serve": "vite preview --host"
+  },
+  "dependencies": {
+    "vue": "^3.3.4",
+    "vue-router": "^4.2.4",
+    "pinia": "^2.1.6",
+    "@vueuse/core": "^10.2.0",
+    "lucide-vue-next": "^0.271.0",
+    "marked": "^9.1.2",
+    "prismjs": "^1.29.0",
+    "@prismjs/plugins": "^1.29.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^4.2.3",
+    "vite": "^4.4.5",
+    "@types/prismjs": "^1.26.0"
+  }
+}

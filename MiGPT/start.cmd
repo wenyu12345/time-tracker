@@ -1,0 +1,7 @@
+@echo off
+
+SET MI_USER_ID=1487810896
+SET MI_PASSWORD=lj199006
+SET MI_SPEAKER_DID=小爱音箱Play
+
+node index.js

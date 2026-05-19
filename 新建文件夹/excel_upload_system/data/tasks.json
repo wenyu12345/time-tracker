@@ -1,0 +1,36 @@
+[
+  {
+    "task_id": "0267caad",
+    "title": "上班打卡",
+    "description": "",
+    "status": "pending",
+    "priority": "high",
+    "due_date": "2026-05-31",
+    "created_at": "2026-05-16T23:11:29.247371",
+    "completed_at": null,
+    "task_type": "daily",
+    "shift": "day",
+    "shift_time_morning": "07:35",
+    "shift_time_evening": "07:40",
+    "reminder_enabled": true,
+    "reminder_sent_dates": [
+      "2026-05-17"
+    ]
+  },
+  {
+    "task_id": "14e96fcd",
+    "title": "下班打卡",
+    "description": "",
+    "status": "pending",
+    "priority": "high",
+    "due_date": "2026-05-31",
+    "created_at": "2026-05-17T07:48:48.108837",
+    "completed_at": null,
+    "task_type": "daily",
+    "shift": "day",
+    "shift_time_morning": "07:35",
+    "shift_time_evening": null,
+    "reminder_enabled": true,
+    "reminder_sent_dates": []
+  }
+]

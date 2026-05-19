@@ -1,0 +1,25 @@
+{
+  "models": [
+    {
+      "id": "model1",
+      "name": "D652正极",
+      "core_diameter": 180,
+      "max_diameter": 625,
+      "max_weight": 300
+    },
+    {
+      "id": "model2",
+      "name": "732负极",
+      "core_diameter": 180,
+      "max_diameter": 600,
+      "max_weight": 155
+    },
+    {
+      "id": "model3",
+      "name": "D680负极",
+      "core_diameter": 180,
+      "max_diameter": 720,
+      "max_weight": 315
+    }
+  ]
+}

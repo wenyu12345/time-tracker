@@ -1,0 +1,1721 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>员工工装管理</title>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .card {
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+        }
+        .card-header {
+            background-color: #007bff;
+            color: white;
+            font-weight: 600;
+            border-radius: 8px 8px 0 0;
+        }
+        .btn-primary {
+            background-color: #00007bff;
+            border-color: #007bff;
+        }
+        .btn-primary:hover {
+            background-color: #0056b3;
+            border-color: #0056b3;
+        }
+        .btn-danger {
+            background-color: #dc3545;
+            border-color: #dc3545;
+        }
+        .btn-danger:hover {
+            background-color: #c82333;
+            border-color: #c82333;
+        }
+        .table th,
+        .table td {
+            text-align: center;
+            vertical-align: middle;
+        }
+        .table-hover tbody tr:hover {
+            background-color: #f5f5f5;
+        }
+        .form-control:focus {
+            border-color: #007bff;
+            box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+        }
+        .badge {
+            font-size: 0.875rem;
+            padding: 0.5em 0.75em;
+        }
+        .action-buttons button {
+            margin: 0 5px;
+        }
+        /* 自定义动画效果 */
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-5 fade-in">
+        <h1 class="text-center mb-5">👔 员工工装管理系统</h1>
+        
+        <!-- 选项卡导航 -->
+        <ul class="nav nav-tabs mb-4" id="employeeUniformTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="employees-tab" data-bs-toggle="tab" data-bs-target="#employees" type="button" role="tab" aria-controls="employees" aria-selected="true">
+                    <i class="bi bi-people"></i> 员工管理
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="uniform-types-tab" data-bs-toggle="tab" data-bs-target="#uniform-types" type="button" role="tab" aria-controls="uniform-types" aria-selected="false">
+                    <i class="bi bi-tags"></i> 工装类型
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="issuance-tab" data-bs-toggle="tab" data-bs-target="#issuance" type="button" role="tab" aria-controls="issuance" aria-selected="false">
+                    <i class="bi bi-box-seam"></i> 工装发放
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="records-tab" data-bs-toggle="tab" data-bs-target="#records" type="button" role="tab" aria-controls="records" aria-selected="false">
+                    <i class="bi bi-list-check"></i> 领取记录
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="summary-tab" data-bs-toggle="tab" data-bs-target="#summary" type="button" role="tab" aria-controls="summary" aria-selected="false">
+                    <i class="bi bi-bar-chart"></i> 汇总统计
+                </button>
+            </li>
+        </ul>
+        
+        <!-- 主内容区域 -->
+        <div class="row">
+            <!-- 员工管理卡片 -->
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">👥 员工管理</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <input type="text" id="employeeSearch" class="form-control" placeholder="搜索员工工号或姓名...">
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-hover table-striped">
+                                <thead class="bg-light">
+                                    <tr>
+                                        <th>工号</th>
+                                        <th>姓名</th>
+                                        <th>添加时间</th>
+                                        <th>操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="employeeTableBody">
+                                    <!-- 员工数据将通过JavaScript动态添加 -->
+                                    <tr>
+                                        <td colspan="4" class="text-center text-muted">加载中...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 工装管理卡片 -->
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">👕 工装管理</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <input type="text" id="uniformSearch" class="form-control" placeholder="搜索工装类型...">
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-hover table-striped">
+                                <thead class="bg-light">
+                                    <tr>
+                                        <th>类型ID</th>
+                                        <th>类型名称</th>
+                                        <th>描述</th>
+                                        <th>操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="uniformTypeTableBody">
+                                    <!-- 工装类型数据将通过JavaScript动态添加 -->
+                                    <tr>
+                                        <td colspan="4" class="text-center text-muted">加载中...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 工装领取汇总卡片 -->
+        <div class="row mt-4" id="summarySection" style="display: none;">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0">
+                            📊 工装领取汇总统计
+                            <button class="btn btn-sm btn-light float-end" id="refreshSummaryBtn">
+                                <i class="bi bi-arrow-clockwise"></i> 刷新数据
+                            </button>
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="input-group">
+                                    <span class="input-group-text">🔍</span>
+                                    <input type="text" id="summarySearch" class="form-control" placeholder="搜索员工工号或姓名...">
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <select id="summaryYearFilter" class="form-control">
+                                    <option value="">所有年份</option>
+                                    <!-- 年份选项将通过JavaScript动态添加 -->
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="btn-group w-100" role="group">
+                                    <button type="button" class="btn btn-outline-secondary active" id="summaryViewTable">表格视图</button>
+                                    <button type="button" class="btn btn-outline-secondary" id="summaryViewChart">图表视图</button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 表格视图 -->
+                        <div id="summaryTableView">
+                            <div class="table-responsive">
+                                <table class="table table-hover table-striped">
+                                    <thead class="bg-light">
+                                        <tr>
+                                            <th>员工工号</th>
+                                            <th>员工姓名</th>
+                                            <th>今年领取套数</th>
+                                            <th>距离上次领取天数</th>
+                                            <th>最近领取日期</th>
+                                            <th>操作</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="summaryTableBody">
+                                        <!-- 汇总数据将通过JavaScript动态添加 -->
+                                        <tr>
+                                            <td colspan="6" class="text-center text-muted">加载中...</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        
+                        <!-- 图表视图 -->
+                        <div id="summaryChartView" style="display: none;">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6>今年领取套数排行</h6>
+                                    <canvas id="thisYearChart" width="400" height="300"></canvas>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6>距离上次领取天数</h6>
+                                    <canvas id="daysSinceLastChart" width="400" height="300"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 统计信息 -->
+                        <div class="row mt-3">
+                            <div class="col-md-3">
+                                <div class="card text-center bg-light">
+                                    <div class="card-body">
+                                        <h6 class="card-title">员工总数</h6>
+                                        <h3 class="text-primary" id="totalEmployeesCount">-</h3>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card text-center bg-light">
+                                    <div class="card-body">
+                                        <h6 class="card-title">今年总发放套数</h6>
+                                        <h3 class="text-success" id="totalThisYearCount">-</h3>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card text-center bg-light">
+                                    <div class="card-body">
+                                        <h6 class="card-title">平均领取间隔(天)</h6>
+                                        <h3 class="text-info" id="avgDaysBetweenIssuance">-</h3>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card text-center bg-light">
+                                    <div class="card-body">
+                                        <h6 class="card-title">超期未领人数</h6>
+                                        <h3 class="text-warning" id="overdueCount">-</h3>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 工装领取记录卡片 -->
+        <div class="row mt-4">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">📋 工装领取记录</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <input type="text" id="recordSearch" class="form-control" placeholder="搜索员工工号或姓名...">
+                                </div>
+                                <div class="col-md-4">
+                                    <select id="uniformTypeFilter" class="form-control">
+                                        <option value="">所有工装类型</option>
+                                        <!-- 工装类型选项将通过JavaScript动态添加 -->
+                                    </select>
+                                </div>
+                                <div class="col-md-2">
+                                    <button id="filterRecordsBtn" class="btn btn-secondary w-100">筛选</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-hover table-striped">
+                                <thead class="bg-light">
+                                    <tr>
+                                        <th>记录ID</th>
+                                        <th>员工工号</th>
+                                        <th>员工姓名</th>
+                                        <th>工装类型</th>
+                                        <th>领取日期</th>
+                                        <th>记录时间</th>
+                                        <th>操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="recordTableBody">
+                                    <!-- 领取记录数据将通过JavaScript动态添加 -->
+                                    <tr>
+                                        <td colspan="7" class="text-center text-muted">加载中...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="text-center mt-3">
+                            <button id="prevPageBtn" class="btn btn-outline-secondary me-2">上一页</button>
+                            <span id="pageInfo">第 1 页</span>
+                            <button id="nextPageBtn" class="btn btn-outline-secondary ms-2">下一页</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 添加员工模态框 -->
+    <div class="modal fade" id="addEmployeeModal" tabindex="-1" aria-labelledby="addEmployeeModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="addEmployeeModalLabel">添加新员工</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addEmployeeForm">
+                        <div class="mb-3">
+                            <label for="employeeId" class="form-label">员工工号 <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="employeeId" name="employee_id" required placeholder="请输入员工工号">
+                        </div>
+                        <div class="mb-3">
+                            <label for="employeeName" class="form-label">员工姓名 <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="employeeName" name="name" required placeholder="请输入员工姓名">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" id="saveEmployeeBtn">保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 更新员工模态框 -->
+    <div class="modal fade" id="updateEmployeeModal" tabindex="-1" aria-labelledby="updateEmployeeModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-info text-white">
+                    <h5 class="modal-title" id="updateEmployeeModalLabel">更新员工信息</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="updateEmployeeForm">
+                        <input type="hidden" id="updateEmployeeId" name="employee_id">
+                        <div class="mb-3">
+                            <label for="updateEmployeeIdDisplay" class="form-label">员工工号</label>
+                            <input type="text" class="form-control" id="updateEmployeeIdDisplay" disabled>
+                        </div>
+                        <div class="mb-3">
+                            <label for="updateEmployeeName" class="form-label">员工姓名 <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="updateEmployeeName" name="name" required placeholder="请输入员工姓名">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-info" id="confirmUpdateEmployeeBtn">更新</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 批量添加员工模态框 -->
+    <div class="modal fade" id="batchAddEmployeeModal" tabindex="-1" aria-labelledby="batchAddEmployeeModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="batchAddEmployeeModalLabel">批量添加员工</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <h6><i class="bi bi-info-circle"></i> 使用说明</h6>
+                        <p>请按照"工号 姓名"的格式输入员工信息，每行一位员工。例如：</p>
+                        <pre>1001 张三
+1002 李四
+1003 王五</pre>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="batchEmployeeData" class="form-label">员工数据 <span class="text-danger">*</span></label>
+                        <textarea class="form-control" id="batchEmployeeData" rows="10" required placeholder="工号 姓名&#10;工号 姓名&#10;..."></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <button type="button" class="btn btn-outline-secondary" id="previewBatchEmployees">预览数据</button>
+                        <button type="button" class="btn btn-outline-warning" id="clearBatchData">清空数据</button>
+                    </div>
+                    
+                    <div id="batchPreviewArea" class="mb-3" style="display: none;">
+                        <h6>数据预览</h6>
+                        <div class="table-responsive">
+                            <table class="table table-sm table-bordered">
+                                <thead class="bg-light">
+                                    <tr>
+                                        <th>序号</th>
+                                        <th>工号</th>
+                                        <th>姓名</th>
+                                        <th>状态</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="batchPreviewTableBody">
+                                    <!-- 预览数据将在这里显示 -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" id="saveBatchEmployeesBtn">批量保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 添加工装类型模态框 -->
+    <div class="modal fade" id="addUniformTypeModal" tabindex="-1" aria-labelledby="addUniformTypeModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title" id="addUniformTypeModalLabel">添加工装类型</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addUniformTypeForm">
+                        <div class="mb-3">
+                            <label for="uniformTypeName" class="form-label">类型名称 <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="uniformTypeName" name="type_name" required placeholder="请输入工装类型名称">
+                        </div>
+                        <div class="mb-3">
+                            <label for="uniformTypeDesc" class="form-label">类型描述</label>
+                            <textarea class="form-control" id="uniformTypeDesc" name="description" rows="3" placeholder="请输入工装类型描述"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-success" id="saveUniformTypeBtn">保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 发放工装模态框 -->
+    <div class="modal fade" id="issueUniformModal" tabindex="-1" aria-labelledby="issueUniformModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-warning text-white">
+                    <h5 class="modal-title" id="issueUniformModalLabel">发放工装</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="issueUniformForm">
+                        <div class="mb-3">
+                            <label for="issueEmployeeId" class="form-label">员工工号 <span class="text-danger">*</span></label>
+                            <select class="form-control" id="issueEmployeeId" name="employee_id" required>
+                                <option value="">请选择员工</option>
+                                <!-- 员工选项将通过JavaScript动态添加 -->
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="issueUniformTypeId" class="form-label">工装类型 <span class="text-danger">*</span></label>
+                            <select class="form-control" id="issueUniformTypeId" name="type_id" required>
+                                <option value="">请选择工装类型</option>
+                                <!-- 工装类型选项将通过JavaScript动态添加 -->
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="issueDate" class="form-label">领取日期</label>
+                            <input type="date" class="form-control" id="issueDate" name="issue_date">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-warning" id="confirmIssueBtn">确认发放</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 批量发放工装模态框 -->
+    <div class="modal fade" id="batchIssueUniformModal" tabindex="-1" aria-labelledby="batchIssueUniformModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-warning text-white">
+                    <h5 class="modal-title" id="batchIssueUniformModalLabel">批量发放工装</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <h6><i class="bi bi-info-circle"></i> 使用说明</h6>
+                        <p>1. 先选择工装类型</p>
+                        <p>2. 然后选择需要发放的员工（可多选）</p>
+                        <p>3. 设置发放日期（默认为今天）</p>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="batchUniformTypeId" class="form-label">工装类型 <span class="text-danger">*</span></label>
+                        <select class="form-control" id="batchUniformTypeId" required>
+                            <option value="">请选择工装类型</option>
+                            <!-- 工装类型选项将通过JavaScript动态添加 -->
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">选择员工 <span class="text-danger">*</span></label>
+                        <div class="row mb-2">
+                            <div class="col-md-8">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="selectAllEmployees">
+                                    <label class="form-check-label" for="selectAllEmployees">
+                                        全选/取消全选
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <button type="button" class="btn btn-sm btn-outline-secondary" id="filterByDepartment">按部门筛选</button>
+                            </div>
+                        </div>
+                        
+                        <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
+                            <table class="table table-sm table-hover table-striped">
+                                <thead class="bg-light sticky-top">
+                                    <tr>
+                                        <th width="40px">选择</th>
+                                        <th>工号</th>
+                                        <th>姓名</th>
+                                        <th>部门</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="batchEmployeeTableBody">
+                                    <!-- 员工列表将通过JavaScript动态添加 -->
+                                    <tr>
+                                        <td colspan="4" class="text-center text-muted">加载中...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label for="batchIssueDate" class="form-label">发放日期</label>
+                                <input type="date" class="form-control" id="batchIssueDate">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="batchIssueCount" class="form-label">发放数量</label>
+                                <input type="number" class="form-control" id="batchIssueCount" value="1" min="1">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3" id="batchIssuePreview" style="display: none;">
+                        <h6>发放预览</h6>
+                        <div class="alert alert-light">
+                            <p><strong>工装类型：</strong><span id="previewUniformType">-</span></p>
+                            <p><strong>发放日期：</strong><span id="previewIssueDate">-</span></p>
+                            <p><strong>发放数量：</strong><span id="previewIssueCount">-</span></p>
+                            <p><strong>选中员工：</strong><span id="previewSelectedEmployees">-</span></p>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-warning" id="confirmBatchIssueBtn">确认批量发放</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 确认删除模态框 -->
+    <div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title" id="confirmDeleteModalLabel">确认删除</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p id="deleteConfirmMessage">确定要删除此项吗？此操作不可撤销。</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-danger" id="confirmDeleteBtn">删除</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 提示消息组件 -->
+    <div id="toastContainer" class="position-fixed bottom-5 end-5 z-50"></div>
+    
+    <!-- Bootstrap Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- 页面交互脚本 -->
+    <script>
+        // 全局变量
+        let currentDeleteType = null; // 'employee' 或 'uniform_type'
+        let currentDeleteId = null;
+        
+        // 初始化页面
+        document.addEventListener('DOMContentLoaded', function() {
+            // 加载员工列表
+            loadEmployees();
+            // 加载工装类型列表
+            loadUniformTypes();
+            // 加载领取记录
+            loadRecords();
+            
+            // 添加事件监听器
+            setupEventListeners();
+        });
+        
+        // 设置事件监听器
+        function setupEventListeners() {
+            // 添加员工按钮
+            document.getElementById('addEmployeeBtn').addEventListener('click', function() {
+                document.getElementById('addEmployeeForm').reset();
+                new bootstrap.Modal(document.getElementById('addEmployeeModal')).show();
+            });
+            
+            // 保存员工
+            document.getElementById('saveEmployeeBtn').addEventListener('click', saveEmployee);
+            
+            // 确认更新员工
+            document.getElementById('confirmUpdateEmployeeBtn').addEventListener('click', updateEmployee);
+            
+            // 显示汇总统计按钮
+            document.getElementById('showSummaryBtn').addEventListener('click', function() {
+                const summarySection = document.getElementById('summarySection');
+                if (summarySection.style.display === 'none') {
+                    summarySection.style.display = 'block';
+                    loadSummaryData();
+                } else {
+                    summarySection.style.display = 'none';
+                }
+            });
+            
+            // 刷新汇总数据按钮
+            document.getElementById('refreshSummaryBtn').addEventListener('click', loadSummaryData);
+            
+            // 汇总数据搜索
+            document.getElementById('summarySearch').addEventListener('input', debounce(renderSummaryTable, 300));
+            
+            // 视图切换
+            document.getElementById('summaryViewTable').addEventListener('click', function() {
+                document.getElementById('summaryViewTable').classList.add('active');
+                document.getElementById('summaryViewChart').classList.remove('active');
+                document.getElementById('summaryTableView').style.display = 'block';
+                document.getElementById('summaryChartView').style.display = 'none';
+            });
+            
+            document.getElementById('summaryViewChart').addEventListener('click', function() {
+                document.getElementById('summaryViewChart').classList.add('active');
+                document.getElementById('summaryViewTable').classList.remove('active');
+                document.getElementById('summaryChartView').style.display = 'block';
+                document.getElementById('summaryTableView').style.display = 'none';
+                renderSummaryCharts();
+            });
+            
+            // 年份筛选
+            document.getElementById('summaryYearFilter').addEventListener('change', function() {
+                const selectedYear = this.value;
+                // 这里可以根据年份重新加载数据，目前仅过滤显示
+                renderSummaryTable();
+            });
+            
+            // 添加工装类型按钮
+            document.getElementById('addUniformTypeBtn').addEventListener('click', function() {
+                document.getElementById('addUniformTypeForm').reset();
+                new bootstrap.Modal(document.getElementById('addUniformTypeModal')).show();
+            });
+            
+            // 保存工装类型
+            document.getElementById('saveUniformTypeBtn').addEventListener('click', saveUniformType);
+            
+            // 发放工装按钮
+            document.getElementById('issueUniformBtn').addEventListener('click', function() {
+                document.getElementById('issueUniformForm').reset();
+                // 重新加载员工和工装类型选项
+                loadEmployeeSelectOptions();
+                loadUniformTypeSelectOptions();
+                // 设置默认日期为今天
+                const today = new Date();
+                const formattedDate = today.toISOString().split('T')[0];
+                document.getElementById('issueDate').value = formattedDate;
+                
+                new bootstrap.Modal(document.getElementById('issueUniformModal')).show();
+            });
+            
+            // 确认发放
+            document.getElementById('confirmIssueBtn').addEventListener('click', issueUniform);
+            
+            // 批量添加员工按钮 - 事件绑定在单独的JavaScript文件中处理
+            
+            // 预览批量员工数据
+            document.getElementById('previewBatchEmployees').addEventListener('click', previewBatchEmployees);
+            
+            // 清空批量数据
+            document.getElementById('clearBatchData').addEventListener('click', function() {
+                document.getElementById('batchEmployeeData').value = '';
+                document.getElementById('batchPreviewArea').style.display = 'none';
+            });
+            
+            // 批量保存员工
+            document.getElementById('saveBatchEmployeesBtn').addEventListener('click', saveBatchEmployees);
+            
+            // 批量发放工装按钮
+            document.getElementById('batchIssueUniformBtn').addEventListener('click', function() {
+                loadBatchEmployeeList();
+                loadBatchUniformTypeOptions();
+                // 设置默认日期为今天
+                const today = new Date();
+                const formattedDate = today.toISOString().split('T')[0];
+                document.getElementById('batchIssueDate').value = formattedDate;
+                document.getElementById('batchIssueCount').value = 1;
+                document.getElementById('batchIssuePreview').style.display = 'none';
+                
+                new bootstrap.Modal(document.getElementById('batchIssueUniformModal')).show();
+            });
+            
+            // 全选/取消全选员工
+            document.getElementById('selectAllEmployees').addEventListener('change', function() {
+                const checkboxes = document.querySelectorAll('#batchEmployeeTableBody input[type="checkbox"]');
+                checkboxes.forEach(cb => cb.checked = this.checked);
+                updateBatchIssuePreview();
+            });
+            
+            // 工装类型选择变化
+            document.getElementById('batchUniformTypeId').addEventListener('change', updateBatchIssuePreview);
+            document.getElementById('batchIssueDate').addEventListener('change', updateBatchIssuePreview);
+            document.getElementById('batchIssueCount').addEventListener('input', updateBatchIssuePreview);
+            
+            // 动态添加的员工复选框变化事件委托
+            document.getElementById('batchEmployeeTableBody').addEventListener('change', function(e) {
+                if (e.target && e.target.type === 'checkbox' && e.target.classList.contains('employee-checkbox')) {
+                    updateBatchIssuePreview();
+                }
+            });
+            
+            // 确认批量发放
+            document.getElementById('confirmBatchIssueBtn').addEventListener('click', batchIssueUniform);
+            
+            // 确认删除
+            document.getElementById('confirmDeleteBtn').addEventListener('click', confirmDelete);
+            
+            // 搜索功能
+            document.getElementById('employeeSearch').addEventListener('input', debounce(loadEmployees, 300));
+            document.getElementById('uniformSearch').addEventListener('input', debounce(loadUniformTypes, 300));
+            document.getElementById('recordSearch').addEventListener('input', debounce(loadRecords, 300));
+            
+            // 筛选按钮
+            document.getElementById('filterRecordsBtn').addEventListener('click', loadRecords);
+            
+            // 分页按钮
+            document.getElementById('prevPageBtn').addEventListener('click', goToPrevPage);
+            document.getElementById('nextPageBtn').addEventListener('click', goToNextPage);
+        }
+        
+        // 加载员工列表
+        function loadEmployees() {
+            const searchTerm = document.getElementById('employeeSearch').value.toLowerCase();
+            
+            fetch('/employee_uniform/employees')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const tbody = document.getElementById('employeeTableBody');
+                        tbody.innerHTML = '';
+                        
+                        let filteredEmployees = data.data;
+                        if (searchTerm) {
+                            filteredEmployees = data.data.filter(emp => 
+                                emp.employee_id.toLowerCase().includes(searchTerm) ||
+                                emp.name.toLowerCase().includes(searchTerm)
+                            );
+                        }
+                        
+                        if (filteredEmployees.length === 0) {
+                            tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">暂无员工数据</td></tr>';
+                            return;
+                        }
+                        
+                        filteredEmployees.forEach(employee => {
+                            const tr = document.createElement('tr');
+                            tr.innerHTML = `
+                                <td>${employee.employee_id}</td>
+                                <td>${employee.name}</td>
+                                <td>${employee.created_at}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-info" onclick="editEmployee('${employee.employee_id}', '${employee.name}')">编辑</button>
+                                    <button class="btn btn-sm btn-danger" onclick="showDeleteConfirm('employee', '${employee.employee_id}', '员工 ${employee.name} (${employee.employee_id})')">删除</button>
+                                </td>
+                            `;
+                            tbody.appendChild(tr);
+                        });
+                    } else {
+                        showToast('加载员工列表失败: ' + (data.error || '未知错误'), 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading employees:', error);
+                    showToast('加载员工列表失败', 'error');
+                });
+        }
+        
+        // 保存员工
+        function saveEmployee() {
+            const employeeId = document.getElementById('employeeId').value.trim();
+            const employeeName = document.getElementById('employeeName').value.trim();
+            
+            if (!employeeId || !employeeName) {
+                showToast('请填写完整的员工信息', 'warning');
+                return;
+            }
+            
+            fetch('/employee_uniform/employees', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ employee_id: employeeId, name: employeeName })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showToast('员工添加成功', 'success');
+                    bootstrap.Modal.getInstance(document.getElementById('addEmployeeModal')).hide();
+                    loadEmployees();
+                } else {
+                    showToast('员工添加失败: ' + (data.error || '未知错误'), 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error saving employee:', error);
+                showToast('员工添加失败', 'error');
+            });
+        }
+        
+        // 编辑员工
+        function editEmployee(employeeId, name) {
+            document.getElementById('updateEmployeeId').value = employeeId;
+            document.getElementById('updateEmployeeIdDisplay').value = employeeId;
+            document.getElementById('updateEmployeeName').value = name;
+            
+            new bootstrap.Modal(document.getElementById('updateEmployeeModal')).show();
+        }
+        
+        // 更新员工
+        function updateEmployee() {
+            const employeeId = document.getElementById('updateEmployeeId').value;
+            const name = document.getElementById('updateEmployeeName').value.trim();
+            
+            if (!name) {
+                showToast('请输入员工姓名', 'warning');
+                return;
+            }
+            
+            fetch(`/employee_uniform/employees/${employeeId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ name: name })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showToast('员工信息更新成功', 'success');
+                    bootstrap.Modal.getInstance(document.getElementById('updateEmployeeModal')).hide();
+                    loadEmployees();
+                } else {
+                    showToast('员工信息更新失败: ' + (data.error || '未知错误'), 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error updating employee:', error);
+                showToast('员工信息更新失败', 'error');
+            });
+        }
+        
+        // 加载工装类型列表
+        function loadUniformTypes() {
+            const searchTerm = document.getElementById('uniformSearch').value.toLowerCase();
+            
+            fetch('/employee_uniform/uniform_types')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const tbody = document.getElementById('uniformTypeTableBody');
+                        tbody.innerHTML = '';
+                        
+                        let filteredTypes = data.data;
+                        if (searchTerm) {
+                            filteredTypes = data.data.filter(type => 
+                                type.name.toLowerCase().includes(searchTerm) ||
+                                (type.description && type.description.toLowerCase().includes(searchTerm))
+                            );
+                        }
+                        
+                        if (filteredTypes.length === 0) {
+                            tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">暂无工装类型数据</td></tr>';
+                        } else {
+                            filteredTypes.forEach(uniformType => {
+                                const tr = document.createElement('tr');
+                                tr.innerHTML = `
+                                    <td>${uniformType.id}</td>
+                                    <td>${uniformType.name}</td>
+                                    <td>${uniformType.description || '-'}</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-danger" onclick="showDeleteConfirm('uniform_type', '${uniformType.id}', '工装类型 ${uniformType.name}')">删除</button>
+                                    </td>
+                                `;
+                                tbody.appendChild(tr);
+                            });
+                        }
+                        
+                        // 同时更新工装类型筛选下拉框
+                        updateUniformTypeFilter(data.data);
+                    } else {
+                        showToast('加载工装类型失败: ' + (data.error || '未知错误'), 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading uniform types:', error);
+                    showToast('加载工装类型失败', 'error');
+                });
+        }
+        
+        // 保存工装类型
+        function saveUniformType() {
+            const typeName = document.getElementById('uniformTypeName').value.trim();
+            const description = document.getElementById('uniformTypeDesc').value.trim();
+            
+            if (!typeName) {
+                showToast('请输入工装类型名称', 'warning');
+                return;
+            }
+            
+            fetch('/employee_uniform/uniform_types', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ type_name: typeName, description: description })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showToast('工装类型添加成功', 'success');
+                    bootstrap.Modal.getInstance(document.getElementById('addUniformTypeModal')).hide();
+                    loadUniformTypes();
+                } else {
+                    showToast('工装类型添加失败: ' + (data.error || '未知错误'), 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error saving uniform type:', error);
+                showToast('工装类型添加失败', 'error');
+            });
+        }
+        
+        // 加载领取记录
+        let currentPage = 1;
+        const pageSize = 10;
+        
+        function loadRecords() {
+            const searchTerm = document.getElementById('recordSearch').value.toLowerCase();
+            const uniformTypeId = document.getElementById('uniformTypeFilter').value;
+            
+            let url = '/employee_uniform/issuance_records';
+            const params = new URLSearchParams();
+            
+            if (searchTerm) {
+                params.append('employee_id', searchTerm);
+            }
+            
+            if (params.toString()) {
+                url += '?' + params.toString();
+            }
+            
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const tbody = document.getElementById('recordTableBody');
+                        tbody.innerHTML = '';
+                        
+                        let filteredRecords = data.data;
+                        
+                        // 根据员工工号或姓名筛选
+                        if (searchTerm) {
+                            filteredRecords = filteredRecords.filter(record => 
+                                record.employee_id.toLowerCase().includes(searchTerm) ||
+                                (record.employee_name && record.employee_name.toLowerCase().includes(searchTerm))
+                            );
+                        }
+                        
+                        // 根据工装类型筛选
+                        if (uniformTypeId) {
+                            filteredRecords = filteredRecords.filter(record => 
+                                record.uniform_type_id == uniformTypeId || record.type_id == uniformTypeId
+                            );
+                        }
+                        
+                        // 分页处理
+                        const totalRecords = filteredRecords.length;
+                        const totalPages = Math.ceil(totalRecords / pageSize);
+                        const startIndex = (currentPage - 1) * pageSize;
+                        const endIndex = startIndex + pageSize;
+                        const pagedRecords = filteredRecords.slice(startIndex, endIndex);
+                        
+                        if (pagedRecords.length === 0) {
+                            tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">暂无领取记录</td></tr>';
+                        } else {
+                            pagedRecords.forEach(record => {
+                                const tr = document.createElement('tr');
+                                tr.innerHTML = `
+                                    <td>${record.id}</td>
+                                    <td>${record.employee_id}</td>
+                                    <td>${record.employee_name || '-'}</td>
+                                    <td>${record.uniform_type_name || '-'}</td>
+                                    <td>${record.issue_date}</td>
+                                    <td>${record.recorded_at || '-'}</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-danger" onclick="showDeleteConfirm('record', '${record.id}', '领取记录 #${record.id}')">删除</button>
+                                    </td>
+                                `;
+                                tbody.appendChild(tr);
+                            });
+                        }
+                        
+                        // 更新分页信息
+                        document.getElementById('pageInfo').textContent = `第 ${currentPage} 页，共 ${totalPages} 页`;
+                        document.getElementById('prevPageBtn').disabled = currentPage <= 1;
+                        document.getElementById('nextPageBtn').disabled = currentPage >= totalPages;
+                    } else {
+                        showToast('加载领取记录失败: ' + (data.error || '未知错误'), 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading records:', error);
+                    showToast('加载领取记录失败', 'error');
+                });
+        }
+        
+        // 发放工装
+        function issueUniform() {
+            const employeeId = document.getElementById('issueEmployeeId').value;
+            const uniformTypeId = document.getElementById('issueUniformTypeId').value;
+            const issueDate = document.getElementById('issueDate').value;
+            
+            if (!employeeId || !uniformTypeId) {
+                showToast('请选择员工和工装类型', 'warning');
+                return;
+            }
+            
+            fetch('/employee_uniform/issuance_records', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ 
+                    employee_id: employeeId, 
+                    type_id: uniformTypeId, 
+                    issue_date: issueDate 
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showToast('工装发放记录添加成功', 'success');
+                    bootstrap.Modal.getInstance(document.getElementById('issueUniformModal')).hide();
+                    loadRecords();
+                } else {
+                    showToast('工装发放记录添加失败: ' + (data.error || '未知错误'), 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error issuing uniform:', error);
+                showToast('工装发放记录添加失败', 'error');
+            });
+        }
+        
+        // 显示删除确认对话框
+        function showDeleteConfirm(type, id, name) {
+            currentDeleteType = type;
+            currentDeleteId = id;
+            document.getElementById('deleteConfirmMessage').textContent = `确定要删除 ${name} 吗？此操作不可撤销。`;
+            new bootstrap.Modal(document.getElementById('confirmDeleteModal')).show();
+        }
+        
+        // 确认删除
+        function confirmDelete() {
+            let url, message;
+            
+            if (currentDeleteType === 'employee') {
+                url = `/employee_uniform/employees/${currentDeleteId}`;
+                message = '员工删除成功';
+            } else if (currentDeleteType === 'uniform_type') {
+                url = `/employee_uniform/uniform_types/${currentDeleteId}`;
+                message = '工装类型删除成功';
+            } else if (currentDeleteType === 'record') {
+                url = `/employee_uniform/issuance_records/${currentDeleteId}`;
+                message = '领取记录删除成功';
+            }
+            
+            fetch(url, {
+                method: 'DELETE'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showToast(message, 'success');
+                    bootstrap.Modal.getInstance(document.getElementById('confirmDeleteModal')).hide();
+                    
+                    // 重新加载相应列表
+                    if (currentDeleteType === 'employee') {
+                        loadEmployees();
+                        loadRecords(); // 同时更新记录列表
+                    } else if (currentDeleteType === 'record') {
+                        loadRecords(); // 删除记录后重新加载记录列表
+                    } else if (currentDeleteType === 'uniform_type') {
+                        loadUniformTypes(); // 删除工装类型后重新加载工装类型列表
+                    }
+                } else {
+                    showToast('删除失败: ' + (data.error || '未知错误'), 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error deleting:', error);
+                showToast('删除失败', 'error');
+            });
+        }
+        
+        // 加载员工选择选项
+        function loadEmployeeSelectOptions() {
+            const select = document.getElementById('issueEmployeeId');
+            select.innerHTML = '<option value="">请选择员工</option>';
+            
+            fetch('/employee_uniform/employees')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        data.data.forEach(employee => {
+                            const option = document.createElement('option');
+                            option.value = employee.employee_id;
+                            option.textContent = `${employee.employee_id} - ${employee.name}`;
+                            select.appendChild(option);
+                        });
+                    }
+                });
+        }
+        
+        // 加载工装类型选择选项
+        function loadUniformTypeSelectOptions() {
+            const select = document.getElementById('issueUniformTypeId');
+            select.innerHTML = '<option value="">请选择工装类型</option>';
+            
+            fetch('/employee_uniform/uniform_types')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        data.data.forEach(uniformType => {
+                            const option = document.createElement('option');
+                            option.value = uniformType.id;
+                            option.textContent = uniformType.name;
+                            select.appendChild(option);
+                        });
+                    }
+                });
+        }
+        
+        // 更新工装类型筛选下拉框
+        function updateUniformTypeFilter(uniformTypes) {
+            const filter = document.getElementById('uniformTypeFilter');
+            // 保存当前选中的值
+            const selectedValue = filter.value;
+            
+            // 清空并添加默认选项
+            filter.innerHTML = '<option value="">所有工装类型</option>';
+            
+            // 添加工装类型选项
+            uniformTypes.forEach(uniformType => {
+                const option = document.createElement('option');
+                option.value = uniformType.id;
+                option.textContent = uniformType.name;
+                filter.appendChild(option);
+            });
+            
+            // 恢复之前的选中状态
+            filter.value = selectedValue;
+        }
+        
+        // 分页导航
+        function goToPrevPage() {
+            if (currentPage > 1) {
+                currentPage--;
+                loadRecords();
+            }
+        }
+        
+        function goToNextPage() {
+            currentPage++;
+            loadRecords();
+        }
+        
+        // 显示提示消息
+        function showToast(message, type = 'info') {
+            const toastContainer = document.getElementById('toastContainer');
+            
+            // 创建toast元素
+            const toast = document.createElement('div');
+            toast.className = `toast fade show align-items-center text-white ${getToastClass(type)}`;
+            toast.role = 'alert';
+            toast.setAttribute('aria-live', 'assertive');
+            toast.setAttribute('aria-atomic', 'true');
+            
+            toast.innerHTML = `
+                <div class="d-flex">
+                    <div class="toast-body">
+                        ${message}
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+            `;
+            
+            // 添加到容器
+            toastContainer.appendChild(toast);
+            
+            // 自动关闭
+            setTimeout(() => {
+                toast.classList.remove('show');
+                toast.classList.add('hide');
+                setTimeout(() => {
+                    toast.remove();
+                }, 500);
+            }, 3000);
+        }
+        
+        // 获取toast样式类
+        function getToastClass(type) {
+            switch (type) {
+                case 'success':
+                    return 'bg-success';
+                case 'error':
+                    return 'bg-danger';
+                case 'warning':
+                    return 'bg-warning';
+                case 'info':
+                default:
+                    return 'bg-info';
+            }
+        }
+        
+        // 加载汇总数据
+        let summaryData = [];
+        
+        function loadSummaryData() {
+            // 显示加载状态
+            document.getElementById('summaryTableBody').innerHTML = '<tr><td colspan="6" class="text-center text-muted">加载中...</td></tr>';
+            
+            fetch('/employee_uniform/uniform-summary')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        summaryData = data.data;
+                        renderSummaryTable();
+                        updateYearFilter();
+                        calculateStatistics();
+                        showToast('汇总数据加载成功', 'success');
+                    } else {
+                        showToast('加载汇总数据失败: ' + (data.error || '未知错误'), 'error');
+                        document.getElementById('summaryTableBody').innerHTML = '<tr><td colspan="6" class="text-center text-danger">加载失败</td></tr>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading summary data:', error);
+                    showToast('加载汇总数据失败', 'error');
+                    document.getElementById('summaryTableBody').innerHTML = '<tr><td colspan="6" class="text-center text-danger">加载失败</td></tr>';
+                });
+        }
+        
+        // 渲染汇总数据表格
+        function renderSummaryTable() {
+            const searchTerm = document.getElementById('summarySearch').value.toLowerCase();
+            const tbody = document.getElementById('summaryTableBody');
+            tbody.innerHTML = '';
+            
+            // 过滤数据
+            let filteredData = summaryData.filter(item => 
+                item.employee_id.toLowerCase().includes(searchTerm) ||
+                item.employee_name.toLowerCase().includes(searchTerm)
+            );
+            
+            if (filteredData.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">暂无数据</td></tr>';
+                return;
+            }
+            
+            // 按今年领取套数降序排序
+            filteredData.sort((a, b) => b.this_year_count - a.this_year_count);
+            
+            filteredData.forEach(item => {
+                const tr = document.createElement('tr');
+                
+                // 根据距离上次领取天数设置单元格样式
+                let daysClass = '';
+                let daysText = item.days_since_last_issue;
+                
+                if (item.days_since_last_issue > 365) {
+                    daysClass = 'text-danger';
+                    daysText += ' (超期)';
+                } else if (item.days_since_last_issue > 180) {
+                    daysClass = 'text-warning';
+                    daysText += ' (即将超期)';
+                }
+                
+                tr.innerHTML = `
+                    <td>${item.employee_id}</td>
+                    <td>${item.employee_name}</td>
+                    <td>
+                        <span class="badge bg-primary">${item.this_year_count} 套</span>
+                    </td>
+                    <td class="${daysClass}">${daysText} 天</td>
+                    <td>最近领取记录请在详情中查看</td>
+                    <td>
+                        <button class="btn btn-sm btn-info" onclick="viewEmployeeHistory('${item.employee_id}')">
+                            查看详情
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+        
+        // 渲染图表
+        function renderSummaryCharts() {
+            // 这里可以使用Chart.js等库来绘制图表
+            // 简单示例，实际实现可以更复杂
+            
+            // 今年领取套数图表
+            const thisYearCtx = document.getElementById('thisYearChart').getContext('2d');
+            // Chart.js 示例代码（需要引入Chart.js库）
+            
+            // 距离上次领取天数图表
+            const daysSinceLastCtx = document.getElementById('daysSinceLastChart').getContext('2d');
+            // Chart.js 示例代码
+            
+            // 注意：如果需要真正的图表，需要引入Chart.js库
+            // 这里只是简单示例，实际可以使用其他方式实现
+        }
+        
+        // 更新年份筛选器
+        function updateYearFilter() {
+            const currentYear = new Date().getFullYear();
+            const yearFilter = document.getElementById('summaryYearFilter');
+            yearFilter.innerHTML = '<option value="">所有年份</option>';
+            
+            for (let year = currentYear; year >= currentYear - 5; year--) {
+                const option = document.createElement('option');
+                option.value = year;
+                option.textContent = year + '年';
+                if (year === currentYear) {
+                    option.selected = true;
+                }
+                yearFilter.appendChild(option);
+            }
+        }
+        
+        // 计算统计信息
+        function calculateStatistics() {
+            if (!summaryData || summaryData.length === 0) {
+                return;
+            }
+            
+            // 员工总数
+            document.getElementById('totalEmployeesCount').textContent = summaryData.length;
+            
+            // 今年总发放套数
+            const totalThisYear = summaryData.reduce((sum, item) => sum + item.this_year_count, 0);
+            document.getElementById('totalThisYearCount').textContent = totalThisYear;
+            
+            // 平均领取间隔天数
+            const validDays = summaryData
+                .filter(item => item.days_since_last_issue > 0)
+                .map(item => item.days_since_last_issue);
+            
+            if (validDays.length > 0) {
+                const avgDays = Math.round(validDays.reduce((sum, days) => sum + days, 0) / validDays.length);
+                document.getElementById('avgDaysBetweenIssuance').textContent = avgDays;
+            } else {
+                document.getElementById('avgDaysBetweenIssuance').textContent = '-';
+            }
+            
+            // 超期未领人数（超过365天）
+            const overdueCount = summaryData.filter(item => item.days_since_last_issue > 365).length;
+            document.getElementById('overdueCount').textContent = overdueCount;
+        }
+        
+        // 查看员工历史详情
+        function viewEmployeeHistory(employeeId) {
+            // 这里可以跳转到员工详情页面或打开模态框显示历史记录
+            fetch(`/employee_uniform/employees/${employeeId}/uniform_history`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        console.log('员工历史记录:', data);
+                        // 可以在这里创建一个模态框显示历史记录
+                        showToast(`员工 ${employeeId} 的历史记录已加载到控制台`, 'info');
+                    } else {
+                        showToast('获取员工历史记录失败: ' + (data.error || '未知错误'), 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching employee history:', error);
+                    showToast('获取员工历史记录失败', 'error');
+                });
+        }
+        
+        // 批量添加员工相关函数
+        function previewBatchEmployees() {
+            const data = document.getElementById('batchEmployeeData').value.trim();
+            if (!data) {
+                showToast('请输入员工数据', 'warning');
+                return;
+            }
+            
+            const lines = data.split('\n').filter(line => line.trim());
+            const previewData = [];
+            
+            lines.forEach((line, index) => {
+                const parts = line.split(' ').map(part => part.trim()).filter(part => part);
+                if (parts.length >= 2) {
+                    const employeeId = parts[0];
+                    const name = parts[1];
+                    previewData.push({
+                        index: index + 1,
+                        employee_id: employeeId,
+                        name: name,
+                        status: '待添加'
+                    });
+                }
+            });
+            
+            if (previewData.length === 0) {
+                showToast('未找到有效的员工数据，请检查格式', 'warning');
+                return;
+            }
+            
+            // 渲染预览表格
+            const tbody = document.getElementById('batchPreviewTableBody');
+            tbody.innerHTML = '';
+            
+            previewData.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${item.index}</td>
+                    <td>${item.employee_id}</td>
+                    <td>${item.name}</td>
+                    <td><span class="badge bg-info">${item.status}</span></td>
+                `;
+                tbody.appendChild(tr);
+            });
+            
+            document.getElementById('batchPreviewArea').style.display = 'block';
+        }
+        
+        function saveBatchEmployees() {
+            const data = document.getElementById('batchEmployeeData').value.trim();
+            if (!data) {
+                showToast('请输入员工数据', 'warning');
+                return;
+            }
+            
+            const lines = data.split('\n').filter(line => line.trim());
+            const employees = [];
+            
+            lines.forEach(line => {
+                const parts = line.split(' ').map(part => part.trim()).filter(part => part);
+                if (parts.length >= 2) {
+                    const employeeId = parts[0];
+                    const name = parts[1];
+                    employees.push({ employee_id: employeeId, name: name });
+                }
+            });
+            
+            if (employees.length === 0) {
+                showToast('未找到有效的员工数据，请检查格式', 'warning');
+                return;
+            }
+            
+            // 发送到后端
+            fetch('/employee_uniform/employees/batch', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ employees: employees })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showToast(data.message, 'success');
+                    bootstrap.Modal.getInstance(document.getElementById('batchAddEmployeeModal')).hide();
+                    
+                    // 重新加载员工列表
+                    loadEmployees();
+                    
+                    // 显示详细结果（可选）
+                    if (data.summary.error_count > 0) {
+                        console.log('批量添加详细结果:', data.results);
+                    }
+                } else {
+                    showToast('批量添加失败: ' + (data.error || '未知错误'), 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error batch adding employees:', error);
+                showToast('批量添加失败', 'error');
+            });
+        }
+        
+        // 批量发放工装相关函数
+        function loadBatchEmployeeList() {
+            fetch('/employee_uniform/employees')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const tbody = document.getElementById('batchEmployeeTableBody');
+                        tbody.innerHTML = '';
+                        
+                        if (data.data.length === 0) {
+                            tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">暂无员工数据</td></tr>';
+                            return;
+                        }
+                        
+                        data.data.forEach(employee => {
+                            const tr = document.createElement('tr');
+                            tr.innerHTML = `
+                                <td>
+                                    <input type="checkbox" class="form-check-input employee-checkbox" value="${employee.employee_id}">
+                                </td>
+                                <td>${employee.employee_id}</td>
+                                <td>${employee.name}</td>
+                                <td>${employee.department || '-'}</td>
+                            `;
+                            tbody.appendChild(tr);
+                        });
+                        
+                        // 添加复选框变化事件监听
+                        document.querySelectorAll('.employee-checkbox').forEach(checkbox => {
+                            checkbox.addEventListener('change', updateBatchIssuePreview);
+                        });
+                    } else {
+                        showToast('加载员工列表失败: ' + (data.error || '未知错误'), 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading employees:', error);
+                    showToast('加载员工列表失败', 'error');
+                });
+        }
+        
+        function loadBatchUniformTypeOptions() {
+            const select = document.getElementById('batchUniformTypeId');
+            select.innerHTML = '<option value="">请选择工装类型</option>';
+            
+            fetch('/employee_uniform/uniform_types')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        data.data.forEach(uniformType => {
+                            const option = document.createElement('option');
+                            option.value = uniformType.id;
+                            option.textContent = uniformType.name;
+                            select.appendChild(option);
+                        });
+                    }
+                });
+        }
+        
+        function updateBatchIssuePreview() {
+            const uniformTypeId = document.getElementById('batchUniformTypeId').value;
+            const uniformTypeText = document.getElementById('batchUniformTypeId').selectedOptions[0]?.textContent || '未选择';
+            const issueDate = document.getElementById('batchIssueDate').value;
+            const issueCount = document.getElementById('batchIssueCount').value;
+            const checkedBoxes = document.querySelectorAll('#batchEmployeeTableBody input[type="checkbox"]:checked');
+            
+            if (checkedBoxes.length === 0 || !uniformTypeId) {
+                document.getElementById('batchIssuePreview').style.display = 'none';
+                return;
+            }
+            
+            const selectedEmployees = Array.from(checkedBoxes).map(cb => {
+                const row = cb.closest('tr');
+                const employeeId = row.cells[1].textContent;
+                const employeeName = row.cells[2].textContent;
+                return `${employeeId} (${employeeName})`;
+            }).join(', ');
+            
+            document.getElementById('previewUniformType').textContent = uniformTypeText;
+            document.getElementById('previewIssueDate').textContent = issueDate;
+            document.getElementById('previewIssueCount').textContent = issueCount;
+            document.getElementById('previewSelectedEmployees').textContent = selectedEmployees;
+            document.getElementById('batchIssuePreview').style.display = 'block';
+        }
+        
+        function batchIssueUniform() {
+            const uniformTypeId = document.getElementById('batchUniformTypeId').value;
+            const issueDate = document.getElementById('batchIssueDate').value;
+            const issueCount = parseInt(document.getElementById('batchIssueCount').value);
+            const checkedBoxes = document.querySelectorAll('#batchEmployeeTableBody input[type="checkbox"]:checked');
+            
+            if (!uniformTypeId) {
+                showToast('请选择工装类型', 'warning');
+                return;
+            }
+            
+            if (checkedBoxes.length === 0) {
+                showToast('请选择至少一位员工', 'warning');
+                return;
+            }
+            
+            if (!issueDate) {
+                showToast('请选择发放日期', 'warning');
+                return;
+            }
+            
+            if (issueCount < 1) {
+                showToast('发放数量必须大于0', 'warning');
+                return;
+            }
+            
+            const employeeIds = Array.from(checkedBoxes).map(cb => cb.value);
+            
+            // 发送到后端
+            fetch('/employee_uniform/issuance_records/batch', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    uniform_type_id: uniformTypeId,
+                    employee_ids: employeeIds,
+                    issue_date: issueDate,
+                    quantity: issueCount
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showToast(data.message, 'success');
+                    bootstrap.Modal.getInstance(document.getElementById('batchIssueUniformModal')).hide();
+                    
+                    // 重新加载记录列表
+                    loadRecords();
+                    
+                    // 显示详细结果（可选）
+                    if (data.summary.error_count > 0) {
+                        console.log('批量发放详细结果:', data.results);
+                    }
+                } else {
+                    showToast('批量发放失败: ' + (data.error || '未知错误'), 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error batch issuing uniforms:', error);
+                showToast('批量发放失败', 'error');
+            });
+        }
+        
+        // 防抖函数
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+    </script>
+</body>
+</html>

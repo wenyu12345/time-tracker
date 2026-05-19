@@ -1,0 +1,1016 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSV数据处理 - 表2格式汇总</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-table"></i> 表2格式汇总
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/"><i class="fas fa-home"></i> 首页</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#"><i class="fas fa-chart-bar"></i> 表2格式汇总</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/summary_table"><i class="fas fa-th"></i> 原始汇总</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid mt-4">
+        <div class="row">
+            <div class="col-12">
+                <h2 class="mb-4">
+                    <i class="fas fa-layer-group"></i> 表2格式数据汇总
+                    <small class="text-muted">按班次和产品型号分类显示汇总数据</small>
+                </h2>
+                
+                <!-- 文件上传区域 -->
+                <div class="card mb-4">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0"><i class="fas fa-upload"></i> 数据上传</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="uploadForm" enctype="multipart/form-data">
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <div class="mb-3">
+                                        <label for="csvFile" class="form-label">选择CSV文件</label>
+                                        <input type="file" class="form-control" id="csvFile" name="file" accept=".csv" required>
+                                        <div class="form-text">支持两行表头格式：第一行固定标准表头，第二行不良项字段</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="checkbox" id="includeChart" checked>
+                                        <label class="form-check-label" for="includeChart">
+                                            显示图表分析
+                                        </label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="checkbox" id="includeDetails">
+                                        <label class="form-check-label" for="includeDetails">
+                                            显示详细数据
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 text-end">
+                                    <button type="submit" class="btn btn-success">
+                                        <i class="fas fa-chart-bar"></i> 生成表2格式汇总
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- 筛选条件区域 -->
+                <div id="filterSection" class="card mb-4" style="display: none;">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0"><i class="fas fa-filter"></i> 数据筛选</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <label for="dateRangeStart" class="form-label">开始日期</label>
+                                <input type="date" class="form-control" id="dateRangeStart">
+                            </div>
+                            <div class="col-md-3">
+                                <label for="dateRangeEnd" class="form-label">结束日期</label>
+                                <input type="date" class="form-control" id="dateRangeEnd">
+                            </div>
+                            <div class="col-md-3">
+                                <label for="shiftFilter" class="form-label">班次筛选</label>
+                                <select class="form-select" id="shiftFilter" multiple>
+                                    <option value="A">A班</option>
+                                    <option value="B">B班</option>
+                                    <option value="C">C班</option>
+                                    <option value="ALL" selected>全部班次</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="productFilter" class="form-label">产品型号筛选</label>
+                                <select class="form-select" id="productFilter" multiple>
+                                    <!-- 动态生成产品型号选项 -->
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col-12 text-end">
+                                <button type="button" class="btn btn-primary" onclick="applyFilters()">
+                                    <i class="fas fa-check"></i> 应用筛选
+                                </button>
+                                <button type="button" class="btn btn-secondary" onclick="resetFilters()">
+                                    <i class="fas fa-undo"></i> 重置
+                                </button>
+                                <button type="button" class="btn btn-outline-success" onclick="exportSummary()">
+                                    <i class="fas fa-download"></i> 导出表2格式
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 汇总统计概览 -->
+                <div id="overviewSection" class="card mb-4" style="display: none;">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="fas fa-chart-pie"></i> 汇总统计概览</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="overviewStats" class="overview-stats">
+                            <!-- 动态生成概览统计 -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 表2格式汇总表格 -->
+                <div id="summaryTableSection" style="display: none;">
+                    <div class="card mb-4">
+                        <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0"><i class="fas fa-table"></i> 表2格式 - 按班次和产品型号汇总</h5>
+                            <div>
+                                <span class="badge bg-light text-dark" id="totalRecords">0 条记录</span>
+                            </div>
+                        </div>
+                        <div class="card-body p-0">
+                            <!-- 动态生成班次分组表格 -->
+                            <div id="shiftTables">
+                                <!-- 这里将动态生成A班次、B班次等的表格 -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 图表分析区域 -->
+                    <div id="chartSection" class="card mb-4" style="display: none;">
+                        <div class="card-header bg-warning text-dark">
+                            <h5 class="mb-0"><i class="fas fa-chart-line"></i> 图表分析</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <canvas id="productChart"></canvas>
+                                </div>
+                                <div class="col-md-6">
+                                    <canvas id="shiftChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 详细数据表格 -->
+                    <div id="detailTableSection" class="card mb-4" style="display: none;">
+                        <div class="card-header bg-secondary text-white">
+                            <h5 class="mb-0"><i class="fas fa-list"></i> 详细数据</h5>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table id="detailTable" class="table table-striped table-sm mb-0">
+                                    <thead id="detailTableHeaders" class="table-light">
+                                        <!-- 动态生成详细表头 -->
+                                    </thead>
+                                    <tbody id="detailTableBody">
+                                        <!-- 动态生成详细数据 -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 加载状态 -->
+                <div id="loadingSpinner" class="text-center py-4" style="display: none;">
+                    <div class="spinner-border text-success" role="status">
+                        <span class="visually-hidden">处理中...</span>
+                    </div>
+                    <p class="mt-2 text-muted">正在生成表2格式汇总...</p>
+                </div>
+
+                <!-- 错误信息 -->
+                <div id="errorAlert" class="alert alert-danger" style="display: none;">
+                    <strong><i class="fas fa-exclamation-triangle"></i> 处理失败：</strong>
+                    <span id="errorMessage"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 页脚 -->
+    <footer class="bg-light mt-5 py-3">
+        <div class="container text-center">
+            <p class="text-muted">© 2025 表2格式汇总系统 | 按班次和产品型号汇总</p>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        .overview-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .overview-card {
+            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .overview-card.success {
+            background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);
+        }
+
+        .overview-card.warning {
+            background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
+        }
+
+        .overview-card.danger {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        }
+
+        .overview-card h6 {
+            font-size: 0.9rem;
+            opacity: 0.9;
+            margin-bottom: 0.5rem;
+        }
+
+        .overview-card .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            line-height: 1;
+        }
+
+        .shift-group {
+            margin-bottom: 30px;
+            border: 1px solid #dee2e6;
+            border-radius: 0.375rem;
+            overflow: hidden;
+        }
+
+        .shift-header {
+            background-color: #2c3e50;
+            color: white;
+            padding: 10px 15px;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        .shift-table {
+            margin-bottom: 0;
+        }
+
+        .shift-table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+            text-align: center;
+            border-top: none;
+        }
+
+        .shift-table td {
+            text-align: center;
+            vertical-align: middle;
+        }
+
+        .shift-table .total-row {
+            background-color: #e9ecef;
+            font-weight: bold;
+        }
+
+        .shift-table .percentage-good {
+            color: #28a745;
+            font-weight: bold;
+        }
+
+        .shift-table .percentage-warning {
+            color: #ffc107;
+            font-weight: bold;
+        }
+
+        .shift-table .percentage-danger {
+            color: #dc3545;
+            font-weight: bold;
+        }
+
+        .numeric-cell {
+            font-family: 'Courier New', monospace;
+        }
+
+        .sticky-top {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .table th {
+            white-space: nowrap;
+            vertical-align: middle;
+        }
+
+        .badge {
+            font-size: 0.8em;
+        }
+    </style>
+
+    <script>
+    let currentData = null;
+    let currentSummary = null;
+    let currentHeaderInfo = null;
+    let productChart = null;
+    let shiftChart = null;
+
+    // 文件上传处理
+    document.getElementById('uploadForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const fileInput = document.getElementById('csvFile');
+        const file = fileInput.files[0];
+        
+        if (!file) {
+            showError('请选择文件');
+            return;
+        }
+        
+        const formData = new FormData();
+        formData.append('file', file);
+        
+        showLoading(true);
+        hideError();
+        
+        try {
+            const response = await fetch('/api/summary/analyze', {
+                method: 'POST',
+                body: formData
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                currentData = result.data;
+                currentSummary = result.summary;
+                currentHeaderInfo = result.header_info;
+                
+                displayTable2Format(result);
+                document.getElementById('filterSection').style.display = 'block';
+            } else {
+                showError(result.error || '处理失败');
+            }
+        } catch (error) {
+            showError('网络错误: ' + error.message);
+        } finally {
+            showLoading(false);
+        }
+    });
+
+    // 显示表2格式汇总
+    function displayTable2Format(result) {
+        document.getElementById('summaryTableSection').style.display = 'block';
+        
+        // 显示概览统计
+        displayOverview(result.summary);
+        
+        // 生成表2格式汇总
+        generateTable2Format(result);
+        
+        // 填充产品型号筛选选项
+        populateProductFilter(result.summary);
+        
+        // 如果选择了显示详细数据
+        if (document.getElementById('includeDetails').checked) {
+            displayDetailTable(result.data);
+        } else {
+            document.getElementById('detailTableSection').style.display = 'none';
+        }
+        
+        // 如果选择了显示图表
+        if (document.getElementById('includeChart').checked) {
+            displayCharts(result.summary);
+        } else {
+            document.getElementById('chartSection').style.display = 'none';
+        }
+    }
+
+    // 生成表2格式汇总
+    function generateTable2Format(result) {
+        const container = document.getElementById('shiftTables');
+        container.innerHTML = '';
+        
+        const summary = result.summary;
+        const data = result.data;
+        
+        // 获取所有班次
+        const shifts = getUniqueValues(data, '班次');
+        
+        // 为每个班次生成一个表格
+        shifts.forEach(shift => {
+            // 筛选当前班次的数据
+            const shiftData = data.filter(row => row['班次'] === shift);
+            
+            // 按产品型号分组汇总
+            const productSummary = {};
+            let shiftTotal = {
+                '投入数(kg)': 0,
+                '良品数(kg)': 0,
+                '报废数(kg)': 0,
+                '光箔*': 0
+            };
+            
+            shiftData.forEach(row => {
+                const product = row['产品型号'];
+                if (!productSummary[product]) {
+                    productSummary[product] = {
+                        '投入数(kg)': 0,
+                        '良品数(kg)': 0,
+                        '报废数(kg)': 0,
+                        '光箔*': 0,
+                        count: 0
+                    };
+                }
+                
+                // 累加各项数据
+                productSummary[product]['投入数(kg)'] += parseFloat(row['投入数(kg)']) || 0;
+                productSummary[product]['良品数(kg)'] += parseFloat(row['良品数(kg)']) || 0;
+                productSummary[product]['报废数(kg)'] += parseFloat(row['报废数(kg)']) || 0;
+                productSummary[product]['光箔*'] += parseFloat(row['光箔*']) || 0;
+                productSummary[product].count += 1;
+                
+                // 累加班次总计
+                shiftTotal['投入数(kg)'] += parseFloat(row['投入数(kg)']) || 0;
+                shiftTotal['良品数(kg)'] += parseFloat(row['良品数(kg)']) || 0;
+                shiftTotal['报废数(kg)'] += parseFloat(row['报废数(kg)']) || 0;
+                shiftTotal['光箔*'] += parseFloat(row['光箔*']) || 0;
+            });
+            
+            // 创建班次表格
+            const shiftDiv = document.createElement('div');
+            shiftDiv.className = 'shift-group';
+            
+            // 班次标题
+            const shiftHeader = document.createElement('div');
+            shiftHeader.className = 'shift-header';
+            shiftHeader.textContent = `${shift}班次`;
+            shiftDiv.appendChild(shiftHeader);
+            
+            // 创建表格
+            const table = document.createElement('table');
+            table.className = 'table table-bordered shift-table';
+            
+            // 表头
+            const thead = document.createElement('thead');
+            thead.innerHTML = `
+                <tr>
+                    <th>产品型号</th>
+                    <th>投入数(kg)</th>
+                    <th>良品数(kg)</th>
+                    <th>报废数(kg)</th>
+                    <th>光箔*</th>
+                    <th>良品率(%)</th>
+                </tr>
+            `;
+            table.appendChild(thead);
+            
+            // 表体
+            const tbody = document.createElement('tbody');
+            
+            // 产品型号行
+            Object.keys(productSummary).forEach(product => {
+                const productData = productSummary[product];
+                const goodRate = (productData['良品数(kg)'] / (productData['投入数(kg)'] || 1) * 100).toFixed(2);
+                const rateClass = goodRate >= 99 ? 'percentage-good' : 
+                                goodRate >= 95 ? 'percentage-warning' : 'percentage-danger';
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${product}</td>
+                    <td class="numeric-cell">${productData['投入数(kg)'].toFixed(1)}</td>
+                    <td class="numeric-cell">${productData['良品数(kg)'].toFixed(1)}</td>
+                    <td class="numeric-cell">${productData['报废数(kg)'].toFixed(1)}</td>
+                    <td class="numeric-cell">${productData['光箔*'].toFixed(1)}</td>
+                    <td class="numeric-cell ${rateClass}">${goodRate}</td>
+                `;
+                tbody.appendChild(row);
+            });
+            
+            // 班次总计行
+            const shiftRate = (shiftTotal['良品数(kg)'] / (shiftTotal['投入数(kg)'] || 1) * 100).toFixed(2);
+            const shiftRateClass = shiftRate >= 99 ? 'percentage-good' : 
+                                shiftRate >= 95 ? 'percentage-warning' : 'percentage-danger';
+            
+            const totalRow = document.createElement('tr');
+            totalRow.className = 'total-row';
+            totalRow.innerHTML = `
+                <td>班次总计</td>
+                <td class="numeric-cell">${shiftTotal['投入数(kg)'].toFixed(1)}</td>
+                <td class="numeric-cell">${shiftTotal['良品数(kg)'].toFixed(1)}</td>
+                <td class="numeric-cell">${shiftTotal['报废数(kg)'].toFixed(1)}</td>
+                <td class="numeric-cell">${shiftTotal['光箔*'].toFixed(1)}</td>
+                <td class="numeric-cell ${shiftRateClass}">${shiftRate}</td>
+            `;
+            tbody.appendChild(totalRow);
+            
+            table.appendChild(tbody);
+            shiftDiv.appendChild(table);
+            container.appendChild(shiftDiv);
+        });
+        
+        // 更新记录数
+        document.getElementById('totalRecords').textContent = `${result.total_rows} 条记录`;
+    }
+
+    // 获取唯一值
+    function getUniqueValues(data, field) {
+        const values = new Set();
+        data.forEach(row => {
+            if (row[field]) {
+                values.add(row[field]);
+            }
+        });
+        return Array.from(values).sort();
+    }
+
+    // 填充产品型号筛选选项
+    function populateProductFilter(summary) {
+        const select = document.getElementById('productFilter');
+        select.innerHTML = '';
+        
+        // 从汇总数据中提取所有产品型号
+        const products = new Set();
+        
+        if (summary.group_summaries && summary.group_summaries.by_product) {
+            Object.keys(summary.group_summaries.by_product).forEach(product => {
+                products.add(product);
+            });
+        }
+        
+        // 如果没有产品型号数据，从原始数据中提取
+        if (currentData) {
+            currentData.forEach(row => {
+                if (row['产品型号']) {
+                    products.add(row['产品型号']);
+                }
+            });
+        }
+        
+        Array.from(products).sort().forEach(product => {
+            const option = document.createElement('option');
+            option.value = product;
+            option.textContent = product;
+            select.appendChild(option);
+        });
+    }
+
+    // 显示概览统计
+    function displayOverview(summary) {
+        document.getElementById('overviewSection').style.display = 'block';
+        const container = document.getElementById('overviewStats');
+        container.innerHTML = '';
+        
+        // 总记录数
+        const totalCard = document.createElement('div');
+        totalCard.className = 'overview-card';
+        totalCard.innerHTML = `
+            <h6><i class="fas fa-database"></i> 总记录数</h6>
+            <div class="stat-value">${summary.total_records || 0}</div>
+        `;
+        container.appendChild(totalCard);
+        
+        // 总投入数
+        if (summary.total_summary && summary.total_summary['投入数(kg)']) {
+            const inputCard = document.createElement('div');
+            inputCard.className = 'overview-card';
+            inputCard.innerHTML = `
+                <h6><i class="fas fa-weight"></i> 总投入数(kg)</h6>
+                <div class="stat-value">${summary.total_summary['投入数(kg)'].sum.toFixed(1)}</div>
+            `;
+            container.appendChild(inputCard);
+        }
+        
+        // 总良品数
+        if (summary.total_summary && summary.total_summary['良品数(kg)']) {
+            const goodCard = document.createElement('div');
+            goodCard.className = 'overview-card success';
+            goodCard.innerHTML = `
+                <h6><i class="fas fa-check-circle"></i> 总良品数(kg)</h6>
+                <div class="stat-value">${summary.total_summary['良品数(kg)'].sum.toFixed(1)}</div>
+            `;
+            container.appendChild(goodCard);
+        }
+        
+        // 总报废数
+        if (summary.total_summary && summary.total_summary['报废数(kg)']) {
+            const badCard = document.createElement('div');
+            badCard.className = 'overview-card danger';
+            badCard.innerHTML = `
+                <h6><i class="fas fa-times-circle"></i> 总报废数(kg)</h6>
+                <div class="stat-value">${summary.total_summary['报废数(kg)'].sum.toFixed(1)}</div>
+            `;
+            container.appendChild(badCard);
+        }
+        
+        // 总良品率
+        const totalGood = summary.total_summary?.['良品数(kg)']?.sum || 0;
+        const totalInput = summary.total_summary?.['投入数(kg)']?.sum || 0;
+        if (totalInput > 0) {
+            const rateCard = document.createElement('div');
+            const overallRate = (totalGood / totalInput * 100).toFixed(2);
+            const rateClass = overallRate >= 99 ? 'success' : overallRate >= 95 ? 'warning' : 'danger';
+            rateCard.className = `overview-card ${rateClass}`;
+            rateCard.innerHTML = `
+                <h6><i class="fas fa-percentage"></i> 总良品率</h6>
+                <div class="stat-value">${overallRate}%</div>
+            `;
+            container.appendChild(rateCard);
+        }
+    }
+
+    // 显示详细数据表格
+    function displayDetailTable(data) {
+        document.getElementById('detailTableSection').style.display = 'block';
+        
+        const headers = document.getElementById('detailTableHeaders');
+        const body = document.getElementById('detailTableBody');
+        
+        if (!data || data.length === 0) {
+            headers.innerHTML = '<tr><th>无数据</th></tr>';
+            body.innerHTML = '<tr><td>暂无详细数据</td></tr>';
+            return;
+        }
+        
+        // 生成表头
+        const headerRow = document.createElement('tr');
+        Object.keys(data[0]).forEach(column => {
+            const th = document.createElement('th');
+            th.textContent = column;
+            headerRow.appendChild(th);
+        });
+        headers.innerHTML = '';
+        headers.appendChild(headerRow);
+        
+        // 生成数据行（显示前50行）
+        body.innerHTML = '';
+        const displayData = data.slice(0, 50);
+        
+        displayData.forEach(row => {
+            const tr = document.createElement('tr');
+            Object.values(row).forEach(value => {
+                const td = document.createElement('td');
+                td.textContent = value || '';
+                tr.appendChild(td);
+            });
+            body.appendChild(tr);
+        });
+        
+        if (data.length > 50) {
+            const tr = document.createElement('tr');
+            const td = document.createElement('td');
+            td.colSpan = Object.keys(data[0]).length;
+            td.textContent = `... 还有 ${data.length - 50} 行数据未显示`;
+            td.style.textAlign = 'center';
+            td.style.fontStyle = 'italic';
+            td.className = 'text-muted';
+            tr.appendChild(td);
+            body.appendChild(tr);
+        }
+    }
+
+    // 显示图表
+    function displayCharts(summary) {
+        document.getElementById('chartSection').style.display = 'block';
+        
+        // 获取班次汇总数据
+        const shiftData = summary.group_summaries?.by_shift || {};
+        const productData = summary.group_summaries?.by_product || {};
+        
+        // 准备图表数据
+        const shiftLabels = Object.keys(shiftData);
+        const shiftGoodData = shiftLabels.map(shift => shiftData[shift]?.summary?.['良品数(kg)']?.sum || 0);
+        const shiftBadData = shiftLabels.map(shift => shiftData[shift]?.summary?.['报废数(kg)']?.sum || 0);
+        
+        // 班次对比图表
+        const shiftCtx = document.getElementById('shiftChart').getContext('2d');
+        if (shiftChart) shiftChart.destroy();
+        
+        shiftChart = new Chart(shiftCtx, {
+            type: 'bar',
+            data: {
+                labels: shiftLabels,
+                datasets: [
+                    {
+                        label: '良品数(kg)',
+                        data: shiftGoodData,
+                        backgroundColor: 'rgba(40, 167, 69, 0.8)',
+                        borderColor: 'rgba(40, 167, 69, 1)',
+                        borderWidth: 1
+                    },
+                    {
+                        label: '报废数(kg)',
+                        data: shiftBadData,
+                        backgroundColor: 'rgba(220, 53, 69, 0.8)',
+                        borderColor: 'rgba(220, 53, 69, 1)',
+                        borderWidth: 1
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: '各班次生产数据对比'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+        
+        // 产品型号对比图表
+        const productLabels = Object.keys(productData);
+        const productGoodData = productLabels.map(product => productData[product]?.summary?.['良品数(kg)']?.sum || 0);
+        const productBadData = productLabels.map(product => productData[product]?.summary?.['报废数(kg)']?.sum || 0);
+        
+        const productCtx = document.getElementById('productChart').getContext('2d');
+        if (productChart) productChart.destroy();
+        
+        productChart = new Chart(productCtx, {
+            type: 'bar',
+            data: {
+                labels: productLabels,
+                datasets: [
+                    {
+                        label: '良品数(kg)',
+                        data: productGoodData,
+                        backgroundColor: 'rgba(40, 167, 69, 0.8)',
+                        borderColor: 'rgba(40, 167, 69, 1)',
+                        borderWidth: 1
+                    },
+                    {
+                        label: '报废数(kg)',
+                        data: productBadData,
+                        backgroundColor: 'rgba(220, 53, 69, 0.8)',
+                        borderColor: 'rgba(220, 53, 69, 1)',
+                        borderWidth: 1
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: '各产品型号生产数据对比'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    },
+                    x: {
+                        ticks: {
+                            maxRotation: 45,
+                            minRotation: 45
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // 应用筛选
+    async function applyFilters() {
+        if (!currentData) return;
+        
+        const dateRange = {
+            start: document.getElementById('dateRangeStart').value,
+            end: document.getElementById('dateRangeEnd').value
+        };
+        const shiftFilter = Array.from(document.getElementById('shiftFilter').selectedOptions).map(opt => opt.value);
+        const productFilter = Array.from(document.getElementById('productFilter').selectedOptions).map(opt => opt.value);
+        
+        // 筛选数据
+        let filteredData = [...currentData];
+        
+        // 日期筛选
+        if (dateRange.start || dateRange.end) {
+            const startDate = dateRange.start ? new Date(dateRange.start) : new Date('1900-01-01');
+            const endDate = dateRange.end ? new Date(dateRange.end) : new Date('2100-12-31');
+            
+            filteredData = filteredData.filter(row => {
+                if (!row['日期']) return false;
+                const rowDate = new Date(row['日期']);
+                return rowDate >= startDate && rowDate <= endDate;
+            });
+        }
+        
+        // 班次筛选
+        if (shiftFilter.length > 0 && !shiftFilter.includes('ALL')) {
+            filteredData = filteredData.filter(row => shiftFilter.includes(row['班次']));
+        }
+        
+        // 产品型号筛选
+        if (productFilter.length > 0) {
+            filteredData = filteredData.filter(row => productFilter.includes(row['产品型号']));
+        }
+        
+        // 创建筛选后的结果对象
+        const filteredResult = {
+            success: true,
+            data: filteredData,
+            total_rows: filteredData.length,
+            summary: calculateTable2Summary(filteredData)
+        };
+        
+        // 重新显示表2格式
+        displayTable2Format(filteredResult);
+    }
+
+    // 计算表2格式汇总
+    function calculateTable2Summary(data) {
+        const summary = {
+            total_records: data.length,
+            total_summary: {},
+            group_summaries: {
+                by_shift: {},
+                by_product: {}
+            }
+        };
+        
+        // 按班次分组
+        const shiftGroups = {};
+        data.forEach(row => {
+            const shift = row['班次'];
+            if (!shiftGroups[shift]) {
+                shiftGroups[shift] = [];
+            }
+            shiftGroups[shift].push(row);
+        });
+        
+        // 计算班次汇总
+        Object.keys(shiftGroups).forEach(shift => {
+            const shiftData = shiftGroups[shift];
+            const shiftSummary = {
+                records: shiftData.length,
+                summary: {
+                    '投入数(kg)': { sum: 0 },
+                    '良品数(kg)': { sum: 0 },
+                    '报废数(kg)': { sum: 0 },
+                    '光箔*': { sum: 0 }
+                }
+            };
+            
+            shiftData.forEach(row => {
+                shiftSummary.summary['投入数(kg)'].sum += parseFloat(row['投入数(kg)']) || 0;
+                shiftSummary.summary['良品数(kg)'].sum += parseFloat(row['良品数(kg)']) || 0;
+                shiftSummary.summary['报废数(kg)'].sum += parseFloat(row['报废数(kg)']) || 0;
+                shiftSummary.summary['光箔*'].sum += parseFloat(row['光箔*']) || 0;
+            });
+            
+            summary.group_summaries.by_shift[shift] = shiftSummary;
+        });
+        
+        // 按产品型号分组
+        const productGroups = {};
+        data.forEach(row => {
+            const product = row['产品型号'];
+            if (!productGroups[product]) {
+                productGroups[product] = [];
+            }
+            productGroups[product].push(row);
+        });
+        
+        // 计算产品型号汇总
+        Object.keys(productGroups).forEach(product => {
+            const productData = productGroups[product];
+            const productSummary = {
+                records: productData.length,
+                summary: {
+                    '投入数(kg)': { sum: 0 },
+                    '良品数(kg)': { sum: 0 },
+                    '报废数(kg)': { sum: 0 },
+                    '光箔*': { sum: 0 }
+                }
+            };
+            
+            productData.forEach(row => {
+                productSummary.summary['投入数(kg)'].sum += parseFloat(row['投入数(kg)']) || 0;
+                productSummary.summary['良品数(kg)'].sum += parseFloat(row['良品数(kg)']) || 0;
+                productSummary.summary['报废数(kg)'].sum += parseFloat(row['报废数(kg)']) || 0;
+                productSummary.summary['光箔*'].sum += parseFloat(row['光箔*']) || 0;
+            });
+            
+            summary.group_summaries.by_product[product] = productSummary;
+        });
+        
+        // 计算总体汇总
+        summary.total_summary = {
+            '投入数(kg)': { sum: 0 },
+            '良品数(kg)': { sum: 0 },
+            '报废数(kg)': { sum: 0 },
+            '光箔*': { sum: 0 }
+        };
+        
+        data.forEach(row => {
+            summary.total_summary['投入数(kg)'].sum += parseFloat(row['投入数(kg)']) || 0;
+            summary.total_summary['良品数(kg)'].sum += parseFloat(row['良品数(kg)']) || 0;
+            summary.total_summary['报废数(kg)'].sum += parseFloat(row['报废数(kg)']) || 0;
+            summary.total_summary['光箔*'].sum += parseFloat(row['光箔*']) || 0;
+        });
+        
+        return summary;
+    }
+
+    // 重置筛选
+    function resetFilters() {
+        document.getElementById('dateRangeStart').value = '';
+        document.getElementById('dateRangeEnd').value = '';
+        document.getElementById('shiftFilter').selectedIndex = -1;
+        document.getElementById('productFilter').selectedIndex = -1;
+    }
+
+    // 导出表2格式
+    function exportSummary() {
+        if (!currentSummary) {
+            showError('没有可导出的数据');
+            return;
+        }
+        
+        const exportData = {
+            summary: currentSummary,
+            data: currentData,
+            export_format: 'table2',
+            export_time: new Date().toISOString()
+        };
+        
+        fetch('/api/summary/export-summary', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(exportData)
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (result.success) {
+                // 创建下载链接
+                const downloadUrl = result.download_url;
+                const link = document.createElement('a');
+                link.href = downloadUrl;
+                link.download = result.filename;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            } else {
+                showError(result.error || '导出失败');
+            }
+        })
+        .catch(error => {
+            showError('导出错误: ' + error.message);
+        });
+    }
+
+    // 显示加载状态
+    function showLoading(show) {
+        document.getElementById('loadingSpinner').style.display = show ? 'block' : 'none';
+    }
+
+    // 显示错误信息
+    function showError(message) {
+        document.getElementById('errorMessage').textContent = message;
+        document.getElementById('errorAlert').style.display = 'block';
+    }
+
+    // 隐藏错误信息
+    function hideError() {
+        document.getElementById('errorAlert').style.display = 'none';
+    }
+    </script>
+</body>
+</html>

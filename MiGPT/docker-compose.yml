@@ -1,0 +1,20 @@
+version: '3'
+
+services:
+  mi-gpt:
+    image: idootop/mi-gpt:latest
+    container_name: mi-gpt
+    restart: unless-stopped
+    volumes:
+      - ./logs:/app/logs
+      - ./.migpt.js:/app/.migpt.js
+    env_file:
+      - ./.env
+    # 可选：如果需要网络访问控制
+    # networks:
+    #   - default
+
+# 可选：定义自定义网络
+# networks:
+#   default:
+#     driver: bridge

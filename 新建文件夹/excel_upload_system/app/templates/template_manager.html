@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>钉钉消息模板管理</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border-left: 4px solid #4CAF50;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .btn-primary {
+            background: #4CAF50;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+        
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #c82333;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        .status-enabled {
+            background: #28a745;
+        }
+        
+        .status-disabled {
+            background: #dc3545;
+        }
+        
+        .template-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 25px;
+        }
+        
+        .template-card {
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            padding: 25px;
+            background: white;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .template-card:hover {
+            border-color: #4CAF50;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            transform: translateY(-5px);
+        }
+        
+        .template-card.enabled {
+            border-color: #28a745;
+            background: linear-gradient(135deg, #f8fff8 0%, #ffffff 100%);
+        }
+        
+        .template-card.disabled {
+            border-color: #dc3545;
+            background: linear-gradient(135deg, #fff8f8 0%, #ffffff 100%);
+            opacity: 0.8;
+        }
+        
+        .template-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f1f3f4;
+        }
+        
+        .template-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .template-status {
+            display: flex;
+            align-items: center;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        
+        .template-content {
+            margin-bottom: 20px;
+        }
+        
+        .template-description {
+            color: #666;
+            margin-bottom: 15px;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        
+        .template-format {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #007bff;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            color: #495057;
+            margin-bottom: 15px;
+            word-break: break-all;
+        }
+        
+        .template-example {
+            background: #e8f5e8;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #28a745;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            color: #155724;
+            margin-bottom: 15px;
+        }
+        
+        .template-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            backdrop-filter: blur(5px);
+        }
+        
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 30px;
+            border-radius: 15px;
+            width: 80%;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e9ecef;
+        }
+        
+        .modal-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .close {
+            color: #aaa;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+        
+        .close:hover {
+            color: #dc3545;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #333;
+            font-size: 14px;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: #4CAF50;
+            box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+        }
+        
+        .form-text {
+            font-size: 12px;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+        
+        .preview-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        
+        .preview-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .preview-content {
+            background: white;
+            padding: 15px;
+            border-radius: 6px;
+            border: 1px solid #dee2e6;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.5;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        
+        .alert {
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            border-left: 4px solid;
+        }
+        
+        .alert-success {
+            background: #d4edda;
+            border-color: #28a745;
+            color: #155724;
+        }
+        
+        .alert-error {
+            background: #f8d7da;
+            border-color: #dc3545;
+            color: #721c24;
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #4CAF50;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .template-variables {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #2196f3;
+            margin-bottom: 20px;
+        }
+        
+        .variables-title {
+            font-size: 14px;
+            font-weight: bold;
+            color: #1976d2;
+            margin-bottom: 10px;
+        }
+        
+        .variables-list {
+            font-size: 12px;
+            color: #424242;
+            line-height: 1.6;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                border-radius: 10px;
+            }
+            
+            .content {
+                padding: 20px;
+            }
+            
+            .template-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .controls {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .modal-content {
+                width: 95%;
+                margin: 10% auto;
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>钉钉消息模板管理</h1>
+            <p>管理A732型号钉钉消息模板，支持自定义标题、头部和尾部内容</p>
+        </div>
+        
+        <div class="content">
+            <div class="controls">
+                <div>
+                    <span class="status-indicator status-enabled"></span>
+                    <span>模板状态: <strong id="template-status">加载中...</strong></span>
+                </div>
+                <div>
+                    <button class="btn btn-primary" onclick="editTemplate()">编辑模板</button>
+                    <button class="btn btn-secondary" onclick="resetTemplates()">重置默认</button>
+                    <a href="/" class="btn btn-secondary">返回首页</a>
+                </div>
+            </div>
+            
+            <div id="alert-container"></div>
+            
+            <div class="template-grid" id="template-grid">
+                <!-- 模板卡片将在这里动态生成 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 编辑模态框 -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">编辑模板</h2>
+                <span class="close" onclick="closeModal()">&times;</span>
+            </div>
+            
+            <form id="template-form">
+                <div class="template-variables">
+                    <div class="variables-title">可用变量：</div>
+                    <div class="variables-list">
+                        <strong>标题模板变量：</strong><br>
+                        无（纯文本）<br><br>
+                        <strong>头部模板变量：</strong><br>
+                        {file_name} - 文件名<br>
+                        {operation} - 操作类型<br>
+                        {datetime} - 处理时间<br>
+                        {time_range} - 操作时间段<br><br>
+                        <strong>尾部模板变量：</strong><br>
+                        无（纯文本）
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="honglian_title_template">红莲模式 - 标题模板</label>
+                    <input type="text" class="form-control" id="honglian_title_template" name="honglian_title_template">
+                    <div class="form-text">红莲模式钉钉消息的标题，支持纯文本</div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="honglian_header_template">红莲模式 - 头部模板</label>
+                    <textarea class="form-control" id="honglian_header_template" name="honglian_header_template" rows="4"></textarea>
+                    <div class="form-text">红莲模式消息头部内容，支持变量替换</div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="honglian_footer_template">红莲模式 - 尾部模板</label>
+                    <textarea class="form-control" id="honglian_footer_template" name="honglian_footer_template" rows="3"></textarea>
+                    <div class="form-text">红莲模式消息尾部内容，支持纯文本</div>
+                </div>
+                
+                <hr style="margin: 30px 0; border: 1px solid #e9ecef;">
+                
+                <div class="form-group">
+                    <label class="form-label" for="process_files_title_template">工艺文件推送 - 标题模板</label>
+                    <input type="text" class="form-control" id="process_files_title_template" name="process_files_title_template">
+                    <div class="form-text">工艺文件推送钉钉消息的标题，支持纯文本</div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="process_files_header_template">工艺文件推送 - 头部模板</label>
+                    <textarea class="form-control" id="process_files_header_template" name="process_files_header_template" rows="4"></textarea>
+                    <div class="form-text">工艺文件推送消息头部内容，支持变量替换</div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="process_files_footer_template">工艺文件推送 - 尾部模板</label>
+                    <textarea class="form-control" id="process_files_footer_template" name="process_files_footer_template" rows="3"></textarea>
+                    <div class="form-text">工艺文件推送消息尾部内容，支持纯文本</div>
+                </div>
+                
+                <div class="preview-section">
+                    <div class="preview-title">预览效果</div>
+                    <div class="preview-content" id="preview-content">
+                        填写模板内容后将显示预览...
+                    </div>
+                </div>
+                
+                <div style="text-align: right; margin-top: 20px;">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()">取消</button>
+                    <button type="submit" class="btn btn-primary">保存模板</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let currentTemplates = {};
+        
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            loadTemplates();
+            
+            // 添加表单提交事件监听
+            document.getElementById('template-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                saveTemplate();
+            });
+            
+            // 添加实时预览功能
+            ['honglian_title_template', 'honglian_header_template', 'honglian_footer_template'].forEach(id => {
+                document.getElementById(id).addEventListener('input', updatePreview);
+            });
+        });
+        
+        // 加载模板配置
+        async function loadTemplates() {
+            try {
+                const response = await fetch('/template/api/templates');
+                const result = await response.json();
+                
+                if (result.success) {
+                    currentTemplates = result.data;
+                    displayTemplates();
+                    updateTemplateStatus();
+                } else {
+                    showAlert('加载模板失败: ' + result.message, 'error');
+                }
+            } catch (error) {
+                showAlert('加载模板失败: ' + error.message, 'error');
+            }
+        }
+        
+        // 显示模板列表
+        function displayTemplates() {
+            const grid = document.getElementById('template-grid');
+            grid.innerHTML = '';
+            
+            const templates = [
+                {
+                    key: 'honglian_title_template',
+                    title: '红莲模式明细 - 标题模板',
+                    description: '设置钉钉消息的标题格式',
+                    example: currentTemplates.honglian_title_template || '@小艺 红莲模式明细'
+                },
+                {
+                    key: 'honglian_header_template', 
+                    title: '红莲模式明细 - 头部模板',
+                    description: '设置消息头部内容，支持变量替换',
+                    example: (currentTemplates.honglian_header_template || '**文件名:** {file_name}\\n**操作:** {operation}\\n**处理时间:** {datetime}\\n**操作时间段:** {time_range}\\n').replace(/\\n/g, '\n')
+                },
+                {
+                    key: 'honglian_footer_template',
+                    title: '红莲模式明细 - 尾部模板', 
+                    description: '设置消息尾部内容',
+                    example: (currentTemplates.honglian_footer_template || '\\n此消息由系统自动发送').replace(/\\n/g, '\n')
+                },
+                {
+                    key: 'process_files_title_template',
+                    title: '工艺文件推送 - 标题模板',
+                    description: '设置工艺文件钉钉推送的标题格式',
+                    example: currentTemplates.process_files_title_template || '@小艺 工艺文件推送'
+                },
+                {
+                    key: 'process_files_header_template', 
+                    title: '工艺文件推送 - 头部模板',
+                    description: '设置工艺文件推送消息头部内容，支持变量替换',
+                    example: (currentTemplates.process_files_header_template || '**文件名:** {file_name}\\n**操作:** {operation}\\n**处理时间:** {datetime}\\n**数据条数:** {data_count}\\n').replace(/\\n/g, '\n')
+                },
+                {
+                    key: 'process_files_footer_template',
+                    title: '工艺文件推送 - 尾部模板', 
+                    description: '设置工艺文件推送消息尾部内容',
+                    example: (currentTemplates.process_files_footer_template || '\\n此消息由系统自动发送').replace(/\\n/g, '\n')
+                }
+            ];
+            
+            templates.forEach(template => {
+                const card = document.createElement('div');
+                card.className = 'template-card enabled';
+                card.innerHTML = `
+                    <div class="template-header">
+                        <div class="template-title">${template.title}</div>
+                        <div class="template-status">
+                            <span class="status-indicator status-enabled"></span>
+                            <span>已启用</span>
+                        </div>
+                    </div>
+                    <div class="template-content">
+                        <div class="template-description">${template.description}</div>
+                        <div class="template-example">
+                            <strong>当前内容：</strong><br>
+                            ${template.example}
+                        </div>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+        
+        // 更新模板状态
+        function updateTemplateStatus() {
+            const hasCustomConfig = Object.keys(currentTemplates).length > 0;
+            document.getElementById('template-status').textContent = hasCustomConfig ? '已自定义' : '使用默认配置';
+        }
+        
+        // 编辑模板
+        function editTemplate() {
+            // 填充当前模板内容
+            document.getElementById('honglian_title_template').value = currentTemplates.honglian_title_template || '@小艺 红莲模式明细';
+            document.getElementById('honglian_header_template').value = currentTemplates.honglian_header_template || '**文件名:** {file_name}\\n**操作:** {operation}\\n**处理时间:** {datetime}\\n**操作时间段:** {time_range}\\n';
+            document.getElementById('honglian_footer_template').value = currentTemplates.honglian_footer_template || '\\n此消息由系统自动发送';
+            
+            // 填充工艺文件推送模板内容
+            document.getElementById('process_files_title_template').value = currentTemplates.process_files_title_template || '@小艺 工艺文件推送';
+            document.getElementById('process_files_header_template').value = currentTemplates.process_files_header_template || '**文件名:** {file_name}\\n**操作:** {operation}\\n**处理时间:** {datetime}\\n**数据条数:** {data_count}\\n';
+            document.getElementById('process_files_footer_template').value = currentTemplates.process_files_footer_template || '\\n此消息由系统自动发送';
+            
+            updatePreview();
+            document.getElementById('editModal').style.display = 'block';
+        }
+        
+        // 关闭模态框
+        function closeModal() {
+            document.getElementById('editModal').style.display = 'none';
+        }
+        
+        // 更新预览
+        function updatePreview() {
+            const title = document.getElementById('honglian_title_template').value || '@小艺 红莲模式明细';
+            const header = document.getElementById('honglian_header_template').value || '**文件名:** {file_name}\\n**操作:** {operation}\\n**处理时间:** {datetime}\\n**操作时间段:** {time_range}\\n';
+            const footer = document.getElementById('honglian_footer_template').value || '\\n此消息由系统自动发送';
+            
+            // 替换示例变量
+            const exampleHeader = header
+                .replace(/\\n/g, '\n')
+                .replace(/{file_name}/g, 'example.xlsx')
+                .replace(/{operation}/g, '数据处理')
+                .replace(/{datetime}/g, '2024-01-01 12:00:00')
+                .replace(/{time_range}/g, '2024-01-01 08:00-12:00');
+            
+            const exampleFooter = footer.replace(/\\n/g, '\n');
+            
+            const preview = `标题: ${title}\n\n头部内容:\n${exampleHeader}\n\n尾部内容:\n${exampleFooter}`;
+            
+            document.getElementById('preview-content').textContent = preview;
+        }
+        
+        // 保存模板
+        async function saveTemplate() {
+            const formData = {
+                honglian_title_template: document.getElementById('honglian_title_template').value,
+                honglian_header_template: document.getElementById('honglian_header_template').value,
+                honglian_footer_template: document.getElementById('honglian_footer_template').value,
+                process_files_title_template: document.getElementById('process_files_title_template').value,
+                process_files_header_template: document.getElementById('process_files_header_template').value,
+                process_files_footer_template: document.getElementById('process_files_footer_template').value
+            };
+            
+            try {
+                const response = await fetch('/template/api/templates', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showAlert('模板保存成功！', 'success');
+                    closeModal();
+                    loadTemplates(); // 重新加载模板
+                } else {
+                    showAlert('保存模板失败: ' + result.message, 'error');
+                }
+            } catch (error) {
+                showAlert('保存模板失败: ' + error.message, 'error');
+            }
+        }
+        
+        // 重置为默认模板
+        async function resetTemplates() {
+            if (!confirm('确定要重置为默认模板吗？这将清除所有自定义配置。')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch('/template/api/templates/reset', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showAlert('已重置为默认模板', 'success');
+                    loadTemplates(); // 重新加载模板
+                } else {
+                    showAlert('重置模板失败: ' + result.message, 'error');
+                }
+            } catch (error) {
+                showAlert('重置模板失败: ' + error.message, 'error');
+            }
+        }
+        
+        // 显示提示信息
+        function showAlert(message, type) {
+            const container = document.getElementById('alert-container');
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type === 'success' ? 'success' : 'error'}`;
+            alert.textContent = message;
+            
+            container.appendChild(alert);
+            
+            // 3秒后自动移除
+            setTimeout(() => {
+                alert.remove();
+            }, 3000);
+        }
+        
+        // 点击模态框外部关闭
+        window.onclick = function(event) {
+            const modal = document.getElementById('editModal');
+            if (event.target == modal) {
+                closeModal();
+            }
+        }
+    </script>
+</body>
+</html>

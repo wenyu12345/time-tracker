@@ -1,0 +1,782 @@
+{% extends 'base.html' %}
+
+{% block title %}CSV双层表头处理{% endblock %}
+
+{% block css %}
+<style>
+    .filter-container {
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 20px;
+        border: 1px solid #dee2e6;
+    }
+    .filter-section {
+        margin-bottom: 15px;
+    }
+    .filter-section h5 {
+        font-size: 1rem;
+        font-weight: 600;
+        margin-bottom: 10px;
+        color: #495057;
+    }
+    .filter-select {
+        max-height: 120px;
+        overflow-y: auto;
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+        padding: 5px;
+    }
+    .filter-select label {
+        display: block;
+        padding: 4px 0;
+        margin-bottom: 0;
+        font-weight: normal;
+        cursor: pointer;
+    }
+    .filter-select label:hover {
+        background-color: #e9ecef;
+    }
+    .filter-select input[type="checkbox"] {
+        margin-right: 8px;
+    }
+    .btn-action {
+        min-width: 120px;
+        margin-right: 10px;
+    }
+    .result-card {
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 20px;
+        background-color: #f8f9fa;
+    }
+    .result-card h4 {
+        margin-bottom: 15px;
+        color: #495057;
+    }
+    .result-item {
+        display: inline-block;
+        background-color: #ffffff;
+        border: 1px solid #dee2e6;
+        border-radius: 6px;
+        padding: 10px 15px;
+        margin-right: 15px;
+        margin-bottom: 10px;
+        min-width: 180px;
+        text-align: center;
+    }
+    .result-item .value {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #007bff;
+        display: block;
+    }
+    .result-item .label {
+        font-size: 0.9rem;
+        color: #6c757d;
+        display: block;
+    }
+    .table-container {
+        max-height: 400px;
+        overflow-y: auto;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        margin-top: 15px;
+    }
+    table th {
+        position: sticky;
+        top: 0;
+        background-color: #f8f9fa;
+        z-index: 10;
+    }
+    .upload-container {
+        border: 2px dashed #007bff;
+        border-radius: 8px;
+        padding: 30px;
+        text-align: center;
+        margin-bottom: 20px;
+        background-color: #f8f9fa;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    .upload-container:hover {
+        background-color: #e9ecef;
+        border-color: #0056b3;
+    }
+    .upload-icon {
+        font-size: 4rem;
+        color: #007bff;
+        margin-bottom: 15px;
+    }
+    .preview-table {
+        margin-top: 20px;
+        margin-bottom: 20px;
+    }
+    .loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(255, 255, 255, 0.8);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+    }
+    .loading-spinner {
+        font-size: 3rem;
+        color: #007bff;
+    }
+    .selected-filters {
+        margin-top: 10px;
+        padding: 10px;
+        background-color: #e3f2fd;
+        border-radius: 6px;
+    }
+    .filter-badge {
+        display: inline-block;
+        background-color: #007bff;
+        color: white;
+        padding: 4px 8px;
+        border-radius: 12px;
+        margin-right: 5px;
+        margin-bottom: 5px;
+        font-size: 0.8rem;
+    }
+    .filter-badge .close {
+        color: white;
+        margin-left: 5px;
+        cursor: pointer;
+        font-weight: bold;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <h2 class="mb-4"><i class="fas fa-file-csv"></i> CSV双层表头多条件汇总求和</h2>
+        
+        <!-- 文件上传区域 -->
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0"><i class="fas fa-upload"></i> 文件上传</h4>
+            </div>
+            <div class="card-body">
+                <div class="upload-container" id="upload-area">
+                    <input type="file" id="file-input" accept=".csv" style="display: none;">
+                    <div class="upload-icon">
+                        <i class="fas fa-file-excel"></i>
+                    </div>
+                    <h4>拖拽文件到此处或点击选择文件</h4>
+                    <p class="text-muted">支持CSV格式文件，文件大小不超过10MB</p>
+                </div>
+                
+                <!-- 上传的文件名显示 -->
+                <div id="file-info" class="mt-3" style="display: none;">
+                    <div class="alert alert-info">
+                        <i class="fas fa-check-circle"></i> 已选择文件: <span id="selected-filename"></span>
+                    </div>
+                </div>
+                
+                <!-- 数据预览表格 -->
+                <div id="preview-section" class="mt-4" style="display: none;">
+                    <h5>数据预览 (<span id="preview-count">0</span> 行)</h5>
+                    <div class="table-container">
+                        <table class="table table-bordered table-hover preview-table">
+                            <thead id="preview-header"></thead>
+                            <tbody id="preview-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 筛选条件区域 -->
+        <div id="filter-section" class="card mt-4" style="display: none;">
+            <div class="card-header bg-secondary text-white">
+                <h4 class="mb-0"><i class="fas fa-filter"></i> 筛选条件</h4>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <!-- 日期筛选 -->
+                    <div class="col-md-3 filter-section">
+                        <h5>日期</h5>
+                        <div id="date-filter" class="filter-select"></div>
+                    </div>
+                    
+                    <!-- 班次筛选 -->
+                    <div class="col-md-3 filter-section">
+                        <h5>班次</h5>
+                        <div id="shift-filter" class="filter-select"></div>
+                    </div>
+                    
+                    <!-- 产品型号筛选 -->
+                    <div class="col-md-3 filter-section">
+                        <h5>产品型号</h5>
+                        <div id="product-filter" class="filter-select"></div>
+                    </div>
+                    
+                    <!-- 工序名称筛选 -->
+                    <div class="col-md-3 filter-section">
+                        <h5>工序名称</h5>
+                        <div id="process-filter" class="filter-select"></div>
+                    </div>
+                </div>
+                
+                <!-- 选中的筛选条件显示 -->
+                <div id="selected-filters" class="selected-filters mt-3" style="display: none;">
+                    <h6><i class="fas fa-tag"></i> 已选择的筛选条件:</h6>
+                    <div id="filter-badges"></div>
+                </div>
+                
+                <!-- 操作按钮 -->
+                <div class="mt-4 text-center">
+                    <button id="apply-filter-btn" class="btn btn-primary btn-action">
+                        <i class="fas fa-search"></i> 应用筛选
+                    </button>
+                    <button id="reset-filter-btn" class="btn btn-secondary btn-action">
+                        <i class="fas fa-redo"></i> 重置筛选
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 结果展示区域 -->
+        <div id="result-section" class="card mt-4" style="display: none;">
+            <div class="card-header bg-success text-white">
+                <h4 class="mb-0"><i class="fas fa-chart-bar"></i> 汇总结果</h4>
+            </div>
+            <div class="card-body">
+                <!-- 汇总统计卡片 -->
+                <div class="result-card">
+                    <h4>统计概览</h4>
+                    <div id="summary-stats">
+                        <div class="result-item">
+                            <span class="value" id="total-count">0</span>
+                            <span class="label">数据条数</span>
+                        </div>
+                        <div class="result-item">
+                            <span class="value" id="total-good">0</span>
+                            <span class="label">良品总数(kg)</span>
+                        </div>
+                        <div class="result-item">
+                            <span class="value" id="total-scrap">0</span>
+                            <span class="label">报废总数(kg)</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 分组汇总表格 -->
+                <div>
+                    <h4>分组汇总详情</h4>
+                    <div class="table-container">
+                        <table class="table table-bordered table-hover">
+                            <thead id="group-header"></thead>
+                            <tbody id="group-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- 导出按钮 -->
+                <div class="mt-4 text-center">
+                    <button id="export-excel-btn" class="btn btn-success btn-action">
+                        <i class="fas fa-file-excel"></i> 导出Excel
+                    </button>
+                    <button id="export-csv-btn" class="btn btn-info btn-action">
+                        <i class="fas fa-file-csv"></i> 导出CSV
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 加载遮罩层 -->
+<div id="loading-overlay" class="loading-overlay" style="display: none;">
+    <div class="loading-spinner">
+        <i class="fas fa-spinner fa-spin"></i>
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script>
+    // 全局变量存储筛选选项和处理后的数据
+    let filterOptions = {};
+    let currentFilters = {};
+    let lastFilterResult = null;
+    
+    $(document).ready(function() {
+        // 文件上传处理
+        const uploadArea = $('#upload-area');
+        const fileInput = $('#file-input');
+        const fileInfo = $('#file-info');
+        const selectedFilename = $('#selected-filename');
+        
+        // 点击上传区域触发文件选择
+        uploadArea.click(function() {
+            fileInput[0].click();  // 使用原生click方法而不是jQuery click
+        });
+        
+        // 防止fileInput点击事件冒泡回uploadArea，避免无限递归
+        fileInput.click(function(e) {
+            e.stopPropagation();
+        });
+        
+        // 文件选择变化
+        fileInput.change(function(e) {
+            if (e.target.files.length > 0) {
+                const file = e.target.files[0];
+                selectedFilename.text(file.name);
+                fileInfo.show();
+                processFile(file);
+            }
+        });
+        
+        // 拖拽上传
+        uploadArea.on('dragover', function(e) {
+            e.preventDefault();
+            $(this).css('background-color', '#e9ecef');
+        });
+        
+        uploadArea.on('dragleave', function() {
+            $(this).css('background-color', '#f8f9fa');
+        });
+        
+        uploadArea.on('drop', function(e) {
+            e.preventDefault();
+            $(this).css('background-color', '#f8f9fa');
+            
+            if (e.originalEvent.dataTransfer.files.length > 0) {
+                const file = e.originalEvent.dataTransfer.files[0];
+                fileInput[0].files = e.originalEvent.dataTransfer.files;
+                selectedFilename.text(file.name);
+                fileInfo.show();
+                processFile(file);
+            }
+        });
+        
+        // 处理文件上传
+        function processFile(file) {
+            showLoading();
+            
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            $.ajax({
+                url: '/process_csv_double_header',
+                type: 'POST',
+                data: formData,
+                contentType: false,
+                processData: false,
+                success: function(response) {
+                    hideLoading();
+                    
+                    if (response.success) {
+                        // 显示预览数据
+                        showPreview(response.preview);
+                        
+                        // 保存筛选选项
+                        filterOptions = response.filter_options || {};
+                        
+                        // 构建筛选器
+                        buildFilters();
+                        
+                        // 显示筛选区域
+                        $('#filter-section').show();
+                        
+                        // 清空之前的结果
+                        $('#result-section').hide();
+                        clearFilters();
+                        
+                        showSuccess('文件处理成功！');
+                    } else {
+                        showError(response.error || '文件处理失败');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    hideLoading();
+                    showError('上传失败: ' + error);
+                }
+            });
+        }
+        
+        // 显示预览数据
+        function showPreview(data) {
+            const previewSection = $('#preview-section');
+            const previewHeader = $('#preview-header');
+            const previewBody = $('#preview-body');
+            const previewCount = $('#preview-count');
+            
+            previewCount.text(data.length);
+            
+            // 清空表格
+            previewHeader.empty();
+            previewBody.empty();
+            
+            if (data.length > 0) {
+                // 创建表头
+                const headers = Object.keys(data[0]);
+                const theadRow = $('<tr></tr>');
+                
+                headers.forEach(header => {
+                    theadRow.append($('<th></th>').text(header));
+                });
+                
+                previewHeader.append(theadRow);
+                
+                // 创建表体
+                data.forEach(row => {
+                    const tbodyRow = $('<tr></tr>');
+                    
+                    headers.forEach(header => {
+                        const value = row[header] || '';
+                        tbodyRow.append($('<td></td>').text(value));
+                    });
+                    
+                    previewBody.append(tbodyRow);
+                });
+                
+                previewSection.show();
+            }
+        }
+        
+        // 构建筛选器
+        function buildFilters() {
+            // 日期筛选器
+            buildFilterOptions('date-filter', '日期', filterOptions['日期'] || []);
+            
+            // 班次筛选器
+            buildFilterOptions('shift-filter', '班次', filterOptions['班次'] || []);
+            
+            // 产品型号筛选器
+            buildFilterOptions('product-filter', '产品型号', filterOptions['产品型号'] || []);
+            
+            // 工序名称筛选器
+            buildFilterOptions('process-filter', '工序名称', filterOptions['工序名称'] || []);
+        }
+        
+        // 构建单个筛选选项
+        function buildFilterOptions(containerId, fieldName, options) {
+            const container = $('#' + containerId);
+            container.empty();
+            
+            options.forEach(option => {
+                const label = $('<label></label>');
+                const checkbox = $('<input type="checkbox">');
+                checkbox.val(option);
+                checkbox.attr('data-field', fieldName);
+                
+                // 添加复选框到标签
+                label.append(checkbox);
+                label.append(option);
+                
+                // 添加到容器
+                container.append(label);
+                
+                // 绑定复选框事件
+                checkbox.change(function() {
+                    updateSelectedFilters();
+                });
+            });
+        }
+        
+        // 更新已选择的筛选条件显示
+        function updateSelectedFilters() {
+            const selectedFilters = $('#selected-filters');
+            const filterBadges = $('#filter-badges');
+            
+            filterBadges.empty();
+            
+            // 收集所有选中的筛选条件
+            const selected = {};
+            
+            $('input[type="checkbox"][data-field]').each(function() {
+                if (this.checked) {
+                    const field = $(this).attr('data-field');
+                    const value = $(this).val();
+                    
+                    if (!selected[field]) {
+                        selected[field] = [];
+                    }
+                    selected[field].push(value);
+                }
+            });
+            
+            // 显示筛选标签
+            let hasFilters = false;
+            
+            for (const [field, values] of Object.entries(selected)) {
+                values.forEach(value => {
+                    hasFilters = true;
+                    const badge = $('<span class="filter-badge"></span>');
+                    badge.text(field + ': ' + value);
+                    
+                    const closeBtn = $('<span class="close">&times;</span>');
+                    closeBtn.click(function() {
+                        // 取消选中对应的复选框
+                        $(`input[type="checkbox"][data-field="${field}"][value="${value}"]`).prop('checked', false);
+                        updateSelectedFilters();
+                    });
+                    
+                    badge.append(closeBtn);
+                    filterBadges.append(badge);
+                });
+            }
+            
+            if (hasFilters) {
+                selectedFilters.show();
+            } else {
+                selectedFilters.hide();
+            }
+        }
+        
+        // 应用筛选
+        $('#apply-filter-btn').click(function() {
+            applyFilters();
+        });
+        
+        // 重置筛选
+        $('#reset-filter-btn').click(function() {
+            clearFilters();
+        });
+        
+        // 清除筛选条件
+        function clearFilters() {
+            $('input[type="checkbox"][data-field]').prop('checked', false);
+            updateSelectedFilters();
+            $('#result-section').hide();
+        }
+        
+        // 应用筛选条件
+        function applyFilters() {
+            // 收集筛选条件
+            const filters = {};
+            
+            $('input[type="checkbox"][data-field]').each(function() {
+                if (this.checked) {
+                    const field = $(this).attr('data-field');
+                    const value = $(this).val();
+                    
+                    if (!filters[field]) {
+                        filters[field] = [];
+                    }
+                    filters[field].push(value);
+                }
+            });
+            
+            // 保存当前筛选条件
+            currentFilters = filters;
+            
+            // 发送请求
+            showLoading();
+            
+            $.ajax({
+                url: '/filter_and_sum',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    filters: filters,
+                    sum_fields: ['良品数(kg)', '报废数(kg)']
+                }),
+                success: function(response) {
+                    hideLoading();
+                    
+                    if (response.success) {
+                        // 保存结果
+                        lastFilterResult = response;
+                        
+                        // 显示结果
+                        showResults(response);
+                    } else {
+                        showError(response.error || '筛选失败');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    hideLoading();
+                    showError('请求失败: ' + error);
+                }
+            });
+        }
+        
+        // 显示筛选结果
+        function showResults(result) {
+            // 更新统计数据
+            $('#total-count').text(result.total_count);
+            $('#total-good').text(result.sums['良品数(kg)'] || 0);
+            $('#total-scrap').text(result.sums['报废数(kg)'] || 0);
+            
+            // 更新分组汇总表格
+            updateGroupTable(result.group_sums || []);
+            
+            // 显示结果区域
+            $('#result-section').show();
+        }
+        
+        // 更新分组汇总表格
+        function updateGroupTable(data) {
+            const groupHeader = $('#group-header');
+            const groupBody = $('#group-body');
+            
+            groupHeader.empty();
+            groupBody.empty();
+            
+            if (data.length > 0) {
+                // 创建表头
+                const headers = Object.keys(data[0]);
+                const theadRow = $('<tr></tr>');
+                
+                headers.forEach(header => {
+                    theadRow.append($('<th></th>').text(header));
+                });
+                
+                groupHeader.append(theadRow);
+                
+                // 创建表体
+                data.forEach(row => {
+                    const tbodyRow = $('<tr></tr>');
+                    
+                    headers.forEach(header => {
+                        const value = row[header] || '';
+                        // 如果是数值类型，添加千分位格式化
+                        if (typeof value === 'number') {
+                            tbodyRow.append($('<td></td>').text(value.toLocaleString('zh-CN', {minimumFractionDigits: 2, maximumFractionDigits: 2})));
+                        } else {
+                            tbodyRow.append($('<td></td>').text(value));
+                        }
+                    });
+                    
+                    groupBody.append(tbodyRow);
+                });
+            } else {
+                // 没有数据时显示提示
+                const emptyRow = $('<tr></tr>');
+                emptyRow.append($('<td colspan="5" class="text-center"></td>').text('暂无数据'));
+                groupBody.append(emptyRow);
+            }
+        }
+        
+        // 导出Excel
+        $('#export-excel-btn').click(function() {
+            if (lastFilterResult) {
+                exportToExcel();
+            } else {
+                showError('没有可导出的数据');
+            }
+        });
+        
+        // 导出CSV
+        $('#export-csv-btn').click(function() {
+            if (lastFilterResult) {
+                exportToCSV();
+            } else {
+                showError('没有可导出的数据');
+            }
+        });
+        
+        // 导出到Excel (前端简单实现)
+        function exportToExcel() {
+            // 这里使用简单的方式，实际项目中可以考虑使用更专业的库
+            const data = lastFilterResult.group_sums || [];
+            if (data.length === 0) return;
+            
+            let csvContent = convertToCSV(data);
+            const blob = new Blob([`\uFEFF${csvContent}`], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.setAttribute('href', url);
+            link.setAttribute('download', `汇总结果_${new Date().toISOString().slice(0, 10)}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+        
+        // 导出到CSV
+        function exportToCSV() {
+            const data = lastFilterResult.group_sums || [];
+            if (data.length === 0) return;
+            
+            let csvContent = convertToCSV(data);
+            const blob = new Blob([`\uFEFF${csvContent}`], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.setAttribute('href', url);
+            link.setAttribute('download', `汇总结果_${new Date().toISOString().slice(0, 10)}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+        
+        // 转换数据为CSV格式
+        function convertToCSV(data) {
+            if (data.length === 0) return '';
+            
+            const headers = Object.keys(data[0]);
+            let csv = headers.join(',') + '\n';
+            
+            data.forEach(row => {
+                const values = headers.map(header => {
+                    let value = row[header] || '';
+                    // 如果值包含逗号、引号或换行符，需要用引号包围
+                    if (typeof value === 'string' && (value.includes(',') || value.includes('"') || value.includes('\n'))) {
+                        value = '"' + value.replace(/"/g, '""') + '"';
+                    }
+                    return value;
+                });
+                csv += values.join(',') + '\n';
+            });
+            
+            return csv;
+        }
+        
+        // 显示加载遮罩
+        function showLoading() {
+            $('#loading-overlay').show();
+        }
+        
+        // 隐藏加载遮罩
+        function hideLoading() {
+            $('#loading-overlay').hide();
+        }
+        
+        // 显示成功消息
+        function showSuccess(message) {
+            toastr.success(message);
+        }
+        
+        // 显示错误消息
+        function showError(message) {
+            toastr.error(message);
+        }
+    });
+</script>
+
+<!-- 引入toastr用于消息提示 -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+<script>
+    // 配置toastr
+    toastr.options = {
+        "closeButton": true,
+        "debug": false,
+        "newestOnTop": true,
+        "progressBar": true,
+        "positionClass": "toast-top-right",
+        "preventDuplicates": false,
+        "onclick": null,
+        "showDuration": "300",
+        "hideDuration": "1000",
+        "timeOut": "5000",
+        "extendedTimeOut": "1000",
+        "showEasing": "swing",
+        "hideEasing": "linear",
+        "showMethod": "fadeIn",
+        "hideMethod": "fadeOut"
+    };
+</script>
+{% endblock %}

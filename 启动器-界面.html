@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AlgerMusicPlayer 启动器</title>
+  <style>
+    body {
+      font-family: 'Microsoft YaHei', Arial, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      margin: 0;
+      padding: 20px;
+      color: white;
+      text-align: center;
+    }
+    
+    .container {
+      max-width: 500px;
+      margin: 0 auto;
+      padding: 30px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 15px;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    }
+    
+    h1 {
+      margin-bottom: 30px;
+      font-size: 28px;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    }
+    
+    .button-group {
+      margin-bottom: 30px;
+    }
+    
+    button {
+      background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+      border: none;
+      color: white;
+      padding: 12px 24px;
+      margin: 10px;
+      border-radius: 25px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    }
+    
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+    }
+    
+    button:active {
+      transform: translateY(0);
+    }
+    
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+    
+    .search-container {
+      margin-bottom: 20px;
+    }
+    
+    input[type="text"] {
+      padding: 10px 15px;
+      border: none;
+      border-radius: 20px;
+      width: 250px;
+      margin-right: 10px;
+      font-size: 14px;
+      outline: none;
+    }
+    
+    .status-box {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      padding: 15px;
+      max-height: 150px;
+      overflow-y: auto;
+      text-align: left;
+      font-size: 14px;
+      font-family: monospace;
+    }
+    
+    .status-item {
+      margin-bottom: 5px;
+      padding: 5px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .status-item:last-child {
+      border-bottom: none;
+    }
+    
+    .status-running {
+      background: rgba(76, 175, 80, 0.2);
+    }
+    
+    .status-error {
+      background: rgba(244, 67, 54, 0.2);
+    }
+    
+    .footer {
+      margin-top: 20px;
+      font-size: 12px;
+      opacity: 0.8;
+    }
+    
+    .tips {
+      font-size: 14px;
+      margin-bottom: 20px;
+      opacity: 0.9;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🎵 AlgerMusicPlayer 启动器</h1>
+    
+    <div class="tips">
+      选择要运行的程序或下载音乐
+    </div>
+    
+    <div class="button-group">
+      <button id="runMusicPlayer" class="main-button">启动音乐播放器</button>
+      <button id="openDownloads" class="main-button">打开下载文件夹</button>
+    </div>
+    
+    <div class="search-container">
+      <input type="text" id="searchInput" placeholder="输入歌曲名称搜索（如：周杰伦 稻香）" />
+      <button id="searchMusic">搜索并下载</button>
+    </div>
+    
+    <div class="status-box" id="statusBox">
+      <div class="status-item">就绪，等待命令...</div>
+    </div>
+    
+    <div class="footer">
+      <p>© 2024 AlgerMusicPlayer 启动器 | 运行状态监控</p>
+    </div>
+  </div>
+
+  <script>
+    const { ipcRenderer } = require('electron');
+    const runMusicPlayerBtn = document.getElementById('runMusicPlayer');
+    const searchMusicBtn = document.getElementById('searchMusic');
+    const searchInput = document.getElementById('searchInput');
+    const openDownloadsBtn = document.getElementById('openDownloads');
+    const statusBox = document.getElementById('statusBox');
+    
+    let musicPlayerRunning = false;
+    
+    // 添加状态信息
+    function addStatus(message, type = 'info') {
+      const statusItem = document.createElement('div');
+      statusItem.className = `status-item status-${type}`;
+      statusItem.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+      statusBox.appendChild(statusItem);
+      statusBox.scrollTop = statusBox.scrollHeight;
+      
+      // 限制状态消息数量
+      if (statusBox.children.length > 20) {
+        statusBox.removeChild(statusBox.firstChild);
+      }
+    }
+    
+    // 启动音乐播放器
+    runMusicPlayerBtn.addEventListener('click', () => {
+      if (musicPlayerRunning) {
+        addStatus('音乐播放器已经在运行中...', 'error');
+        return;
+      }
+      
+      addStatus('正在启动 AlgerMusicPlayer...');
+      runMusicPlayerBtn.disabled = true;
+      
+      ipcRenderer.send('run-algermusicplayer');
+    });
+    
+    // 搜索并下载音乐
+    searchMusicBtn.addEventListener('click', () => {
+      const searchText = searchInput.value.trim() || '周杰伦 稻香';
+      addStatus(`正在搜索音乐: ${searchText}...`);
+      searchMusicBtn.disabled = true;
+      
+      ipcRenderer.send('run-music-crawler', searchText);
+      
+      // 3秒后自动恢复按钮状态
+      setTimeout(() => {
+        searchMusicBtn.disabled = false;
+      }, 3000);
+    });
+    
+    // 打开下载文件夹
+    openDownloadsBtn.addEventListener('click', () => {
+      addStatus('正在打开下载文件夹...');
+      ipcRenderer.send('open-downloads-folder');
+    });
+    
+    // 监听进程启动
+    ipcRenderer.on('process-started', (event, name) => {
+      if (name === 'AlgerMusicPlayer') {
+        musicPlayerRunning = true;
+        addStatus('AlgerMusicPlayer 已启动！请检查任务栏或Alt+Tab查看窗口', 'running');
+        
+        // 2秒后恢复按钮状态
+        setTimeout(() => {
+          runMusicPlayerBtn.disabled = false;
+        }, 2000);
+      } else if (name === 'MusicCrawler') {
+        addStatus('音乐爬虫已启动，正在搜索和下载...', 'running');
+      }
+    });
+    
+    // 监听进程输出
+    ipcRenderer.on('process-output', (event, output) => {
+      addStatus(output);
+    });
+    
+    // 监听进程退出
+    ipcRenderer.on('process-exit', (event, data) => {
+      addStatus(`${data.name} 进程已结束，退出码: ${data.code}`);
+      if (data.name === 'AlgerMusicPlayer') {
+        musicPlayerRunning = false;
+        runMusicPlayerBtn.disabled = false;
+      }
+    });
+    
+    // 监听进程错误
+    ipcRenderer.on('process-error', (event, error) => {
+      addStatus(error, 'error');
+      runMusicPlayerBtn.disabled = false;
+      searchMusicBtn.disabled = false;
+    });
+    
+    // 检查运行状态
+    ipcRenderer.send('check-running');
+    ipcRenderer.on('running-status', (event, status) => {
+      musicPlayerRunning = status.algermusicplayer;
+      if (musicPlayerRunning) {
+        addStatus('检测到音乐播放器正在运行中', 'running');
+      }
+    });
+  </script>
+</body>
+</html>

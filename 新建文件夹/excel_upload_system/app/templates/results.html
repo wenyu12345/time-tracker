@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>分析结果 - Excel上传分析汇总工具</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <style>
+        .summary-section {
+            margin: 20px 0;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+        }
+        .form-group {            margin-bottom: 15px;        }        .column-select {            display: grid;            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));            gap: 6px;            margin: 10px 0;            max-height: 300px;            overflow-y: auto;        }        .column-select label {            display: flex;            align-items: center;            padding: 4px 8px;            background-color: #f8f9fa;            border-radius: 4px;            font-size: 12px;            min-height: 28px;            white-space: nowrap;            overflow: hidden;            text-overflow: ellipsis;            cursor: pointer;            transition: all 0.2s ease;        }        .column-select label:hover {            background-color: #e9ecef;        }        .column-select input[type="checkbox"] {            margin-right: 6px;            transform: scale(0.9);        }        .collapsed-column {            display: none;        }        .column-toggle {            margin: 10px 0;            text-align: center;        }        .btn-sm {            padding: 4px 10px;            font-size: 12px;        }
+        .summary-result {
+            margin-top: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .detail-btn {
+            background-color: #17a2b8;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .detail-btn:hover {
+            background-color: #138496;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        .modal-content {
+            background-color: white;
+            margin: 10% auto;
+            padding: 20px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 1200px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .close-btn {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .close-btn:hover {
+            color: black;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>分析结果</h1>
+        
+        <div class="file-info">
+            <h3>文件信息</h3>
+            <p><strong>文件名:</strong> {{ filename }}</p>
+        </div>
+        
+        <div class="preview-section">
+            <h2>数据预览</h2>
+            <p>前10行数据：</p>
+            <div class="preview-container">
+                {{ preview|safe }}
+            </div>
+        </div>
+        
+        <!-- 新增汇总功能部分 -->
+        <div class="summary-section">
+            <h2>按表头汇总求和</h2>
+            <form id="summary-form" method="post" action="{{ url_for('aggregate_data') }}">
+                <input type="hidden" name="filename" value="{{ filename }}">
+                
+                <div class="form-group">
+                    <label for="group-columns">选择分组列（用于汇总的表头）：</label>
+                    <div class="column-select group-columns-select">
+                        {% for col in columns %}
+                            <label class="{% if loop.index > 20 %}collapsed-column{% endif %}" data-index="{{ loop.index }}">
+                                <input type="checkbox" name="group_columns" value="{{ col }}"> {{ col }}
+                            </label>
+                        {% endfor %}
+                    </div>
+                    {% if columns|length > 20 %}
+                    <div class="column-toggle">
+                        <button type="button" class="btn btn-sm btn-secondary toggle-group-columns">
+                            显示全部 {{ columns|length - 20 }} 列
+                        </button>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <label for="value-columns">选择要求和的数值列：</label>
+                    <div class="column-select value-columns-select">
+                        {% for col in columns %}
+                            <label class="{% if loop.index > 20 %}collapsed-column{% endif %}" data-index="{{ loop.index }}">
+                                <input type="checkbox" name="value_columns" value="{{ col }}"> {{ col }}
+                            </label>
+                        {% endfor %}
+                    </div>
+                    {% if columns|length > 20 %}
+                    <div class="column-toggle">
+                        <button type="button" class="btn btn-sm btn-secondary toggle-value-columns">
+                            显示全部 {{ columns|length - 20 }} 列
+                        </button>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <button type="submit" class="btn">生成汇总</button>
+            </form>
+        </div>
+        
+        <!-- 汇总结果区域 -->
+        {% if summary_result %}
+        <div class="summary-section">
+            <h2>汇总结果</h2>
+            <div class="summary-result">
+                {{ summary_result|safe }}
+            </div>
+        </div>
+        {% endif %}
+        
+        <div class="stats-container">
+            <h2>统计摘要</h2>
+            {{ stats|safe }}
+        </div>
+        
+        <div class="charts-container">
+            <h2>数据可视化</h2>
+            {% if charts %}
+                {% for chart in charts %}
+                <div class="chart-item">
+                    <h3>{{ chart.title }}</h3>
+                    <img src="data:image/png;base64,{{ chart.data }}" alt="{{ chart.title }}">
+                </div>
+                {% endfor %}
+            {% else %}
+                <p>没有足够的数值列生成图表</p>
+            {% endif %}
+        </div>
+        
+        <div class="download-section">
+            <h2>下载汇总结果</h2>
+            <p>汇总文件包含：数据预览、统计摘要和数据质量报告</p>
+            <a href="{{ url_for('download_file', filename=aggregated_file) }}" class="btn">
+                下载汇总Excel文件
+            </a>
+        </div>
+        
+        <div class="actions-section">
+            <a href="{{ url_for('index') }}" class="btn btn-secondary">
+                分析新文件
+            </a>
+        </div>
+    </div>
+    
+    <!-- 明细查看模态框 -->
+    <div id="detail-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn">&times;</span>
+            <h2 id="modal-title">明细数据</h2>
+            <div id="modal-content">
+                <!-- 明细内容将通过JavaScript动态加载 -->
+            </div>
+        </div>
+    </div>
+    
+    <script src="{{ url_for('static', filename='js/scripts.js') }}"></script>
+    <script>
+        // 明细查看功能
+        document.addEventListener('DOMContentLoaded', function() {
+            const modal = document.getElementById('detail-modal');
+            const closeBtn = document.getElementsByClassName('close-btn')[0];
+            const modalContent = document.getElementById('modal-content');
+            const modalTitle = document.getElementById('modal-title');
+            
+            // 点击关闭按钮
+            closeBtn.onclick = function() {
+                modal.style.display = 'none';
+            }
+            
+            // 点击模态框外部关闭
+            window.onclick = function(event) {
+                if (event.target == modal) {
+                    modal.style.display = 'none';
+                }
+            }
+            
+            // 列折叠/展开功能
+            function initColumnToggle(containerClass, buttonClass) {
+                const toggleButton = document.querySelector(buttonClass);
+                const collapsedColumns = document.querySelectorAll(`${containerClass} .collapsed-column`);
+                
+                if (toggleButton && collapsedColumns.length > 0) {
+                    let isExpanded = false;
+                    
+                    toggleButton.addEventListener('click', function() {
+                        isExpanded = !isExpanded;
+                        
+                        if (collapsedColumns && collapsedColumns.length > 0) {
+                            collapsedColumns.forEach(column => {
+                                column.style.display = isExpanded ? 'flex' : 'none';
+                            });
+                        }
+                        
+                        if (isExpanded) {
+                            toggleButton.textContent = '折叠多余列';
+                        } else {
+                            toggleButton.textContent = `显示全部 ${collapsedColumns.length} 列`;
+                        }
+                    });
+                }
+            }
+            
+            // 初始化分组列折叠功能
+            initColumnToggle('.group-columns-select', '.toggle-group-columns');
+            
+            // 初始化数值列折叠功能
+            initColumnToggle('.value-columns-select', '.toggle-value-columns');
+            
+            // 处理明细按钮点击事件（这些按钮将在汇总结果生成后动态添加）
+            document.addEventListener('click', function(event) {
+                if (event.target.classList.contains('detail-btn')) {
+                    const groupValues = event.target.getAttribute('data-group');
+                    const filename = '{{ filename }}';
+                    const allColumns = {{ columns|tojson }};
+                    
+                    // 显示加载状态
+                    modalTitle.textContent = '加载明细数据...';
+                    
+                    // 首先显示列选择界面
+                    let columnSelectionHtml = `
+                        <div class="detail-column-selection">
+                            <h3>选择要显示的明细列：</h3>
+                            <div class="column-select detail-columns-select" style="max-height: 300px; overflow-y: auto; margin-bottom: 15px;">
+                    `;
+                    
+                    // 添加所有列的复选框
+                    if (allColumns && Array.isArray(allColumns)) {
+                        allColumns.forEach((col, index) => {
+                            // 默认选中前10列，方便用户快速查看
+                            const isChecked = index < 10 ? 'checked' : '';
+                            const isCollapsed = index >= 20 ? 'collapsed-column' : '';
+                            columnSelectionHtml += `<label class="${isCollapsed}" data-index="${index + 1}">
+                                <input type="checkbox" name="detail_columns" value="${col}" ${isChecked}> ${col}
+                            </label>`;
+                        });
+                    }
+                    
+                    columnSelectionHtml += `
+                            </div>
+                            ${allColumns.length > 20 ? `
+                            <div class="column-toggle">
+                                <button type="button" id="toggle-detail-columns" class="btn btn-sm btn-secondary">
+                                    显示全部 ${allColumns.length - 20} 列
+                                </button>
+                            </div>
+                            ` : ''}
+                            <div style="display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap;">
+                                <button id="apply-columns-btn" class="btn">应用选择</button>
+                                <button id="select-all-btn" class="btn btn-secondary">全选</button>
+                                <button id="select-none-btn" class="btn btn-secondary">全不选</button>
+                            </div>
+                        </div>
+                    `;
+                    
+                    modalContent.innerHTML = columnSelectionHtml;
+                    modal.style.display = 'block';
+                    
+                    // 绑定列选择相关按钮事件
+                    
+                    // 明细列折叠/展开功能
+                    const toggleDetailColumnsBtn = document.getElementById('toggle-detail-columns');
+                    const collapsedDetailColumns = document.querySelectorAll('.detail-columns-select .collapsed-column');
+                    
+                    if (toggleDetailColumnsBtn && collapsedDetailColumns.length > 0) {
+                        let isDetailExpanded = false;
+                        
+                        toggleDetailColumnsBtn.addEventListener('click', function() {
+                            isDetailExpanded = !isDetailExpanded;
+                            
+                            collapsedDetailColumns.forEach(column => {
+                                column.style.display = isDetailExpanded ? 'flex' : 'none';
+                            });
+                            
+                            if (isDetailExpanded) {
+                                toggleDetailColumnsBtn.textContent = '折叠多余列';
+                            } else {
+                                toggleDetailColumnsBtn.textContent = `显示全部 ${collapsedDetailColumns.length} 列`;
+                            }
+                        });
+                    }
+                    
+                    // 全选/全不选功能
+                    document.getElementById('select-all-btn').onclick = function() {
+                        document.querySelectorAll('input[name="detail_columns"]').forEach(checkbox => {
+                            checkbox.checked = true;
+                        });
+                    };
+                    
+                    document.getElementById('select-none-btn').onclick = function() {
+                        document.querySelectorAll('input[name="detail_columns"]').forEach(checkbox => {
+                            checkbox.checked = false;
+                        });
+                    };
+                    
+                    // 应用列选择并加载数据
+                    document.getElementById('apply-columns-btn').onclick = function() {
+                        const selectedColumns = Array.from(document.querySelectorAll('input[name="detail_columns"]:checked'))
+                            .map(checkbox => checkbox.value);
+                        
+                        if (selectedColumns.length === 0) {
+                            alert('请至少选择一列');
+                            return;
+                        }
+                        
+                        // 显示加载状态
+                        modalTitle.textContent = '加载中...';
+                        modalContent.innerHTML = '<p>正在加载明细数据...</p>';
+                        
+                        // 发送请求获取明细数据
+                        const params = new URLSearchParams();
+                        params.append('filename', filename);
+                        params.append('group_values', groupValues);
+                        // 逐个添加选中的列
+                        selectedColumns.forEach(col => {
+                            params.append('detail_columns', col);
+                        });
+                        
+                        fetch('{{ url_for('get_details') }}', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/x-www-form-urlencoded'
+                            },
+                            body: params
+                        })
+                        .then(response => response.text())
+                        .then(html => {
+                            modalTitle.textContent = `明细数据 - ${groupValues}`;
+                            // 添加排序和重新选择列的按钮
+                            modalContent.innerHTML = `
+                                <div style="margin-bottom: 15px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                                    <button id="reselect-columns-btn" class="btn btn-secondary">重新选择列</button>
+                                    
+                                    <!-- 多条件排序控制 -->
+                                    <div class="sort-controls" style="margin-left: 20px; padding: 10px; background-color: #f8f9fa; border-radius: 4px;">
+                                        <div style="margin-bottom: 10px; font-weight: bold;">多条件排序</div>
+                                        <div id="sort-conditions">
+                                            <div class="sort-condition" style="display: flex; align-items: center; margin-bottom: 5px;">
+                                                <select class="sort-column form-control-sm" style="width: 150px; margin-right: 5px;">
+                                                    <option value="">选择字段</option>
+                                                </select>
+                                                <select class="sort-direction form-control-sm" style="width: 80px; margin-right: 5px;">
+                                                    <option value="asc">升序</option>
+                                                    <option value="desc">降序</option>
+                                                </select>
+                                                <button class="remove-sort btn btn-danger btn-sm" disabled>
+                                                    <span>×</span>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div style="margin-top: 5px;">
+                                            <button id="add-sort-condition" class="btn btn-success btn-sm">添加条件</button>
+                                            <button id="apply-sort-btn" class="btn btn-primary btn-sm" style="margin-left: 5px;">应用排序</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                ${html}
+                            `;
+                            
+                            // 填充所有排序下拉框
+                                function populateSortColumns() {
+                                    // 获取当前表格中的列
+                                    const table = modalContent.querySelector('table');
+                                    if (table && table.rows.length > 0) {
+                                        const headerCells = table.rows[0].cells;
+                                        const columns = [];
+                                        
+                                        // 收集所有列名
+                                        for (let i = 0; i < headerCells.length; i++) {
+                                            const colName = headerCells[i].textContent.trim();
+                                            columns.push(colName);
+                                        }
+                                        
+                                        // 为所有排序下拉框添加选项
+                                        document.querySelectorAll('.sort-column').forEach(select => {
+                                            // 清空现有选项（保留第一项）
+                                            while (select.options.length > 1) {
+                                                select.remove(1);
+                                            }
+                                            
+                                            // 添加列选项
+                                            if (columns && Array.isArray(columns)) {
+                                                columns.forEach(colName => {
+                                                    const option = document.createElement('option');
+                                                    option.value = colName;
+                                                    option.textContent = colName;
+                                                    select.appendChild(option);
+                                                });
+                                            }
+                                        });
+                                    }
+                                }
+                                
+                                // 添加新的排序条件
+                                function addSortCondition() {
+                                    const conditionsContainer = document.getElementById('sort-conditions');
+                                    const newCondition = document.createElement('div');
+                                    newCondition.className = 'sort-condition';
+                                    newCondition.style.display = 'flex';
+                                    newCondition.style.alignItems = 'center';
+                                    newCondition.style.marginBottom = '5px';
+                                    
+                                    newCondition.innerHTML = `
+                                        <select class="sort-column form-control-sm" style="width: 150px; margin-right: 5px;">
+                                            <option value="">选择字段</option>
+                                        </select>
+                                        <select class="sort-direction form-control-sm" style="width: 80px; margin-right: 5px;">
+                                            <option value="asc">升序</option>
+                                            <option value="desc">降序</option>
+                                        </select>
+                                        <button class="remove-sort btn btn-danger btn-sm">
+                                            <span>×</span>
+                                        </button>
+                                    `;
+                                    
+                                    conditionsContainer.appendChild(newCondition);
+                                    
+                                    // 填充列选项
+                                    populateSortColumns();
+                                    
+                                    // 绑定删除事件
+                                    newCondition.querySelector('.remove-sort').onclick = function() {
+                                        if (document.querySelectorAll('.sort-condition').length > 1) {
+                                            conditionsContainer.removeChild(newCondition);
+                                            updateRemoveButtons();
+                                        }
+                                    };
+                                    
+                                    // 更新删除按钮状态
+                                    updateRemoveButtons();
+                                }
+                                
+                                // 更新删除按钮状态
+                                function updateRemoveButtons() {
+                                    const conditionCount = document.querySelectorAll('.sort-condition').length;
+                                    document.querySelectorAll('.remove-sort').forEach(btn => {
+                                        btn.disabled = conditionCount <= 1;
+                                    });
+                                }
+                                
+                                // 应用多条件排序
+                                function applyMultiSort() {
+                                    const sortColumns = [];
+                                    const sortDirections = [];
+                                    let hasValidSort = false;
+                                    
+                                    // 收集排序条件
+                                    const sortConditions = document.querySelectorAll('.sort-condition');
+                                    if (sortConditions && sortConditions.length > 0) {
+                                        sortConditions.forEach(condition => {
+                                            const column = condition.querySelector('.sort-column').value;
+                                            const direction = condition.querySelector('.sort-direction').value;
+                                             
+                                            if (column) {
+                                                sortColumns.push(column);
+                                                sortDirections.push(direction);
+                                                hasValidSort = true;
+                                            }
+                                        });
+                                    }
+                                    
+                                    if (!hasValidSort) {
+                                        alert('请至少选择一个有效的排序列');
+                                        return;
+                                    }
+                                    
+                                    // 显示加载状态
+                                    modalContent.innerHTML = '<p>正在排序数据...</p>';
+                                    
+                                    // 重新请求数据，包含排序参数
+                                    const params = new URLSearchParams();
+                                    params.append('filename', filename);
+                                    params.append('group_values', groupValues);
+                                    // 添加选中的列
+                                    if (selectedColumns && Array.isArray(selectedColumns)) {
+                                        selectedColumns.forEach(col => {
+                                            params.append('detail_columns', col);
+                                        });
+                                    }
+                                    // 添加多条件排序参数
+                                    params.append('sort_columns', sortColumns.join(','));
+                                    params.append('sort_directions', sortDirections.join(','));
+                                    
+                                    fetch('{{ url_for('get_details') }}', {  
+                                        method: 'POST',
+                                        headers: {
+                                            'Content-Type': 'application/x-www-form-urlencoded'
+                                        },
+                                        body: params
+                                    })
+                                    .then(response => response.text())
+                                    .then(html => {
+                                        // 重新构建界面，保留排序控件
+                                        rebuildDetailView(html);
+                                    })
+                                    .catch(error => {
+                                        modalContent.innerHTML = `<p>排序失败: ${error}</p>`;
+                                    });
+                                }
+                                
+                                // 重新构建明细视图
+                                function rebuildDetailView(html) {
+                                    modalContent.innerHTML = `
+                                        <div style="margin-bottom: 15px; display: flex; gap: 10px; align-items: flex-start; flex-wrap: wrap;">
+                                            <button id="reselect-columns-btn" class="btn btn-secondary">重新选择列</button>
+                                              
+                                            <!-- 多条件排序控制 -->
+                                            <div class="sort-controls" style="margin-left: 20px; padding: 10px; background-color: #f8f9fa; border-radius: 4px;">
+                                                <div style="margin-bottom: 10px; font-weight: bold;">多条件排序</div>
+                                                <div id="sort-conditions">
+                                                    <div class="sort-condition" style="display: flex; align-items: center; margin-bottom: 5px;">
+                                                        <select class="sort-column form-control-sm" style="width: 150px; margin-right: 5px;">
+                                                            <option value="">选择字段</option>
+                                                        </select>
+                                                        <select class="sort-direction form-control-sm" style="width: 80px; margin-right: 5px;">
+                                                            <option value="asc">升序</option>
+                                                            <option value="desc">降序</option>
+                                                        </select>
+                                                        <button class="remove-sort btn btn-danger btn-sm" disabled>
+                                                            <span>×</span>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                                <div style="margin-top: 5px;">
+                                                    <button id="add-sort-condition" class="btn btn-success btn-sm">添加条件</button>
+                                                    <button id="apply-sort-btn" class="btn btn-primary btn-sm" style="margin-left: 5px;">应用排序</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        ${html}
+                                    `;
+                                    
+                                    // 填充排序列并绑定事件
+                                    populateSortColumns();
+                                    
+                                    // 绑定按钮事件
+                                    document.getElementById('add-sort-condition').onclick = addSortCondition;
+                                    document.getElementById('apply-sort-btn').onclick = applyMultiSort;
+                                    document.querySelectorAll('.remove-sort').forEach(btn => {
+                                        btn.onclick = function() {
+                                            if (document.querySelectorAll('.sort-condition').length > 1) {
+                                                this.closest('.sort-condition').remove();
+                                                updateRemoveButtons();
+                                            }
+                                        };
+                                    });
+                                    
+                                    // 重新绑定重新选择列按钮事件
+                                    document.getElementById('reselect-columns-btn').onclick = function() {
+                                        showColumnSelection();
+                                    };
+                                }
+                                
+                                // 填充排序列
+                                populateSortColumns();
+                                
+                                // 绑定多条件排序相关事件
+                                document.getElementById('add-sort-condition').onclick = addSortCondition;
+                                document.getElementById('apply-sort-btn').onclick = applyMultiSort;
+                                
+                                // 绑定删除按钮事件
+                                const removeButtons = document.querySelectorAll('.remove-sort');
+                                if (removeButtons && removeButtons.length > 0) {
+                                    removeButtons.forEach(btn => {
+                                        btn.onclick = function() {
+                                            if (document.querySelectorAll('.sort-condition').length > 1) {
+                                                this.closest('.sort-condition').remove();
+                                                updateRemoveButtons();
+                                            }
+                                        });
+                                    }
+                                }
+                                
+                                // 创建显示列选择界面的函数，方便复用
+                                function showColumnSelection() {
+                                    // 重新显示列选择界面
+                                    let columnSelectionHtml = `
+                                    <div class="detail-column-selection">
+                                        <h3>选择要显示的明细列：</h3>
+                                        <div class="column-select" style="max-height: 200px; overflow-y: auto; margin-bottom: 15px;">
+                                `;
+                                
+                                // 添加所有列的复选框
+                                if (allColumns && Array.isArray(allColumns)) {
+                                    allColumns.forEach(col => {
+                                        const isChecked = selectedColumns && Array.isArray(selectedColumns) && selectedColumns.includes(col) ? 'checked' : '';
+                                        columnSelectionHtml += `<label style="display: flex; align-items: center; margin-right: 15px; white-space: nowrap;">
+                                            <input type="checkbox" name="detail_columns" value="${col}" ${isChecked}> ${col}
+                                        </label>`;
+                                    });
+                                }
+                                
+                                columnSelectionHtml += `
+                                    </div>
+                                    <button id="apply-columns-btn" class="btn" style="margin-right: 10px;">应用选择</button>
+                                    <button id="select-all-btn" class="btn btn-secondary">全选</button>
+                                    <button id="select-none-btn" class="btn btn-secondary">全不选</button>
+                                </div>
+                                `;
+                                
+                                modalContent.innerHTML = columnSelectionHtml;
+                                
+                                // 重新绑定按钮事件
+                                document.getElementById('select-all-btn').onclick = function() {
+                                    document.querySelectorAll('input[name="detail_columns"]').forEach(checkbox => {
+                                        checkbox.checked = true;
+                                    });
+                                };
+                                
+                                document.getElementById('select-none-btn').onclick = function() {
+                                    document.querySelectorAll('input[name="detail_columns"]').forEach(checkbox => {
+                                        checkbox.checked = false;
+                                    });
+                                };
+                                
+                                document.getElementById('apply-columns-btn').onclick = function() {
+                                    // 获取选中的列
+                                    const checkboxes = document.querySelectorAll('input[name="detail_columns"]:checked');
+                                    selectedColumns = Array.from(checkboxes).map(cb => cb.value);
+                                    
+                                    if (selectedColumns.length === 0) {
+                                        alert('请至少选择一列');
+                                        return;
+                                    }
+                                    
+                                    // 显示加载状态
+                                    modalContent.innerHTML = '<p>正在加载明细数据...</p>';
+                                    
+                                    // 请求明细数据
+                                    const params = new URLSearchParams();
+                                    params.append('filename', filename);
+                                    params.append('group_values', groupValues);
+                                    // 确保selectedColumns是数组
+                                    if (selectedColumns && Array.isArray(selectedColumns)) {
+                                        selectedColumns.forEach(col => {
+                                            params.append('detail_columns', col);
+                                        });
+                                    }
+                                    
+                                    fetch('{{ url_for('get_details') }}', {
+                                        method: 'POST',
+                                        headers: {
+                                            'Content-Type': 'application/x-www-form-urlencoded'
+                                        },
+                                        body: params
+                                    })
+                                    .then(response => response.text())
+                                    .then(html => {
+                                        // 使用多条件排序控件重新构建界面
+                                                rebuildDetailView(html);
+                                    })
+                                    .catch(error => {
+                                        modalContent.innerHTML = `<p>加载失败: ${error}</p>`;
+                                    });
+                                };
+                            };
+                        })
+                        .catch(error => {
+                            modalContent.innerHTML = `<p>加载失败: ${error}</p>`;
+                        });
+                    };
+                }
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,5 @@
+{
+  "honglian_title_template": "@小艺 红莲模式明细",
+  "honglian_header_template": "**文件名:** {file_name}\n",
+  "honglian_footer_template": "\n请核对数据"
+}

@@ -1,0 +1,15 @@
+flask==3.0.0
+pandas==2.1.4
+openpyxl==3.1.2
+matplotlib==3.8.2
+seaborn==0.13.0
+chardet==5.2.0
+python-dotenv==1.0.0
+# 缓存依赖
+redis==5.0.1
+# 生产环境依赖
+gunicorn==21.2.0
+supervisor==4.2.5
+gevent==23.9.1
+# Nginx配置依赖（可选，非Python包，手动安装）
+# nginx==1.24.0

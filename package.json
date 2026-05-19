@@ -1,0 +1,25 @@
+{
+  "name": "alger-music-launcher",
+  "version": "1.0.0",
+  "description": "AlgerMusicPlayer启动器和音乐爬虫",
+  "main": "启动器-GUI.js",
+  "scripts": {
+    "start": "electron .",
+    "launcher": "electron .",
+    "crawler": "node simple_music_crawler.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "music",
+    "player",
+    "launcher",
+    "crawler",
+    "electron"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^1.6.2",
+    "electron": "^28.2.0"
+  }
+}

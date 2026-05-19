@@ -1,0 +1,26 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./data.db"
+}
+
+// 对话历史模型
+model Message {
+  id        Int      @id @default(autoincrement())
+  role      String   // system, user, assistant
+  content   String
+  timestamp DateTime @default(now())
+}
+
+// 设备配置模型
+model Device {
+  id        Int      @id @default(autoincrement())
+  did       String   @unique
+  name      String
+  type      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+}

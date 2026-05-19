@@ -1,0 +1,342 @@
+{% extends 'docs_base.html' %}
+
+{% block title %}技术协议 - Excel上传分析汇总工具{% endblock %}
+
+{% block content %}
+<h2>技术协议</h2>
+
+<div class="protocol-overview">
+    <p>本文档详细定义了Excel上传分析汇总工具的技术规范、数据处理协议、接口标准和集成指南，为系统集成、技术对接和二次开发提供全面的技术参考。</p>
+</div>
+
+<h3>1. 技术规范</h3>
+
+<h4>1.1 后端技术栈要求</h4>
+<div class="technology-stack">
+    <table class="tech-specs-table">
+        <tr>
+            <th>技术/组件</th>
+            <th>版本要求</th>
+            <th>用途说明</th>
+        </tr>
+        <tr>
+            <td><strong>Python</strong></td>
+            <td>3.8 或更高版本</td>
+            <td>运行环境</td>
+        </tr>
+        <tr>
+            <td><strong>Flask</strong></td>
+            <td>2.0.0 或更高版本</td>
+            <td>Web应用框架</td>
+        </tr>
+        <tr>
+            <td><strong>Pandas</strong></td>
+            <td>1.3.0 或更高版本</td>
+            <td>数据处理与分析</td>
+        </tr>
+        <tr>
+            <td><strong>NumPy</strong></td>
+            <td>1.20.0 或更高版本</td>
+            <td>数值计算支持</td>
+        </tr>
+        <tr>
+            <td><strong>Matplotlib</strong></td>
+            <td>3.4.0 或更高版本</td>
+            <td>数据可视化</td>
+        </tr>
+        <tr>
+            <td><strong>Seaborn</strong></td>
+            <td>0.11.0 或更高版本</td>
+            <td>高级统计图表</td>
+        </tr>
+        <tr>
+            <td><strong>OpenPyXL</strong></td>
+            <td>3.0.0 或更高版本</td>
+            <td>Excel文件处理</td>
+        </tr>
+        <tr>
+            <td><strong>XlsxWriter</strong></td>
+            <td>3.0.0 或更高版本</td>
+            <td>Excel文件生成</td>
+        </tr>
+    </table>
+</div>
+
+<h4>1.2 前端技术栈要求</h4>
+<ul>
+    <li><strong>HTML5</strong>：页面结构与语义</li>
+    <li><strong>CSS3</strong>：样式与响应式设计</li>
+    <li><strong>JavaScript (ES6+)</strong>：交互逻辑与数据处理</li>
+    <li><strong>Jinja2</strong>：服务端模板渲染</li>
+    <li><strong>Bootstrap</strong>：响应式UI组件库（可选）</li>
+</ul>
+
+<h3>2. 数据处理协议</h3>
+
+<h4>2.1 支持的文件格式与编码</h4>
+<ul>
+    <li><strong>Excel文件</strong>：
+        <ul>
+            <li>.xlsx - Excel Open XML格式</li>
+            <li>.xls - Excel 97-2003格式</li>
+        </ul>
+    </li>
+    <li><strong>CSV文件</strong>：
+        <ul>
+            <li>.csv - 逗号分隔值格式</li>
+            <li><strong>编码要求</strong>：UTF-8（默认），支持检测其他常见编码</li>
+            <li><strong>分隔符</strong>：默认逗号(,)，支持自动检测分号(;)等其他分隔符</li>
+        </ul>
+    </li>
+</ul>
+
+<h4>2.2 文件处理限制</h4>
+<ul>
+    <li><strong>最大文件大小</strong>：50MB（可配置）</li>
+    <li><strong>建议数据量</strong>：不超过100,000行 × 50列</li>
+    <li><strong>超时设置</strong>：文件处理超时时间为30秒</li>
+</ul>
+
+<h4>2.3 数据类型识别规则</h4>
+<div class="data-type-rules">
+    <h5>2.3.1 自动识别流程</h5>
+    <ol>
+        <li>首先尝试将数据解析为日期时间类型</li>
+        <li>如失败，尝试解析为数值类型（整数或浮点数）</li>
+        <li>如仍失败，则作为文本类型处理</li>
+    </ol>
+    
+    <h5>2.3.2 数值类型处理</h5>
+    <ul>
+        <li>支持识别包含千位分隔符的数值（如 "1,234.56"）</li>
+        <li>支持识别包含货币符号的数值（如 "$123.45"、"￥123.45"）</li>
+        <li>支持百分比格式转换（如 "25%" → 0.25）</li>
+    </ul>
+    
+    <h5>2.3.3 日期类型支持</h5>
+    <ul>
+        <li>ISO标准格式：YYYY-MM-DD, YYYY-MM-DDTHH:MM:SS</li>
+        <li>常用日期格式：YYYY/MM/DD, DD/MM/YYYY, MM/DD/YYYY</li>
+        <li>中文日期格式：YYYY年MM月DD日</li>
+    </ul>
+</div>
+
+<h4>2.4 数据清洗与预处理规则</h4>
+<ul>
+    <li><strong>列名处理</strong>：
+        <ul>
+            <li>移除列名前后的多余空格</li>
+            <li>替换重复列名（添加数字后缀）</li>
+            <li>将空列名替换为 "Unnamed:X" 格式</li>
+        </ul>
+    </li>
+    <li><strong>缺失值处理</strong>：
+        <ul>
+            <li>识别空字符串、"NA"、"N/A"、"NaN"等为缺失值</li>
+            <li>在统计分析中自动排除缺失值</li>
+        </ul>
+    </li>
+    <li><strong>数据标准化</strong>：
+        <ul>
+            <li>尝试将可转换的文本转换为数值类型</li>
+            <li>统一日期格式为标准ISO格式（YYYY-MM-DD）</li>
+        </ul>
+    </li>
+</ul>
+
+<h3>3. 统计分析规范</h3>
+
+<h4>3.1 统计指标定义</h4>
+
+<h5>3.1.1 数值型数据统计指标</h5>
+<ul>
+    <li><strong>基本统计</strong>：均值（mean）、中位数（median）、众数（mode）</li>
+    <li><strong>离散度</strong>：标准差（std）、方差（var）、四分位距（IQR）</li>
+    <li><strong>范围</strong>：最小值（min）、最大值（max）、全距（range）</li>
+    <li><strong>分布</strong>：第25/50/75百分位数（percentile）</li>
+    <li><strong>总和统计</strong>：总和（sum）、计数（count）、非空计数（non-null count）</li>
+</ul>
+
+<h5>3.1.2 文本型数据统计指标</h5>
+<ul>
+    <li>唯一值数量（unique count）</li>
+    <li>最常见值（top value）及其出现频率</li>
+    <li>缺失值数量（missing count）</li>
+    <li>文本长度统计（最小/最大/平均长度）</li>
+</ul>
+
+<h5>3.1.3 日期型数据统计指标</h5>
+<ul>
+    <li>最早日期（earliest）</li>
+    <li>最晚日期（latest）</li>
+    <li>日期范围（range）</li>
+    <li>记录天数（days covered）</li>
+</ul>
+
+<h4>3.2 数据可视化规范</h4>
+
+<h5>3.2.1 图表类型及适用场景</h5>
+<table class="chart-specs-table">
+    <tr>
+        <th>图表类型</th>
+        <th>适用场景</th>
+        <th>数据要求</th>
+    </tr>
+    <tr>
+        <td><strong>柱状图</strong></td>
+        <td>分类数据比较、频次分布</td>
+        <td>分类字段 + 数值字段</td>
+    </tr>
+    <tr>
+        <td><strong>折线图</strong></td>
+        <td>时间序列趋势、连续数据变化</td>
+        <td>时间/序列字段 + 数值字段</td>
+    </tr>
+    <tr>
+        <td><strong>散点图</strong></td>
+        <td>两个数值变量的相关性分析</td>
+        <td>两个数值字段</td>
+    </tr>
+    <tr>
+        <td><strong>热力图</strong></td>
+        <td>相关性矩阵可视化</td>
+        <td>多个数值字段</td>
+    </tr>
+    <tr>
+        <td><strong>箱线图</strong></td>
+        <td>数据分布、异常值检测</td>
+        <td>分类字段 + 数值字段</td>
+    </tr>
+    <tr>
+        <td><strong>饼图</strong></td>
+        <td>部分与整体的占比关系</td>
+        <td>分类字段 + 数值字段（和为100%）</td>
+    </tr>
+</table>
+
+<h5>3.2.2 可视化配置参数</h5>
+<ul>
+    <li><strong>图表尺寸</strong>：默认宽度800px，高度400px</li>
+    <li><strong>颜色主题</strong>：使用分类配色方案，确保可访问性</li>
+    <li><strong>图例位置</strong>：默认右上角，可配置</li>
+    <li><strong>字体设置</strong>：支持中文字体，确保正确显示</li>
+</ul>
+
+<h3>4. API接口标准</h3>
+
+<h4>4.1 API设计原则</h4>
+<ul>
+    <li><strong>RESTful风格</strong>：使用标准HTTP方法（GET, POST, PUT, DELETE）</li>
+    <li><strong>资源导向</strong>：接口URL以资源为中心设计</li>
+    <li><strong>状态码规范</strong>：使用标准HTTP状态码表示操作结果</li>
+    <li><strong>错误处理</strong>：统一的错误响应格式和错误码定义</li>
+</ul>
+
+<h4>4.2 通信协议规范</h4>
+
+<h5>4.2.1 请求格式</h5>
+<ul>
+    <li><strong>文件上传</strong>：multipart/form-data 格式</li>
+    <li><strong>表单提交</strong>：application/x-www-form-urlencoded 格式</li>
+    <li><strong>API请求</strong>：application/json 格式</li>
+</ul>
+
+<h5>4.2.2 响应格式标准</h5>
+
+<div class="response-format">
+    <h6>成功响应格式</h6>
+    <div class="code-block">
+{
+    "status": "success",
+    "data": { ... },           // 响应数据主体
+    "message": "操作成功",    // 操作结果描述
+    "timestamp": "2024-06-15T10:30:00Z"  // 时间戳
+}
+    </div>
+
+    <h6>错误响应格式</h6>
+    <div class="code-block">
+{
+    "status": "error",
+    "error_code": "FILE_UPLOAD_FAILED",  // 错误码
+    "message": "文件上传失败",           // 错误描述
+    "details": "文件格式不支持",        // 详细错误信息
+    "timestamp": "2024-06-15T10:30:00Z"
+}
+    </div>
+</div>
+
+<h4>4.3 HTTP状态码定义</h4>
+<table class="status-codes-table">
+    <tr>
+        <th>状态码</th>
+        <th>含义</th>
+        <th>适用场景</th>
+    </tr>
+    <tr>
+        <td>200 OK</td>
+        <td>成功</td>
+        <td>请求成功处理</td>
+    </tr>
+    <tr>
+        <td>201 Created</td>
+        <td>已创建</td>
+        <td>资源创建成功</td>
+    </tr>
+    <tr>
+        <td>400 Bad Request</td>
+        <td>请求错误</td>
+        <td>参数错误或格式不符合要求</td>
+    </tr>
+    <tr>
+        <td>401 Unauthorized</td>
+        <td>未授权</td>
+        <td>需要身份验证</td>
+    </tr>
+    <tr>
+        <td>403 Forbidden</td>
+        <td>禁止访问</td>
+        <td>无权限访问资源</td>
+    </tr>
+    <tr>
+        <td>404 Not Found</td>
+        <td>未找到</td>
+        <td>请求的资源不存在</td>
+    </tr>
+    <tr>
+        <td>500 Internal Server Error</td>
+        <td>服务器错误</td>
+        <td>服务器内部错误</td>
+    </tr>
+    <tr>
+        <td>503 Service Unavailable</td>
+        <td>服务不可用</td>
+        <td>服务器暂时不可用</td>
+    </tr>
+</table>
+
+<h3>5. 系统集成指南</h3>
+
+<h4>5.1 集成方式</h4>
+<ul>
+    <li><strong>嵌入式集成</strong>：通过iframe嵌入系统界面</li>
+    <li><strong>API集成</strong>：通过RESTful API进行系统对接</li>
+    <li><strong>文件集成</strong>：通过标准文件格式进行数据交换</li>
+</ul>
+
+<h4>5.2 数据安全规范</h4>
+<ul>
+    <li><strong>数据传输</strong>：生产环境必须使用HTTPS加密传输</li>
+    <li><strong>数据存储</strong>：上传文件默认保留24小时后自动删除</li>
+    <li><strong>敏感信息</strong>：系统不会记录或存储敏感个人信息</li>
+    <li><strong>访问控制</strong>：可配置IP白名单和访问频率限制</li>
+</ul>
+
+<h4>5.3 性能与扩展性规范</h4>
+<ul>
+    <li><strong>并发处理</strong>：默认支持50个并发请求</li>
+    <li><strong>缓存机制</strong>：支持配置结果缓存，提高响应速度</li>
+    <li><strong>水平扩展</strong>：支持通过负载均衡实现水平扩展</li>
+    <li><strong>资源限制</strong>：可配置内存使用限制，防止资源耗尽</li>
+</ul>
+{% endblock %}

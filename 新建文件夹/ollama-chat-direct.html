@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ollama 本地大模型聊天界面</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .scrollbar-thin {
+            scrollbar-width: thin;
+            scrollbar-color: rgb(156 163 175) transparent;
+        }
+        .scrollbar-thin::-webkit-scrollbar {
+            width: 6px;
+        }
+        .scrollbar-thin::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .scrollbar-thin::-webkit-scrollbar-thumb {
+            background-color: rgb(156 163 175);
+            border-radius: 3px;
+        }
+        .typing-indicator {
+            animation: typing 1.5s infinite;
+        }
+        @keyframes typing {
+            0%, 60% { opacity: 1; }
+            30% { opacity: 0.3; }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <div id="app" class="flex flex-col h-screen">
+        <!-- 顶部导航栏 -->
+        <header class="bg-white shadow-sm border-b border-gray-200 px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div class="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+                        <span class="text-white font-bold text-sm">AI</span>
+                    </div>
+                    <h1 class="text-xl font-semibold text-gray-800">Ollama 本地大模型</h1>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <div id="connection-status" class="flex items-center space-x-2">
+                        <span class="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
+                        <span class="text-sm text-gray-600">连接中...</span>
+                    </div>
+                    <button onclick="checkConnection()" class="px-3 py-1 text-sm bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 transition-colors">
+                        检查连接
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- 主内容区域 -->
+        <div class="flex flex-1 overflow-hidden">
+            <!-- 中央聊天区域 -->
+            <main class="flex-1 flex flex-col">
+                <!-- 聊天消息区域 -->
+                <div id="chat-messages" class="flex-1 overflow-y-auto p-6 space-y-4 scrollbar-thin">
+                    <div class="text-center text-gray-500 mt-8">
+                        <svg class="w-12 h-12 mx-auto text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+                        </svg>
+                        <p class="mt-2">开始与AI对话吧！直接输入消息即可开始聊天。</p>
+                        <div class="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                            <p class="text-sm text-yellow-700">💡 <strong>使用说明：</strong></p>
+                            <p class="text-sm text-yellow-600 mt-1">1. 确保您的Ollama服务正在运行（端口11434）</p>
+                            <p class="text-sm text-yellow-600">2. 选择一个模型开始对话</p>
+                            <p class="text-sm text-yellow-600">3. 调整右侧参数以获得最佳体验</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 输入区域 -->
+                <div class="border-t border-gray-200 bg-white p-4">
+                    <div class="max-w-4xl mx-auto">
+                        <div class="flex space-x-3">
+                            <div class="flex-1">
+                                <textarea 
+                                    id="message-input" 
+                                    placeholder="输入您的问题..." 
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                                    rows="2"
+                                    onkeydown="handleKeyDown(event)"
+                                ></textarea>
+                            </div>
+                            <button 
+                                onclick="sendMessage()" 
+                                id="send-button"
+                                class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
+                                </svg>
+                            </button>
+                        </div>
+                        <div class="mt-2 flex justify-between items-center">
+                            <span id="selected-model" class="text-sm text-gray-500">默认模型: llama2</span>
+                            <span id="token-count" class="text-sm text-gray-500">0 字符</span>
+                        </div>
+                    </div>
+                </div>
+            </main>
+
+            <!-- 右侧边栏 - 参数设置 -->
+            <aside class="w-80 bg-white border-l border-gray-200 p-4 overflow-y-auto scrollbar-thin">
+                <h2 class="font-semibold text-gray-700 mb-4">参数设置</h2>
+                
+                <!-- 模型选择 -->
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">选择模型</label>
+                    <select id="model-select" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="llama2">llama2</option>
+                        <option value="mistral">mistral</option>
+                        <option value="codellama">codellama</option>
+                        <option value="phi">phi</option>
+                    </select>
+                </div>
+                
+                <div class="space-y-4">
+                    <!-- 温度设置 -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">温度 (Temperature)</label>
+                        <input type="range" id="temperature" min="0" max="2" step="0.1" value="0.7" class="w-full">
+                        <div class="flex justify-between text-xs text-gray-500">
+                            <span>严谨 (0.0)</span>
+                            <span id="temperature-value">0.7</span>
+                            <span>创意 (2.0)</span>
+                        </div>
+                    </div>
+
+                    <!-- 最大生成长度 -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">最大生成长度</label>
+                        <input type="number" id="max-tokens" min="1" max="8192" value="2048" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+
+                    <!-- 系统提示词 -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">系统提示词</label>
+                        <textarea 
+                            id="system-prompt" 
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                            rows="3"
+                            placeholder="你是一个有用的AI助手..."
+                        >你是一个有用的AI助手，请用中文回答用户的问题。</textarea>
+                    </div>
+                </div>
+            </aside>
+        </div>
+    </div>
+
+    <script>
+        // 全局状态
+        let currentModel = 'llama2';
+        let isConnected = false;
+        let isTyping = false;
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 绑定事件监听器
+            document.getElementById('temperature').addEventListener('input', updateTemperatureValue);
+            document.getElementById('message-input').addEventListener('input', updateTokenCount);
+            document.getElementById('model-select').addEventListener('change', updateModel);
+            
+            // 检查连接状态
+            checkConnection();
+            
+            // 初始化显示值
+            updateTemperatureValue();
+        });
+
+        // 更新温度显示值
+        function updateTemperatureValue() {
+            const temp = document.getElementById('temperature').value;
+            document.getElementById('temperature-value').textContent = temp;
+        }
+
+        // 更新模型选择
+        function updateModel() {
+            currentModel = document.getElementById('model-select').value;
+            document.getElementById('selected-model').textContent = `当前模型: ${currentModel}`;
+        }
+
+        // 更新字符计数
+        function updateTokenCount() {
+            const text = document.getElementById('message-input').value;
+            document.getElementById('token-count').textContent = text.length + ' 字符';
+        }
+
+        // 检查连接状态
+        async function checkConnection() {
+            const statusElement = document.getElementById('connection-status');
+            try {
+                // 直接测试Ollama API连接
+                const response = await fetchWithRetry('http://localhost:11434/api/tags');
+                
+                if (response.ok) {
+                    statusElement.innerHTML = '<span class="w-2 h-2 bg-green-500 rounded-full"></span><span class="text-sm text-gray-600">已连接</span>';
+                    isConnected = true;
+                    console.log('Ollama连接成功');
+                } else {
+                    throw new Error('连接失败');
+                }
+            } catch (error) {
+                statusElement.innerHTML = '<span class="w-2 h-2 bg-red-500 rounded-full"></span><span class="text-sm text-gray-600">连接失败</span>';
+                isConnected = false;
+                console.error('Ollama连接失败:', error);
+                
+                // 显示连接帮助信息
+                addMessageToChat('system', '💡 <strong>连接问题解决提示：</strong><br>' +
+                    '1. 请确保Ollama服务已启动<br>' +
+                    '2. 检查Ollama是否在端口11434运行<br>' +
+                    '3. 您可以尝试使用命令行测试: curl http://localhost:11434/api/tags');
+            }
+        }
+
+        // 带重试的fetch函数
+        async function fetchWithRetry(url, options = {}, retries = 3, delay = 1000) {
+            for (let i = 0; i < retries; i++) {
+                try {
+                    const response = await fetch(url, {
+                        ...options,
+                        mode: 'cors',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            ...options.headers
+                        }
+                    });
+                    return response;
+                } catch (error) {
+                    if (i === retries - 1) throw error;
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                }
+            }
+        }
+
+        // 发送消息
+        async function sendMessage() {
+            const messageInput = document.getElementById('message-input');
+            const message = messageInput.value.trim();
+            
+            if (!message) {
+                alert('请输入消息');
+                return;
+            }
+
+            // 禁用发送按钮
+            document.getElementById('send-button').disabled = true;
+            
+            // 添加用户消息到聊天界面
+            addMessageToChat('user', message);
+            
+            // 清空输入框
+            messageInput.value = '';
+            updateTokenCount();
+            
+            // 显示AI正在输入
+            showTypingIndicator();
+            
+            try {
+                const response = await fetchWithRetry('http://localhost:11434/api/generate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        model: currentModel,
+                        prompt: message,
+                        system: document.getElementById('system-prompt').value,
+                        stream: false,
+                        options: {
+                            temperature: parseFloat(document.getElementById('temperature').value),
+                            num_predict: parseInt(document.getElementById('max-tokens').value)
+                        }
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                addMessageToChat('assistant', data.response);
+                
+            } catch (error) {
+                console.error('发送消息失败:', error);
+                
+                // 提供更详细的错误信息
+                let errorMessage = '抱歉，发生了错误：' + error.message;
+                if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+                    errorMessage = '连接失败，请检查：<br>' +
+                        '1. Ollama服务是否启动<br>' +
+                        '2. 防火墙设置<br>' +
+                        '3. 网络连接'; 
+                }
+                
+                addMessageToChat('assistant', errorMessage);
+            } finally {
+                // 移除输入指示器
+                hideTypingIndicator();
+                // 重新启用发送按钮
+                document.getElementById('send-button').disabled = false;
+            }
+        }
+
+        // 显示输入指示器
+        function showTypingIndicator() {
+            isTyping = true;
+            const chatMessages = document.getElementById('chat-messages');
+            const typingDiv = document.createElement('div');
+            typingDiv.id = 'typing-indicator';
+            typingDiv.className = 'flex justify-start';
+            typingDiv.innerHTML = `
+                <div class="max-w-3xl bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <div class="font-medium text-blue-800 mb-1">AI助手</div>
+                    <div class="text-gray-500 flex items-center space-x-1">
+                        <span class="typing-indicator">●</span>
+                        <span class="typing-indicator" style="animation-delay: 0.2s">●</span>
+                        <span class="typing-indicator" style="animation-delay: 0.4s">●</span>
+                        <span class="text-sm">正在输入...</span>
+                    </div>
+                </div>
+            `;
+            chatMessages.appendChild(typingDiv);
+            typingDiv.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // 隐藏输入指示器
+        function hideTypingIndicator() {
+            isTyping = false;
+            const typingIndicator = document.getElementById('typing-indicator');
+            if (typingIndicator) {
+                typingIndicator.remove();
+            }
+        }
+
+        // 添加消息到聊天界面
+        function addMessageToChat(role, content) {
+            const chatMessages = document.getElementById('chat-messages');
+            
+            // 移除欢迎消息（如果有的话）
+            const welcomeMessage = chatMessages.querySelector('.text-center');
+            if (welcomeMessage && role !== 'system') {
+                welcomeMessage.remove();
+            }
+            
+            const messageDiv = document.createElement('div');
+            
+            if (role === 'system') {
+                messageDiv.className = 'flex justify-center';
+                messageDiv.innerHTML = `
+                    <div class="max-w-3xl bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                        <div class="text-yellow-700 text-sm">${content}</div>
+                    </div>
+                `;
+            } else {
+                messageDiv.className = role === 'user' ? 'flex justify-end' : 'flex justify-start';
+                
+                messageDiv.innerHTML = `
+                    <div class="max-w-3xl ${role === 'user' ? 'bg-green-50 border border-green-200' : 'bg-blue-50 border border-blue-200'} rounded-lg p-4">
+                        <div class="font-medium ${role === 'user' ? 'text-green-800' : 'text-blue-800'} mb-1">
+                            ${role === 'user' ? '您' : 'AI助手'}
+                        </div>
+                        <div class="text-gray-700 whitespace-pre-wrap">${content}</div>
+                    </div>
+                `;
+            }
+            
+            chatMessages.appendChild(messageDiv);
+            messageDiv.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // 处理键盘事件
+        function handleKeyDown(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
+            }
+        }
+    </script>
+</body>
+</html>

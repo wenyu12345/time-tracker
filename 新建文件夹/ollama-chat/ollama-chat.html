@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ollama Chat - 本地大模型聊天界面</title>
+    <meta name="description" content="连接本地Ollama服务的现代化聊天界面">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        /* 基础样式重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #1f2937;
+            background-color: #f8fafc;
+            overflow: hidden;
+        }
+        
+        code {
+            font-family: 'Fira Code', Consolas, Monaco, 'Courier New', monospace;
+        }
+        
+        /* 布局样式 */
+        .app {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+        }
+        
+        /* 左侧边栏 */
+        .sidebar {
+            width: 250px;
+            height: 100vh;
+            background: #ffffff;
+            border-right: 1px solid #e5e7eb;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .logo {
+            padding: 20px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .logo h1 {
+            font-size: 20px;
+            font-weight: 600;
+            color: #3b82f6;
+        }
+        
+        .connection-status {
+            padding: 15px 20px;
+            border-bottom: 1px solid #e5e7eb;
+            font-size: 14px;
+        }
+        
+        .status-connected {
+            color: #10b981;
+        }
+        
+        .status-disconnected {
+            color: #ef4444;
+        }
+        
+        .model-selector {
+            padding: 20px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .model-selector select {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        
+        .conversation-list {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        
+        .new-chat-btn {
+            width: 100%;
+            padding: 12px;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
+        
+        /* 聊天区域 */
+        .chat-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+        
+        .chat-header {
+            padding: 20px;
+            background: #ffffff;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: #f8fafc;
+        }
+        
+        .message {
+            margin-bottom: 20px;
+            max-width: 70%;
+        }
+        
+        .user-message {
+            margin-left: auto;
+            text-align: right;
+        }
+        
+        .ai-message {
+            margin-right: auto;
+        }
+        
+        .message-bubble {
+            padding: 12px 16px;
+            border-radius: 12px;
+            display: inline-block;
+            word-wrap: break-word;
+            white-space: pre-wrap;
+        }
+        
+        .user-message .message-bubble {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        .ai-message .message-bubble {
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+        }
+        
+        .message-time {
+            font-size: 12px;
+            color: #6b7280;
+            margin-top: 4px;
+        }
+        
+        .thinking {
+            opacity: 0.7;
+        }
+        
+        .chat-input {
+            padding: 20px;
+            background: #ffffff;
+            border-top: 1px solid #e5e7eb;
+        }
+        
+        .input-container {
+            display: flex;
+            gap: 12px;
+        }
+        
+        .message-input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 14px;
+            resize: none;
+            min-height: 44px;
+            max-height: 120px;
+        }
+        
+        .send-btn {
+            padding: 12px 20px;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .send-btn:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
+        
+        /* 右侧设置面板 */
+        .settings-panel {
+            width: 300px;
+            height: 100vh;
+            background: #ffffff;
+            border-left: 1px solid #e5e7eb;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        
+        .setting-group {
+            margin-bottom: 24px;
+        }
+        
+        .setting-group h3 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: #374151;
+        }
+        
+        .slider-container {
+            margin-bottom: 16px;
+        }
+        
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        
+        .slider {
+            width: 100%;
+            height: 6px;
+            background: #e5e7eb;
+            border-radius: 3px;
+            outline: none;
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .sidebar, .settings-panel {
+                display: none;
+            }
+            
+            .chat-container {
+                width: 100vw;
+            }
+        }
+        
+        /* 加载动画 */
+        .loading {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .loading::after {
+            content: '';
+            width: 12px;
+            height: 12px;
+            border: 2px solid #e5e7eb;
+            border-top: 2px solid #3b82f6;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* 深色主题 */
+        [data-theme="dark"] body {
+            background-color: #111827;
+            color: #f9fafb;
+        }
+        
+        [data-theme="dark"] .sidebar,
+        [data-theme="dark"] .chat-header,
+        [data-theme="dark"] .chat-input,
+        [data-theme="dark"] .settings-panel {
+            background: #1f2937;
+            border-color: #374151;
+        }
+        
+        [data-theme="dark"] .chat-messages {
+            background: #111827;
+        }
+        
+        [data-theme="dark"] .ai-message .message-bubble {
+            background: #374151;
+            border-color: #4b5563;
+            color: #f9fafb;
+        }
+        
+        [data-theme="dark"] .message-input {
+            background: #374151;
+            border-color: #4b5563;
+            color: #f9fafb;
+        }
+        
+        [data-theme="dark"] .slider {
+            background: #4b5563;
+        }
+        
+        /* 错误提示 */
+        .error-message {
+            background: #fee2e2;
+            border: 1px solid #fecaca;
+            color: #dc2626;
+            padding: 12px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+        
+        [data-theme="dark"] .error-message {
+            background: #7f1d1d;
+            border-color: #991b1b;
+            color: #fca5a5;
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <!-- 左侧边栏 -->
+        <div class="sidebar">
+            <div class="logo">
+                <h1>Ollama Chat</h1>
+            </div>
+            
+            <div class="connection-status" id="connection-status">
+                <span class="status-disconnected">● 连接中...</span>
+            </div>
+            
+            <div class="model-selector">
+                <select id="model-select">
+                    <option value="">加载模型中...</option>
+                </select>
+            </div>
+            
+            <div class="conversation-list">
+                <button class="new-chat-btn" onclick="newChat()">+ 新建对话</button>
+                <div id="conversation-list">
+                    <!-- 对话列表将在这里动态生成 -->
+                </div>
+            </div>
+        </div>
+        
+        <!-- 中央聊天区域 -->
+        <div class="chat-container">
+            <div class="chat-header">
+                <h2 id="conversation-title">新对话</h2>
+                <div class="chat-actions">
+                    <button onclick="toggleTheme()">切换主题</button>
+                </div>
+            </div>
+            
+            <div class="chat-messages" id="chat-messages">
+                <div class="welcome-message">
+                    <div class="ai-message">
+                        <div class="message-bubble">
+                            <h3>欢迎使用 Ollama Chat!</h3>
+                            <p>正在连接本地Ollama服务...</p>
+                            <p>请确保：</p>
+                            <ul>
+                                <li>Ollama服务正在运行（默认端口11434）</li>
+                                <li>已下载至少一个模型</li>
+                                <li>允许跨域访问（CORS）</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="chat-input">
+                <div class="input-container">
+                    <textarea 
+                        class="message-input" 
+                        id="message-input" 
+                        placeholder="输入消息... (按Enter发送，Shift+Enter换行)"
+                        rows="1"
+                        onkeydown="handleKeydown(event)"
+                        disabled
+                    ></textarea>
+                    <button class="send-btn" onclick="sendMessage()" disabled>发送</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 右侧设置面板 -->
+        <div class="settings-panel">
+            <div class="setting-group">
+                <h3>模型参数</h3>
+                
+                <div class="slider-container">
+                    <div class="slider-label">
+                        <span>温度 (Temperature)</span>
+                        <span id="temperature-value">0.7</span>
+                    </div>
+                    <input 
+                        type="range" 
+                        class="slider" 
+                        id="temperature" 
+                        min="0" 
+                        max="1" 
+                        step="0.01" 
+                        value="0.7"
+                        oninput="updateTemperature(this.value)"
+                        disabled
+                    >
+                </div>
+                
+                <div class="slider-container">
+                    <div class="slider-label">
+                        <span>最大长度 (Max Tokens)</span>
+                        <span id="max-tokens-value">2048</span>
+                    </div>
+                    <input 
+                        type="range" 
+                        class="slider" 
+                        id="max-tokens" 
+                        min="0" 
+                        max="32768" 
+                        step="1" 
+                        value="2048"
+                        oninput="updateMaxTokens(this.value)"
+                        disabled
+                    >
+                </div>
+                
+                <div class="slider-container">
+                    <div class="slider-label">
+                        <span>Top P</span>
+                        <span id="top-p-value">0.9</span>
+                    </div>
+                    <input 
+                        type="range" 
+                        class="slider" 
+                        id="top-p" 
+                        min="0" 
+                        max="1" 
+                        step="0.01" 
+                        value="0.9"
+                        oninput="updateTopP(this.value)"
+                        disabled
+                    >
+                </div>
+            </div>
+            
+            <div class="setting-group">
+                <h3>模型信息</h3>
+                <div id="model-info">
+                    <p>正在连接Ollama服务...</p>
+                </div>
+            </div>
+            
+            <div class="setting-group">
+                <h3>系统提示</h3>
+                <textarea 
+                    class="message-input" 
+                    id="system-prompt" 
+                    placeholder="输入系统提示词..."
+                    rows="3"
+                    disabled
+                ></textarea>
+            </div>
+            
+            <div class="setting-group">
+                <h3>Ollama设置</h3>
+                <div>
+                    <label>API地址:</label>
+                    <input type="text" id="api-url" value="http://localhost:11434" style="width: 100%; padding: 8px; margin-top: 5px; border: 1px solid #d1d5db; border-radius: 4px;">
+                    <button onclick="reconnectOllama()" style="margin-top: 10px; padding: 8px 16px; background: #3b82f6; color: white; border: none; border-radius: 4px; cursor: pointer;">重新连接</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Ollama API配置
+        const OLLAMA_API = {
+            baseUrl: 'http://localhost:11434',
+            endpoints: {
+                models: '/api/tags',
+                chat: '/api/chat',
+                generate: '/api/generate'
+            }
+        };
+        
+        // 应用状态
+        let currentConversation = {
+            id: 'default',
+            title: '新对话',
+            messages: [],
+            model: '',
+            temperature: 0.7,
+            maxTokens: 2048,
+            topP: 0.9,
+            systemPrompt: ''
+        };
+        
+        let conversations = [currentConversation];
+        let availableModels = [];
+        let isConnected = false;
+        
+        // 初始化
+        async function init() {
+            loadTheme();
+            loadConversations();
+            await connectToOllama();
+            updateUI();
+        }
+        
+        // Ollama连接
+        async function connectToOllama() {
+            updateConnectionStatus('连接中...', 'disconnected');
+            
+            try {
+                // 测试连接
+                const response = await fetch(`${OLLAMA_API.baseUrl}${OLLAMA_API.endpoints.models}`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                availableModels = data.models || [];
+                
+                updateConnectionStatus('已连接', 'connected');
+                isConnected = true;
+                
+                // 更新模型列表
+                updateModelList();
+                
+                // 启用输入框
+                document.getElementById('message-input').disabled = false;
+                document.getElementById('send-btn').disabled = false;
+                document.getElementById('temperature').disabled = false;
+                document.getElementById('max-tokens').disabled = false;
+                document.getElementById('top-p').disabled = false;
+                document.getElementById('system-prompt').disabled = false;
+                
+                return true;
+                
+            } catch (error) {
+                console.error('连接Ollama失败:', error);
+                updateConnectionStatus(`连接失败: ${error.message}`, 'disconnected');
+                isConnected = false;
+                
+                // 显示错误信息
+                showError(`无法连接Ollama服务: ${error.message}<br>请确保Ollama正在运行且端口11434可访问。`);
+                
+                return false;
+            }
+        }
+        
+        function reconnectOllama() {
+            OLLAMA_API.baseUrl = document.getElementById('api-url').value;
+            connectToOllama();
+        }
+        
+        function updateConnectionStatus(message, status) {
+            const statusElement = document.getElementById('connection-status');
+            statusElement.innerHTML = `
+                <span class="status-${status}">● ${message}</span>
+            `;
+        }
+        
+        function updateModelList() {
+            const modelSelect = document.getElementById('model-select');
+            modelSelect.innerHTML = '<option value="">选择模型...</option>';
+            
+            availableModels.forEach(model => {
+                const option = document.createElement('option');
+                option.value = model.name;
+                option.textContent = `${model.name} (${formatBytes(model.size)})`;
+                modelSelect.appendChild(option);
+            });
+        }
+        
+        function formatBytes(bytes) {
+            if (bytes === 0) return '0 B';
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+        
+        // 主题管理
+        function loadTheme() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        }
+        
+        function toggleTheme() {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+        }
+        
+        // 对话管理
+        function newChat() {
+            const newConv = {
+                id: 'conversation-' + Date.now(),
+                title: '新对话',
+                messages: [],
+                model: currentConversation.model,
+                temperature: currentConversation.temperature,
+                maxTokens: currentConversation.maxTokens,
+                topP: currentConversation.topP,
+                systemPrompt: currentConversation.systemPrompt
+            };
+            
+            conversations.push(newConv);
+            switchConversation(newConv.id);
+            saveConversations();
+        }
+        
+        function switchConversation(conversationId) {
+            const conv = conversations.find(c => c.id === conversationId);
+            if (conv) {
+                currentConversation = conv;
+                updateUI();
+            }
+        }
+        
+        function saveConversations() {
+            localStorage.setItem('conversations', JSON.stringify(conversations));
+        }
+        
+        function loadConversations() {
+            const saved = localStorage.getItem('conversations');
+            if (saved) {
+                conversations = JSON.parse(saved);
+                if (conversations.length > 0) {
+                    currentConversation = conversations[0];
+                }
+            }
+        }
+        
+        // 消息处理
+        async function sendMessage() {
+            if (!isConnected) {
+                showError('请先连接Ollama服务');
+                return;
+            }
+            
+            const input = document.getElementById('message-input');
+            const message = input.value.trim();
+            
+            if (!message) return;
+            
+            if (!currentConversation.model) {
+                showError('请先选择一个模型');
+                return;
+            }
+            
+            // 添加用户消息
+            addMessage('user', message);
+            input.value = '';
+            
+            // 显示AI思考状态
+            showThinking();
+            
+            try {
+                // 调用Ollama API
+                const response = await fetch(`${OLLAMA_API.baseUrl}${OLLAMA_API.endpoints.chat}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        model: currentConversation.model,
+                        messages: [
+                            ...currentConversation.messages.map(msg => ({
+                                role: msg.role,
+                                content: msg.content
+                            })),
+                            { role: 'user', content: message }
+                        ],
+                        options: {
+                            temperature: currentConversation.temperature,
+                            num_predict: currentConversation.maxTokens,
+                            top_p: currentConversation.topP
+                        },
+                        stream: false
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`API错误: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                // 添加AI回复
+                addMessage('ai', data.message.content);
+                
+                // 更新对话标题（基于第一条消息）
+                if (currentConversation.messages.length === 2) {
+                    currentConversation.title = message.substring(0, 30) + (message.length > 30 ? '...' : '');
+                    updateUI();
+                }
+                
+                saveConversations();
+                
+            } catch (error) {
+                console.error('发送消息失败:', error);
+                showError(`发送失败: ${error.message}`);
+                
+                // 移除思考状态
+                removeThinking();
+            }
+        }
+        
+        function addMessage(role, content) {
+            const message = {
+                role: role,
+                content: content,
+                timestamp: new Date().toLocaleTimeString()
+            };
+            
+            currentConversation.messages.push(message);
+            renderMessages();
+        }
+        
+        function showThinking() {
+            const messagesContainer = document.getElementById('chat-messages');
+            const thinkingDiv = document.createElement('div');
+            thinkingDiv.id = 'thinking-message';
+            thinkingDiv.className = 'ai-message thinking';
+            thinkingDiv.innerHTML = `
+                <div class="message-bubble">
+                    <div class="loading">思考中...</div>
+                </div>
+            `;
+            messagesContainer.appendChild(thinkingDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+        
+        function removeThinking() {
+            const thinkingElement = document.getElementById('thinking-message');
+            if (thinkingElement) {
+                thinkingElement.remove();
+            }
+        }
+        
+        function renderMessages() {
+            const container = document.getElementById('chat-messages');
+            container.innerHTML = '';
+            
+            // 如果没有消息，显示欢迎信息
+            if (currentConversation.messages.length === 0) {
+                const welcomeDiv = document.createElement('div');
+                welcomeDiv.className = 'welcome-message';
+                welcomeDiv.innerHTML = `
+                    <div class="ai-message">
+                        <div class="message-bubble">
+                            <h3>欢迎使用 Ollama Chat!</h3>
+                            <p>${isConnected ? '请选择一个模型并开始对话。' : '正在连接Ollama服务...'}</p>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(welcomeDiv);
+                return;
+            }
+            
+            currentConversation.messages.forEach(msg => {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `message ${msg.role}-message`;
+                
+                messageDiv.innerHTML = `
+                    <div class="message-bubble">${msg.content}</div>
+                    <div class="message-time">${msg.timestamp}</div>
+                `;
+                
+                container.appendChild(messageDiv);
+            });
+            
+            container.scrollTop = container.scrollHeight;
+        }
+        
+        // 错误处理
+        function showError(message) {
+            const messagesContainer = document.getElementById('chat-messages');
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error-message';
+            errorDiv.innerHTML = message;
+            
+            // 插入到消息列表顶部
+            messagesContainer.insertBefore(errorDiv, messagesContainer.firstChild);
+            
+            // 3秒后自动移除
+            setTimeout(() => {
+                if (errorDiv.parentNode) {
+                    errorDiv.remove();
+                }
+            }, 5000);
+        }
+        
+        // 参数更新
+        function updateTemperature(value) {
+            currentConversation.temperature = parseFloat(value);
+            document.getElementById('temperature-value').textContent = value;
+        }
+        
+        function updateMaxTokens(value) {
+            currentConversation.maxTokens = parseInt(value);
+            document.getElementById('max-tokens-value').textContent = value;
+        }
+        
+        function updateTopP(value) {
+            currentConversation.topP = parseFloat(value);
+            document.getElementById('top-p-value').textContent = value;
+        }
+        
+        // 模型选择
+        document.getElementById('model-select').addEventListener('change', function(e) {
+            currentConversation.model = e.target.value;
+            updateModelInfo();
+        });
+        
+        function updateModelInfo() {
+            const modelInfo = document.getElementById('model-info');
+            if (currentConversation.model) {
+                const model = availableModels.find(m => m.name === currentConversation.model);
+                modelInfo.innerHTML = `
+                    <p><strong>模型:</strong> ${currentConversation.model}</p>
+                    <p><strong>大小:</strong> ${model ? formatBytes(model.size) : '未知'}</p>
+                    <p><strong>温度:</strong> ${currentConversation.temperature}</p>
+                    <p><strong>最大长度:</strong> ${currentConversation.maxTokens}</p>
+                `;
+            } else {
+                modelInfo.innerHTML = '<p>请先选择一个模型</p>';
+            }
+        }
+        
+        // 键盘快捷键
+        function handleKeydown(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
+            }
+        }
+        
+        // UI更新
+        function updateUI() {
+            document.getElementById('conversation-title').textContent = currentConversation.title;
+            renderMessages();
+            updateModelInfo();
+            
+            // 更新参数显示
+            document.getElementById('temperature').value = currentConversation.temperature;
+            document.getElementById('temperature-value').textContent = currentConversation.temperature;
+            document.getElementById('max-tokens').value = currentConversation.maxTokens;
+            document.getElementById('max-tokens-value').textContent = currentConversation.maxTokens;
+            document.getElementById('top-p').value = currentConversation.topP;
+            document.getElementById('top-p-value').textContent = currentConversation.topP;
+            
+            // 更新模型选择
+            if (currentConversation.model) {
+                document.getElementById('model-select').value = currentConversation.model;
+            }
+        }
+        
+        // 启动应用
+        window.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>

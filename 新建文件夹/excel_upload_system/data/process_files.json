@@ -1,0 +1,43 @@
+{
+  "records": [
+    {
+      "id": "8d5e9b93-a98b-474a-a284-100748db7959",
+      "created_at": "2026-05-17 16:50:00",
+      "updated_at": "2026-05-17 22:56:53",
+      "model": "C951",
+      "test_type": "S511",
+      "electrode_type": "负",
+      "roll1_thickness": "151",
+      "roll2_thickness": "140",
+      "roll1_gap_operate": "-23",
+      "roll1_gap_drive": "-40",
+      "roll1_pressure_operate": "46",
+      "roll1_pressure_drive": "47",
+      "roll2_gap_operate": "283",
+      "roll2_gap_drive": "-120",
+      "roll2_pressure_operate": "30",
+      "roll2_pressure_drive": "30",
+      "jth": "负极1#"
+    },
+    {
+      "id": "71cd9d70-fdd5-488c-a652-0e0639dab34e",
+      "created_at": "2026-05-16 10:33:41",
+      "updated_at": "2026-05-17 20:56:51",
+      "model": "D648",
+      "test_type": "",
+      "roll1_thickness": "",
+      "roll2_thickness": "142",
+      "roll1_gap_operate": "-23",
+      "roll1_gap_drive": "-40",
+      "roll1_pressure_operate": "22",
+      "roll1_pressure_drive": "22",
+      "roll2_gap_operate": "239",
+      "roll2_gap_drive": "-169",
+      "roll2_pressure_operate": "27",
+      "roll2_pressure_drive": "25",
+      "syxh": "",
+      "jth": "负极1#",
+      "electrode_type": "负"
+    }
+  ]
+}

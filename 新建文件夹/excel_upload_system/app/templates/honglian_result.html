@@ -1,0 +1,1284 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>开红莲专用模式 - 处理结果</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .result-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .table-container {
+            overflow-x: auto;
+            margin: 20px 0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: #f0f9ff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #3498db;
+            color: white;
+            font-weight: bold;
+        }
+        tr:hover {
+            background-color: #f5f5f5;
+        }
+        .back-btn {
+            margin-top: 20px;
+            display: inline-block;
+        }
+        
+        /* 编辑模式样式 */
+        .editable-table {
+            position: relative;
+        }
+        
+        .editable-table.edit-mode td[data-column] {
+            cursor: pointer;
+            position: relative;
+            transition: background-color 0.2s;
+        }
+        
+        .editable-table.edit-mode td[data-column]:hover {
+            background-color: #e3f2fd;
+            border-left: 3px solid #2196f3;
+        }
+        
+        .editable-table.edit-mode td[data-column]:hover::after {
+            content: '点击编辑';
+            position: absolute;
+            top: -20px;
+            left: 0;
+            background-color: #2196f3;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-size: 12px;
+            z-index: 100;
+        }
+        
+        .editable-table.edit-mode td.modified {
+            background-color: #fff3e0;
+            border-left: 3px solid #ff9800;
+            font-weight: bold;
+        }
+        
+        .editable-table.edit-mode td.modified::before {
+            content: '✎';
+            color: #ff9800;
+            margin-right: 5px;
+            font-weight: bold;
+        }
+        
+        .cell-display {
+            display: inline-block;
+            width: 100%;
+        }
+        
+        .cell-edit {
+            display: none;
+            width: 100%;
+            padding: 4px;
+            border: 2px solid #2196f3;
+            border-radius: 3px;
+            font-size: inherit;
+            background-color: white;
+        }
+        
+        .cell-edit:focus {
+            outline: none;
+            border-color: #1976d2;
+            box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.2);
+        }
+        /* 按钮组样式 */
+        .button-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin: 20px 0;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .button-group .btn {
+            margin: 0;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 18px;
+            font-weight: bold;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            color: white;
+        }
+        
+        .button-group .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+        }
+        
+        .edit-mode-alert {
+            background-color: #e3f2fd;
+            border: 1px solid #2196f3;
+            color: #1976d2;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 20px 0;
+            display: none;
+            font-weight: bold;
+            text-align: center;
+        }
+        
+        .edit-mode-alert.show {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>开红莲专用模式 - 处理结果</h1>
+            <p>文件名称: {{ filename }}</p>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="messages">
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <div class="result-container">
+            <h2>数据明细</h2>
+            
+            <!-- 功能按钮区域 -->
+            <div style="margin-bottom: 20px; display: flex; flex-direction: column; gap: 15px;">
+                <!-- 自定义映射开关和图表生成器 -->
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+                    <!-- 自定义映射开关 -->
+                    <div style="display: flex; align-items: center; gap: 10px; padding: 12px 20px; background-color: #bbdefb; border-radius: 8px; border: 2px solid #64b5f6;">
+                        <label for="customMappingSwitch" style="font-size: 16px; font-weight: bold; color: #1565c0;">启用自定义映射</label>
+                        <input 
+                            type="checkbox" 
+                            id="customMappingSwitch" 
+                            {% if session.get('custom_mapping_enabled', True) %}checked{% endif %}
+                            style="width: 24px; height: 24px; cursor: pointer; accent-color: #1976d2;"
+                            onchange="toggleCustomMapping()"
+                        >
+                    </div>
+                    
+                    <!-- 图表生成器 -->
+                    <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                        <select id="chartGroupColumn" style="padding: 8px 12px; border: 2px solid #ced4da; border-radius: 6px; font-size: 14px;">
+                            <option value="">选择分组列(x轴)</option>
+                            {% for col in columns %}
+                            <option value="{{ col }}">{{ col }}</option>
+                            {% endfor %}
+                        </select>
+                        <select id="chartColorColumn" style="padding: 8px 12px; border: 2px solid #ced4da; border-radius: 6px; font-size: 14px;">
+                            <option value="">选择颜色分组列(如工序)</option>
+                            {% for col in columns %}
+                            <option value="{{ col }}">{{ col }}</option>
+                            {% endfor %}
+                        </select>
+                        <select id="chartDataColumn" style="padding: 8px 12px; border: 2px solid #ced4da; border-radius: 6px; font-size: 14px;">
+                            <option value="">选择数据列(y轴)</option>
+                            {% for col in columns %}
+                            <option value="{{ col }}">{{ col }}</option>
+                            {% endfor %}
+                        </select>
+                        <select id="chartOriginalWorkshop" style="padding: 8px 12px; border: 2px solid #ced4da; border-radius: 6px; font-size: 14px;">
+                            <option value="">全部</option>
+                            <option value="五一车间">五一车间</option>
+                            <option value="四一车间">四一车间</option>
+                        </select>
+                        <select id="chartType" style="padding: 8px 12px; border: 2px solid #ced4da; border-radius: 6px; font-size: 14px;">
+                            <option value="bar">柱状图</option>
+                            <option value="line">折线图</option>
+                        </select>
+                        <button id="generateChart" style="padding: 8px 16px; background-color: #9b59b6; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: bold;">
+                            生成图表
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- 红莲模式操作按钮组 -->
+                <div class="button-group">
+                    <button id="toggleEditMode" class="btn" style="background-color: #e74c3c;">
+                        开启编辑模式
+                    </button>
+                    <button id="addNewRow" class="btn" style="background-color: #f39c12; display: none;">
+                        添加新行
+                    </button>
+                    <button id="honglianDetail" class="btn" style="background-color: #3498db;">
+                        发送红莲模式明细到钉钉群
+                    </button>
+                    <button id="saveChanges" class="btn" style="background-color: #27ae60; display: none;">
+                        保存修改
+                    </button>
+                    <button id="cancelEdit" class="btn" style="background-color: #95a5a6; display: none;">
+                        取消编辑
+                    </button>
+                </div>
+                
+                <!-- 编辑模式提示 -->
+                <div id="editModeAlert" class="edit-mode-alert">
+                    <strong>编辑模式已开启！</strong> 您可以直接点击表格单元格进行编辑，修改完成后点击"保存修改"按钮保存更改。
+                </div>
+                
+                <script>
+                    // 编辑模式相关变量
+                    let isEditMode = false;
+                    let originalData = {};
+                    let modifiedData = {};
+
+                    // 切换编辑模式
+                    document.getElementById('toggleEditMode').addEventListener('click', function() {
+                        isEditMode = !isEditMode;
+                        const toggleBtn = this;
+                        const saveBtn = document.getElementById('saveChanges');
+                        const cancelBtn = document.getElementById('cancelEdit');
+                        const addBtn = document.getElementById('addNewRow');
+                        const alert = document.getElementById('editModeAlert');
+                        
+                        if (isEditMode) {
+                            // 开启编辑模式
+                            toggleBtn.textContent = '关闭编辑模式';
+                            toggleBtn.style.backgroundColor = '#c0392b';
+                            saveBtn.style.display = 'inline-block';
+                            cancelBtn.style.display = 'inline-block';
+                            addBtn.style.display = 'inline-block';
+                            alert.style.display = 'block';
+                            
+                            // 保存原始数据
+                            saveOriginalData();
+                            
+                            // 添加编辑样式
+                            document.getElementById('dataTable').classList.add('edit-mode');
+                        } else {
+                            // 关闭编辑模式
+                            toggleBtn.textContent = '开启编辑模式';
+                            toggleBtn.style.backgroundColor = '#e74c3c';
+                            saveBtn.style.display = 'none';
+                            cancelBtn.style.display = 'none';
+                            addBtn.style.display = 'none';
+                            alert.style.display = 'none';
+                            
+                            // 移除编辑样式
+                            document.getElementById('dataTable').classList.remove('edit-mode');
+                        }
+                    });
+
+                    // 保存原始数据
+                    function saveOriginalData() {
+                        const table = document.getElementById('dataTable');
+                        const rows = table.querySelectorAll('tbody tr');
+                        
+                        rows.forEach((row, rowIndex) => {
+                            const cells = row.querySelectorAll('td[data-column]');
+                            originalData[rowIndex] = {};
+                            
+                            cells.forEach(cell => {
+                                const column = cell.getAttribute('data-column');
+                                const originalValue = cell.getAttribute('data-original-value');
+                                originalData[rowIndex][column] = originalValue;
+                            });
+                        });
+                    }
+
+                    // 单元格编辑功能
+                    window.editCell = function(cell) {
+                        if (!isEditMode) return;
+                        
+                        const displaySpan = cell.querySelector('.cell-display');
+                        const editInput = cell.querySelector('.cell-edit');
+                        const currentValue = displaySpan.textContent;
+                        
+                        // 显示输入框，隐藏显示文本
+                        displaySpan.style.display = 'none';
+                        editInput.style.display = 'inline-block';
+                        editInput.value = currentValue;
+                        editInput.focus();
+                        editInput.select();
+                        
+                        // 输入框事件处理
+                        editInput.addEventListener('blur', function() {
+                            finishEdit(cell);
+                        });
+                        
+                        editInput.addEventListener('keypress', function(e) {
+                            if (e.key === 'Enter') {
+                                finishEdit(cell);
+                            } else if (e.key === 'Escape') {
+                                cancelEdit(cell);
+                            }
+                        });
+                    };
+
+                    // 完成编辑
+                    function finishEdit(cell) {
+                        const displaySpan = cell.querySelector('.cell-display');
+                        const editInput = cell.querySelector('.cell-edit');
+                        const newValue = editInput.value.trim();
+                        const originalValue = cell.getAttribute('data-original-value');
+                        const rowIndex = cell.parentElement.getAttribute('data-row-index');
+                        const column = cell.getAttribute('data-column');
+                        
+                        // 更新显示文本
+                        displaySpan.textContent = newValue;
+                        displaySpan.style.display = 'inline-block';
+                        editInput.style.display = 'none';
+                        
+                        // 如果值有变化，记录到modifiedData
+                        if (newValue !== originalValue) {
+                            if (!modifiedData[rowIndex]) {
+                                modifiedData[rowIndex] = {};
+                            }
+                            modifiedData[rowIndex][column] = {
+                                oldValue: originalValue,
+                                newValue: newValue
+                            };
+                            
+                            // 添加修改标记
+                            cell.classList.add('modified');
+                            cell.title = `原值: ${originalValue}`;
+                        } else {
+                            // 如果值恢复为原值，移除修改记录
+                            if (modifiedData[rowIndex] && modifiedData[rowIndex][column]) {
+                                delete modifiedData[rowIndex][column];
+                                if (Object.keys(modifiedData[rowIndex]).length === 0) {
+                                    delete modifiedData[rowIndex];
+                                }
+                            }
+                            cell.classList.remove('modified');
+                            cell.removeAttribute('title');
+                        }
+                    }
+
+                    // 取消编辑
+                    function cancelEdit(cell) {
+                        const displaySpan = cell.querySelector('.cell-display');
+                        const editInput = cell.querySelector('.cell-edit');
+                        const originalValue = cell.getAttribute('data-original-value');
+                        
+                        // 恢复显示原值
+                        displaySpan.textContent = originalValue;
+                        displaySpan.style.display = 'inline-block';
+                        editInput.style.display = 'none';
+                    }
+
+                    // 保存修改
+                    document.getElementById('saveChanges').addEventListener('click', function() {
+                        if (Object.keys(modifiedData).length === 0) {
+                            alert('没有检测到任何修改！');
+                            return;
+                        }
+                        
+                        const button = this;
+                        const originalText = button.textContent;
+                        button.disabled = true;
+                        button.textContent = '保存中...';
+                        
+                        // 收集新行数据
+                        const newRows = [];
+                        document.querySelectorAll('tr.new-row').forEach(row => {
+                            const rowData = {};
+                            const cells = row.querySelectorAll('td[data-column]');
+                            cells.forEach(cell => {
+                                const column = cell.getAttribute('data-column');
+                                const displaySpan = cell.querySelector('.cell-display');
+                                rowData[column] = displaySpan.textContent.trim();
+                            });
+                            newRows.push(rowData);
+                        });
+                        
+                        // 准备保存数据
+                        const saveData = {
+                            modified_data: modifiedData,
+                            new_rows: newRows,
+                            total_changes: Object.keys(modifiedData).reduce((total, row) => {
+                                return total + Object.keys(modifiedData[row]).length;
+                            }, 0),
+                            total_new_rows: newRows.length
+                        };
+                        
+                        // 发送到后端保存
+                        fetch('/save_honglian_changes', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify(saveData)
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            button.disabled = false;
+                            button.textContent = originalText;
+                            
+                            if (data.success) {
+                                alert(`保存成功！共修改了 ${saveData.total_changes} 个数据，新增了 ${saveData.total_new_rows} 条新数据。`);
+                                
+                                // 更新原始数据
+                                updateOriginalData();
+                                modifiedData = {};
+                                
+                                // 移除所有修改标记
+                                document.querySelectorAll('td.modified').forEach(cell => {
+                                    cell.classList.remove('modified');
+                                    cell.removeAttribute('title');
+                                });
+                                
+                                // 移除新行标识和背景色
+                                document.querySelectorAll('tr.new-row').forEach(row => {
+                                    row.classList.remove('new-row');
+                                    row.style.backgroundColor = '';
+                                });
+                            } else {
+                                alert(`保存失败: ${data.message}`);
+                            }
+                        })
+                        .catch(error => {
+                            button.disabled = false;
+                            button.textContent = originalText;
+                            alert('保存请求失败，请检查网络连接！');
+                            console.error('保存错误:', error);
+                        });
+                    });
+
+                    // 取消编辑
+                    document.getElementById('cancelEdit').addEventListener('click', function() {
+                        if (confirm('确定要取消所有修改吗？未保存的修改将会丢失。')) {
+                            // 恢复所有修改的单元格
+                            document.querySelectorAll('td.modified').forEach(cell => {
+                                const originalValue = cell.getAttribute('data-original-value');
+                                const displaySpan = cell.querySelector('.cell-display');
+                                displaySpan.textContent = originalValue;
+                                cell.classList.remove('modified');
+                                cell.removeAttribute('title');
+                            });
+                            
+                            modifiedData = {};
+                            alert('已取消所有修改，数据已恢复为原始值。');
+                        }
+                    });
+
+                    // 更新原始数据
+                    function updateOriginalData() {
+                        document.querySelectorAll('td[data-column]').forEach(cell => {
+                            const displaySpan = cell.querySelector('.cell-display');
+                            const newValue = displaySpan.textContent;
+                            cell.setAttribute('data-original-value', newValue);
+                        });
+                    }
+
+                    // 添加新行功能
+                    let newRowCounter = 0;
+                    
+                    document.getElementById('addNewRow').addEventListener('click', function() {
+                        const table = document.getElementById('dataTable');
+                        const tbody = table.querySelector('tbody');
+                        const headers = Array.from(table.querySelectorAll('thead th')).map(th => th.textContent.trim());
+                        
+                        // 创建新行
+                        const newRow = document.createElement('tr');
+                        newRow.classList.add('new-row');
+                        newRow.setAttribute('data-row-index', 'new_' + newRowCounter++);
+                        newRow.style.backgroundColor = '#fff3cd'; // 淡黄色背景标识新行
+                        
+                        // 为每个列创建单元格
+                        headers.forEach((header, index) => {
+                            const cell = document.createElement('td');
+                            cell.setAttribute('data-column', header);
+                            cell.setAttribute('data-original-value', ''); // 新行原始值为空
+                            
+                            // 创建显示元素
+                            const displaySpan = document.createElement('span');
+                            displaySpan.className = 'cell-display';
+                            displaySpan.textContent = '';
+                            
+                            // 创建输入元素
+                            const editInput = document.createElement('input');
+                            editInput.className = 'cell-edit';
+                            editInput.type = 'text';
+                            editInput.style.display = 'none';
+                            editInput.style.width = '100%';
+                            editInput.style.border = '1px solid #ced4da';
+                            editInput.style.padding = '2px 5px';
+                            editInput.style.borderRadius = '3px';
+                            
+                            cell.appendChild(displaySpan);
+                            cell.appendChild(editInput);
+                            
+                            // 添加点击事件
+                            cell.addEventListener('click', function() {
+                                if (isEditMode) {
+                                    editCell(this);
+                                }
+                            });
+                            
+                            newRow.appendChild(cell);
+                        });
+                        
+                        // 添加到表格开头
+                        tbody.insertBefore(newRow, tbody.firstChild);
+                        
+                        // 自动进入第一个单元格的编辑模式
+                        const firstCell = newRow.querySelector('td[data-column]');
+                        if (firstCell) {
+                            setTimeout(() => {
+                                editCell(firstCell);
+                            }, 100);
+                        }
+                        
+                        alert('新行已添加，请点击单元格输入数据');
+                    });
+
+                    // 红莲模式明细发送功能（修改后支持发送更新后的数据）
+                    document.getElementById('honglianDetail').addEventListener('click', function() {
+                        const button = this;
+                        const originalText = button.textContent;
+                        
+                        // 显示加载状态
+                        button.disabled = true;
+                        button.textContent = '正在发送...';
+                        
+                        // 获取表格数据
+                        const table = document.getElementById('dataTable');
+                        if (!table) {
+                            alert('未找到表格数据');
+                            button.disabled = false;
+                            button.textContent = originalText;
+                            return;
+                        }
+                        
+                        // 提取表头
+                        const headers = Array.from(table.querySelectorAll('thead th')).map(th => th.textContent.trim());
+                        
+                        // 提取数据行（支持修改后的数据）
+                        const dataRows = Array.from(table.querySelectorAll('tbody tr'));
+                        const tableData = [];
+                        
+                        dataRows.forEach(row => {
+                            const rowData = {};
+                            Array.from(row.cells).forEach((cell, index) => {
+                                // 优先使用编辑后的值
+                                const displaySpan = cell.querySelector('.cell-display');
+                                if (displaySpan) {
+                                    rowData[headers[index]] = displaySpan.textContent.trim();
+                                } else {
+                                    rowData[headers[index]] = cell.textContent.trim();
+                                }
+                            });
+                            tableData.push(rowData);
+                        });
+                        
+                        // 获取网页底部显示的总记录数
+                        let dataCount = tableData.length; // 默认使用表格数据长度
+                        const paginationSection = document.querySelector('.pagination');
+                        if (paginationSection) {
+                            const totalItemsSpan = paginationSection.querySelector('span');
+                            if (totalItemsSpan && totalItemsSpan.textContent.includes('共')) {
+                                // 从"共 X 条记录"中提取X
+                                const match = totalItemsSpan.textContent.match(/共\s*(\d+)\s*条记录/);
+                                if (match && match[1]) {
+                                    dataCount = match[1];
+                                }
+                            }
+                        }
+                        
+                        // 发送表格数据到钉钉群
+                        fetch('/send_to_dingtalk', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                file_name: '红莲模式明细',
+                                operation: '红莲模式 明细',
+                                table_data: tableData,
+                                data_count: dataCount
+                            })
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            button.innerHTML = '发送红莲模式明细到钉钉群';
+                            button.disabled = false;
+                            
+                            // 处理响应
+                            if (data.errcode === 0) {
+                                alert('红莲模式明细已成功发送到钉钉群！');
+                            } else {
+                                alert(`发送失败: ${data.errmsg || '未知错误'}`);
+                            }
+                        })
+                        .catch(error => {
+                            button.innerHTML = '发送红莲模式明细到钉钉群';
+                            button.disabled = false;
+                            alert('发送请求失败，请检查网络连接！');
+                            console.error('发送错误:', error);
+                        });
+                    });
+                </script>
+            </div>
+            
+            <!-- 图表容器 -->
+            <div id="chartContainer" style="display: none; margin: 20px 0; padding: 20px; background-color: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <h3 id="chartTitle" style="margin: 0;">数据图表</h3>
+                    <button id="closeChart" style="padding: 6px 12px; background-color: #95a5a6; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px;">
+                        关闭图表
+                    </button>
+                </div>
+                <canvas id="dataChartCanvas" height="300"></canvas>
+            </div>
+            
+            <!-- 筛选表单 - 增大尺寸 -->
+            <div class="filter-container" style="margin-bottom: 25px; padding: 25px; background-color: #e3f2fd; border-radius: 8px; border: 2px solid #90caf9;">
+                <h3 style="margin-top: 0; margin-bottom: 20px; font-size: 20px; font-weight: bold;">多条件筛选</h3>
+                <form method="GET" action="{{ url_for('honglian_result') }}" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px;">
+                    {% for col in columns %}
+                    <div>
+                        <label for="filter-{{ col }}" style="display: block; margin-bottom: 8px; font-weight: bold; font-size: 16px;">{{ col }}</label>
+                        <!-- 所有列都使用文本输入框，支持自定义模糊筛选 -->
+                        <input 
+                            type="text" 
+                            id="filter-{{ col }}" 
+                            name="{{ col }}" 
+                            value="{{ filters.get(col, '') }}" 
+                            {% if col in ['原车间', '接收车间'] %}
+                            placeholder="输入车间名称（支持空格分隔多条件）..." 
+                            {% else %}
+                            placeholder="输入筛选条件..." 
+                            {% endif %}
+                            style="width: 100%; padding: 12px 16px; border: 2px solid #ced4da; border-radius: 6px; font-size: 16px; box-sizing: border-box;"
+                        >
+                        {% if col in ['原车间', '接收车间'] %}
+                        <small style="color: #666; display: block; margin-top: 5px; font-size: 14px;">
+                            提示：支持空格分隔多个关键词，如"五一 四一"将匹配包含"五一"或"四一"的车间
+                        </small>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                    <!-- 数据不显示功能 -->
+                    <div style="grid-column: 1 / -1; margin-top: 10px; padding: 15px; background-color: #e3f2fd; border-radius: 6px; border-left: 5px solid #2196f3;">
+                        <div style="display: flex; flex-direction: column; gap: 20px;">
+                            <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap; padding: 10px 15px; background-color: #bbdefb; border-radius: 6px;">
+                                <input 
+                                    type="checkbox" 
+                                    id="excludeWorkshop" 
+                                    name="exclude_workshop" 
+                                    value="四二车间"
+                                    {% if request.args.get('exclude_workshop') == '四二车间' %}checked{% endif %}
+                                    style="width: 24px; height: 24px; cursor: pointer; accent-color: #1976d2;"
+                                >
+                                <label for="excludeWorkshop" style="font-weight: bold; font-size: 16px; cursor: pointer; color: #1565c0;">不显示四二车间数据</label>
+                            </div>
+                            
+                            <!-- 手动输入屏蔽车间 -->
+                            <div style="display: flex; flex-direction: column; gap: 10px;">
+                                <label for="manualExclude" style="font-weight: bold; font-size: 16px;">手动输入需要屏蔽的其他车间：</label>
+                                <textarea 
+                                    id="manualExclude" 
+                                    name="manual_exclude"
+                                    placeholder="输入需要屏蔽的车间名称，支持逗号、空格或换行分隔多个车间，例如：五一车间 六一车间 七一车间"
+                                    style="width: 100%; height: 100px; padding: 12px 16px; border: 2px solid #ced4da; border-radius: 6px; font-size: 16px; box-sizing: border-box; resize: vertical;"
+                                >{{ request.args.get('manual_exclude', '') }}</textarea>
+                                <small style="color: #666; font-size: 14px;">
+                                    提示：输入需要完全屏蔽的车间名称，例如"五一车间"，支持多个车间用逗号、空格或换行分隔
+                                </small>
+                            </div>
+                        </div>
+                        
+                        <!-- 操作说明 -->
+                        <div style="margin-top: 15px; padding: 15px; background-color: white; border-radius: 6px; border: 1px solid #ddd;">
+                            <h4 style="margin-top: 0; color: #333;">操作说明：</h4>
+                            <ul style="margin: 10px 0; padding-left: 20px; color: #555;">
+                                <li>1. 多条件筛选：在各字段输入框中输入关键词，支持空格分隔多个关键词（OR逻辑）</li>
+                                <li>2. 车间筛选：可以在"原车间"或"接收车间"输入框中筛选特定车间</li>
+                                <li>3. 数据过滤：勾选"不显示四二车间数据"可以完全排除四二车间的所有记录</li>
+                                <li>4. 手动屏蔽：在文本框中输入需要屏蔽的车间名称，支持多个车间用逗号、空格或换行分隔</li>
+                                <li>5. 重置功能：点击"重置筛选"按钮可以清除所有筛选条件</li>
+                                <li>6. 查看明细：点击每行的"查看明细"按钮可以查看完整数据</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div style="grid-column: 1 / -1; display: flex; gap: 15px; margin-top: 15px;">
+                        <button type="submit" style="padding: 15px 30px; background-color: #3498db; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 18px; font-weight: bold;">
+                            应用筛选
+                        </button>
+                        <a href="{{ url_for('honglian_result') }}" style="padding: 15px 30px; background-color: #95a5a6; color: white; text-decoration: none; border-radius: 6px; font-size: 18px; font-weight: bold;">
+                            重置筛选
+                        </a>
+                    </div>
+                </form>
+            </div>
+            
+            <div class="table-container">
+                <table id="dataTable" class="editable-table">
+                    <thead>
+                        <tr>
+                            {% for col in columns %}
+                                <th data-column="{{ col }}">{{ col }}</th>
+                            {% endfor %}
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in data %}
+                            <tr data-row-index="{{ loop.index0 }}">
+                                {% for col in columns %}
+                                    <td data-column="{{ col }}" data-original-value="{{ row.get(col, '') }}" onclick="editCell(this)">
+                                        <span class="cell-display">{{ row.get(col, '') }}</span>
+                                        <input type="text" class="cell-edit" style="display: none; width: 100%; padding: 4px; border: 1px solid #ccc; border-radius: 3px;">
+                                    </td>
+                                {% endfor %}
+                                <td>
+                                    <button class="btn btn-sm btn-info" onclick="viewDetail(this)" 
+                                            data-row='{{ row|tojson }}' 
+                                            data-columns='{{ columns|tojson }}'>
+                                        查看
+                                    </button>
+                                </td>
+                            </tr>
+                        {% else %}
+                            <tr>
+                                <td colspan="{{ columns|length + 1 }}">暂无数据</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                    <!-- 汇总行 -->
+                    {% if total_values %}
+                    <tfoot>
+                        <tr style="background-color: #f8f9fa; font-weight: bold;">
+                            <td>总计</td>
+                            {% for col in columns[1:-4] %}
+                            <td></td>
+                            {% endfor %}
+                            <td>{{ total_values['重量'] }}</td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                        </tr>
+                    </tfoot>
+                    {% endif %}
+                </table>
+            </div>
+            
+            <!-- 汇总信息区域 -->
+            {% if total_values %}
+            <div style="margin: 20px 0; padding: 15px; background-color: #e8f4f8; border-radius: 8px; border: 2px solid #3498db;">
+                <h3 style="margin-top: 0; color: #2c3e50;">数据汇总</h3>
+                <div style="display: flex; flex-wrap: wrap; gap: 20px;">
+                    {% for field, value in total_values.items() %}
+                    <div style="background-color: white; padding: 10px 20px; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                        <span style="font-weight: bold; color: #3498db;">{{ field }}:</span>
+                        <span style="font-size: 18px; margin-left: 10px;">{{ value }}</span>
+                    </div>
+                    {% endfor %}
+                    <div style="background-color: white; padding: 10px 20px; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                        <span style="font-weight: bold; color: #e74c3c;">总记录数:</span>
+                        <span style="font-size: 18px; margin-left: 10px;">{{ total_items }}</span>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- 功能脚本 -->
+            <script>
+                // 切换自定义映射状态
+                function toggleCustomMapping() {
+                    const checkbox = document.getElementById('customMappingSwitch');
+                    const isEnabled = checkbox.checked;
+                    
+                    // 显示加载提示
+                    checkbox.disabled = true;
+                    
+                    // 发送AJAX请求更新后端状态
+                    fetch('/toggle_custom_mapping', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ enabled: isEnabled })
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('网络响应错误');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data.success) {
+                            // 刷新页面以应用新的映射设置
+                            location.reload();
+                        } else {
+                            alert('更新映射状态失败，请重试！');
+                            checkbox.checked = !isEnabled; // 恢复原状态
+                            checkbox.disabled = false;
+                        }
+                    })
+                    .catch(error => {
+                        console.error('更新映射状态失败:', error);
+                        alert('更新映射状态失败，请重试！');
+                        checkbox.checked = !isEnabled; // 恢复原状态
+                        checkbox.disabled = false;
+                    });
+                }
+                
+                // 图表生成功能
+                let currentChart = null;
+                
+                // 预定义颜色数组，用于多系列图表
+                const chartColors = [
+                    'rgba(255, 99, 132, 0.6)', 'rgba(54, 162, 235, 0.6)',
+                    'rgba(255, 206, 86, 0.6)', 'rgba(75, 192, 192, 0.6)',
+                    'rgba(153, 102, 255, 0.6)', 'rgba(255, 159, 64, 0.6)',
+                    'rgba(199, 199, 199, 0.6)', 'rgba(83, 102, 255, 0.6)',
+                    'rgba(255, 99, 235, 0.6)', 'rgba(255, 206, 186, 0.6)'
+                ];
+                
+                const chartBorderColors = [
+                    'rgba(255, 99, 132, 1)', 'rgba(54, 162, 235, 1)',
+                    'rgba(255, 206, 86, 1)', 'rgba(75, 192, 192, 1)',
+                    'rgba(153, 102, 255, 1)', 'rgba(255, 159, 64, 1)',
+                    'rgba(199, 199, 199, 1)', 'rgba(83, 102, 255, 1)',
+                    'rgba(255, 99, 235, 1)', 'rgba(255, 206, 186, 1)'
+                ];
+                
+                // 设置图表容器样式，增加高度
+                const chartContainer = document.getElementById('chartContainer');
+                chartContainer.style.height = '600px';
+                const canvasContainer = document.getElementById('dataChartCanvas');
+                canvasContainer.style.height = '550px';
+                
+                // 关闭图表按钮点击事件
+                document.getElementById('closeChart').addEventListener('click', function() {
+                    const chartContainer = document.getElementById('chartContainer');
+                    chartContainer.style.display = 'none';
+                    
+                    // 销毁图表以释放内存
+                    if (currentChart) {
+                        currentChart.destroy();
+                        currentChart = null;
+                    }
+                });
+                
+                // 页面加载完成后，自动填充数据列下拉框
+                document.addEventListener('DOMContentLoaded', function() {
+                    // 获取表格表头信息
+                    const table = document.getElementById('dataTable');
+                    if (table) {
+                        const headers = Array.from(table.querySelectorAll('thead th')).map(th => th.textContent);
+                        const groupColumnSelect = document.getElementById('chartGroupColumn');
+                        const colorColumnSelect = document.getElementById('chartColorColumn');
+                        const dataColumnSelect = document.getElementById('chartDataColumn');
+                        
+                        // 清空现有选项并为三个下拉框添加选项
+                        [groupColumnSelect, colorColumnSelect, dataColumnSelect].forEach((select, index) => {
+                            select.innerHTML = '';
+                            const defaultOption = document.createElement('option');
+                            defaultOption.value = '';
+                            const defaultTexts = ['选择分组列(x轴)', '选择颜色分组列(可选)', '选择数据列(y轴)'];
+                            defaultOption.textContent = defaultTexts[index];
+                            select.appendChild(defaultOption);
+                            
+                            // 添加表头选项
+                            headers.forEach(header => {
+                                const option = document.createElement('option');
+                                option.value = header;
+                                option.textContent = header;
+                                select.appendChild(option);
+                            });
+                        });
+                    }
+                });
+                
+                // 生成图表按钮点击事件
+                document.getElementById('generateChart').addEventListener('click', function() {
+                    const groupColumn = document.getElementById('chartGroupColumn').value;
+                    const colorColumn = document.getElementById('chartColorColumn').value;
+                    const dataColumn = document.getElementById('chartDataColumn').value;
+                    const originalWorkshopFilter = document.getElementById('chartOriginalWorkshop').value;
+                    const chartType = document.getElementById('chartType').value;
+                    
+                    // 验证必要参数
+                    if (!groupColumn) {
+                        alert('请选择分组列(x轴)');
+                        return;
+                    }
+                    if (!dataColumn) {
+                        alert('请选择数据列(y轴)');
+                        return;
+                    }
+                    
+                    // 从表格中提取数据
+                    const table = document.getElementById('dataTable');
+                    const headers = Array.from(table.querySelectorAll('thead th')).map(th => th.textContent);
+                    const groupColumnIndex = headers.indexOf(groupColumn);
+                    const colorColumnIndex = colorColumn ? headers.indexOf(colorColumn) : -1;
+                    const dataColumnIndex = headers.indexOf(dataColumn);
+                    const originalWorkshopIndex = headers.indexOf('原车间');
+                    
+                    if (groupColumnIndex === -1 || dataColumnIndex === -1) {
+                        alert('未找到指定的列');
+                        return;
+                    }
+                    
+                    if (colorColumn && colorColumnIndex === -1) {
+                        alert('未找到指定的颜色分组列');
+                        return;
+                    }
+                    
+                    // 提取数据并处理分组
+                    const dataRows = Array.from(table.querySelectorAll('tbody tr'));
+                    const groupedData = {};
+                    const uniqueLabels = new Set();
+                    const uniqueColors = new Set();
+                    
+                    // 收集所有唯一的分组值和颜色值
+                    dataRows.forEach(row => {
+                        // 应用原车间筛选
+                        if (originalWorkshopFilter && originalWorkshopIndex !== -1) {
+                            const rowOriginalWorkshop = row.cells[originalWorkshopIndex].textContent.trim();
+                            // 模糊匹配原车间
+                            if (!rowOriginalWorkshop.includes(originalWorkshopFilter)) {
+                                return; // 跳过不符合筛选条件的行
+                            }
+                        }
+                        
+                        const groupValue = row.cells[groupColumnIndex].textContent.trim();
+                        const dataValue = row.cells[dataColumnIndex].textContent.trim();
+                        const numValue = parseFloat(dataValue.replace(/,/g, ''));
+                        
+                        if (!isNaN(numValue)) {
+                            uniqueLabels.add(groupValue);
+                            
+                            if (colorColumnIndex !== -1) {
+                                const colorValue = row.cells[colorColumnIndex].textContent.trim();
+                                uniqueColors.add(colorValue);
+                            }
+                        }
+                    });
+                    
+                    // 转换为数组并排序
+                    const sortedLabels = Array.from(uniqueLabels).sort();
+                    const sortedColors = Array.from(uniqueColors).sort();
+                    
+                    // 初始化分组数据结构
+                    if (colorColumnIndex !== -1) {
+                        // 多系列数据（按颜色分组）
+                        sortedColors.forEach(color => {
+                            groupedData[color] = {};
+                            sortedLabels.forEach(label => {
+                                groupedData[color][label] = 0;
+                            });
+                        });
+                    } else {
+                        // 单系列数据
+                        sortedLabels.forEach(label => {
+                            groupedData[label] = 0;
+                        });
+                    }
+                    
+                    // 填充数据（使用求和模式）
+                    let hasValidData = false;
+                    dataRows.forEach(row => {
+                        // 应用原车间筛选
+                        if (originalWorkshopFilter && originalWorkshopIndex !== -1) {
+                            const rowOriginalWorkshop = row.cells[originalWorkshopIndex].textContent.trim();
+                            // 模糊匹配原车间
+                            if (!rowOriginalWorkshop.includes(originalWorkshopFilter)) {
+                                return; // 跳过不符合筛选条件的行
+                            }
+                        }
+                        
+                        const groupValue = row.cells[groupColumnIndex].textContent.trim();
+                        const dataValue = row.cells[dataColumnIndex].textContent.trim();
+                        const numValue = parseFloat(dataValue.replace(/,/g, ''));
+                        
+                        if (!isNaN(numValue)) {
+                            hasValidData = true;
+                            
+                            if (colorColumnIndex !== -1) {
+                                const colorValue = row.cells[colorColumnIndex].textContent.trim();
+                                if (groupedData[colorValue] && groupedData[colorValue][groupValue] !== undefined) {
+                                    groupedData[colorValue][groupValue] += numValue; // 求和模式
+                                }
+                            } else {
+                                if (groupedData[groupValue] !== undefined) {
+                                    groupedData[groupValue] += numValue; // 求和模式
+                                }
+                            }
+                        }
+                    });
+                    
+                    // 计算总和
+                    let totalSum = 0;
+                    if (colorColumnIndex !== -1) {
+                        sortedColors.forEach(color => {
+                            sortedLabels.forEach(label => {
+                                totalSum += groupedData[color][label];
+                            });
+                        });
+                    } else {
+                        sortedLabels.forEach(label => {
+                            totalSum += groupedData[label];
+                        });
+                    }
+                    
+                    if (!hasValidData) {
+                        alert('所选列中没有可用于图表的数值数据');
+                        return;
+                    }
+                    
+                    // 准备Chart.js数据 - 显示所有数据点（移除50个限制）
+                    const chartData = {
+                        labels: sortedLabels,
+                        datasets: []
+                    };
+                    
+                    if (colorColumnIndex !== -1) {
+                        // 多系列数据集
+                        sortedColors.forEach((color, colorIndex) => {
+                            const datasetData = [];
+                            sortedLabels.slice(0, 50).forEach(label => {
+                                datasetData.push(groupedData[color][label]);
+                            });
+                            
+                            chartData.datasets.push({
+                                label: color,
+                                data: datasetData,
+                                backgroundColor: chartColors[colorIndex % chartColors.length],
+                                borderColor: chartBorderColors[colorIndex % chartBorderColors.length],
+                                borderWidth: 2,
+                                fill: chartType === 'line',
+                                tension: 0.1,
+                                // 添加数据标签
+                                datalabels: {
+                                    align: 'end',
+                                    anchor: 'end',
+                                    formatter: function(value) {
+                                        return value.toFixed(3);
+                                    }
+                                }
+                            });
+                        });
+                    } else {
+                        // 单系列数据集
+                        const datasetData = [];
+                        sortedLabels.slice(0, 50).forEach(label => {
+                            datasetData.push(groupedData[label]);
+                        });
+                        
+                        chartData.datasets.push({
+                            label: dataColumn,
+                            data: datasetData,
+                            backgroundColor: chartColors[0],
+                            borderColor: chartBorderColors[0],
+                            borderWidth: 2,
+                            fill: chartType === 'line',
+                            tension: 0.1,
+                            // 添加数据标签
+                            datalabels: {
+                                align: 'end',
+                                anchor: 'end',
+                                formatter: function(value) {
+                                    return value.toFixed(3);
+                                }
+                            }
+                        });
+                    }
+                    
+                    // 显示图表容器
+                    const chartContainer = document.getElementById('chartContainer');
+                    chartContainer.style.display = 'block';
+                    
+                    // 更新图表标题，包含求和信息
+                    let title = `${dataColumn} by ${groupColumn}`;
+                    if (colorColumn) {
+                        title += ` (按${colorColumn}分类)`;
+                    }
+                    // 添加原车间筛选条件到标题
+                    if (originalWorkshopFilter && originalWorkshopFilter !== '全部') {
+                        title += ` - 原车间: ${originalWorkshopFilter}`;
+                    }
+                    title += ` - ${chartType === 'bar' ? '柱状图' : '折线图'}`;
+                    title += ` (总和: ${totalSum.toFixed(3)})`;
+                    document.getElementById('chartTitle').textContent = title;
+                    
+                    // 销毁现有图表
+                    if (currentChart) {
+                        currentChart.destroy();
+                    }
+                    
+                    // 创建新图表
+                    const ctx = document.getElementById('dataChartCanvas').getContext('2d');
+                    currentChart = new Chart(ctx, {
+                        type: chartType,
+                        data: chartData,
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    position: 'top',
+                                },
+                                tooltip: {
+                                    mode: 'index',
+                                    intersect: false
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    title: {
+                                        display: true,
+                                        text: dataColumn
+                                    },
+                                    ticks: {
+                                        callback: function(value) {
+                                            return value.toFixed(3);
+                                        }
+                                    }
+                                },
+                                x: {
+                                    title: {
+                                        display: true,
+                                        text: groupColumn
+                                    },
+                                    ticks: {
+                                        maxRotation: 90,
+                                        minRotation: 90
+                                    }
+                                }
+                            }
+                        }
+                    });
+                });
+            </script>
+            
+            <!-- 分页导航 -->
+            <div class="pagination" style="margin-top: 20px; text-align: center;">
+                <form method="GET" action="{{ url_for('honglian_result') }}" style="display: inline-block; margin-right: 20px;">
+                    {% for col, val in filters.items() %}
+                    <input type="hidden" name="{{ col }}" value="{{ val }}">
+                    {% endfor %}
+                    <select name="page_size" id="page_size" onchange="this.form.submit()" style="padding: 5px 10px; border: 1px solid #ddd; border-radius: 3px;">
+                        <option value="5" {% if page_size == 5 %}selected{% endif %}>5条/页</option>
+                        <option value="8" {% if page_size == 8 %}selected{% endif %}>8条/页</option>
+                        <option value="10" {% if page_size == 10 %}selected{% endif %}>10条/页</option>
+                        <option value="20" {% if page_size == 20 %}selected{% endif %}>20条/页</option>
+                        <option value="50" {% if page_size == 50 %}selected{% endif %}>50条/页</option>
+                        <option value="100" {% if page_size == 100 %}selected{% endif %}>100条/页</option>
+                        <option value="all" {% if page_size == 'all' or page_size is not defined %}selected{% endif %}>全部显示</option>
+                    </select>
+                </form>
+                <span style="margin-right: 10px;">共 {{ total_items }} 条记录</span>
+                {% if page_size != 'all' %}
+                <span style="margin-right: 10px;">第 {{ page }} / {{ total_pages }} 页</span>
+                {% if page > 1 %}
+                <a href="{{ url_for('honglian_result', page=page-1, page_size=page_size, **filters) }}" style="margin: 0 5px; padding: 5px 10px; text-decoration: none; background-color: #f0f0f0; border-radius: 3px;">上一页</a>
+                {% endif %}
+                
+                {% for p in range(1, total_pages + 1) %}
+                    {% if p == page %}
+                    <span style="margin: 0 5px; padding: 5px 10px; background-color: #3498db; color: white; border-radius: 3px;">{{ p }}</span>
+                    {% else %}
+                    <a href="{{ url_for('honglian_result', page=p, page_size=page_size, **filters) }}" style="margin: 0 5px; padding: 5px 10px; text-decoration: none; background-color: #f0f0f0; border-radius: 3px;">{{ p }}</a>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if page < total_pages %}
+                <a href="{{ url_for('honglian_result', page=page+1, page_size=page_size, **filters) }}" style="margin: 0 5px; padding: 5px 10px; text-decoration: none; background-color: #f0f0f0; border-radius: 3px;">下一页</a>
+                {% endif %}
+                {% endif %}
+            </div>
+
+            <a href="{{ url_for('index') }}" class="btn btn-secondary back-btn">返回首页</a>
+        </div>
+        </div>
+    </div>
+
+    <!-- 查看明细模态框 -->
+    <div class="modal fade" id="detailModal" tabindex="-1" aria-labelledby="detailModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="detailModalLabel">数据明细</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>字段</th>
+                                    <th>值</th>
+                                </tr>
+                            </thead>
+                            <tbody id="detailTableBody">
+                                <!-- 明细数据将通过JavaScript动态填充 -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 查看明细功能
+        function viewDetail(button) {
+            // 获取行数据
+            const rowData = JSON.parse(button.getAttribute('data-row'));
+            const columns = JSON.parse(button.getAttribute('data-columns'));
+            
+            // 清空现有内容
+            const detailTableBody = document.getElementById('detailTableBody');
+            detailTableBody.innerHTML = '';
+            
+            // 填充明细数据
+            columns.forEach(column => {
+                const row = document.createElement('tr');
+                const fieldCell = document.createElement('td');
+                const valueCell = document.createElement('td');
+                
+                fieldCell.textContent = column;
+                fieldCell.className = 'font-weight-bold';
+                valueCell.textContent = rowData[column] || '';
+                
+                row.appendChild(fieldCell);
+                row.appendChild(valueCell);
+                detailTableBody.appendChild(row);
+            });
+            
+            // 显示模态框
+            const detailModal = new bootstrap.Modal(document.getElementById('detailModal'));
+            detailModal.show();
+        }
+    </script>
+</body>
+</html>

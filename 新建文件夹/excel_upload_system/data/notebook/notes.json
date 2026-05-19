@@ -1,0 +1,28 @@
+{
+  "note_1": {
+    "note_id": "note_1",
+    "user_id": "demo_user_1",
+    "title": "2025.11/08",
+    "content": {
+      "text": "天命之性谓之道"
+    },
+    "tags": [
+      "随笔"
+    ],
+    "folder_id": null,
+    "priority": 3,
+    "status": "draft",
+    "created_at": "2025-11-08T18:08:14.495722",
+    "updated_at": "2025-11-08T18:08:14.495728",
+    "version": 1,
+    "history": [
+      {
+        "version": 1,
+        "content": {
+          "text": "天命之性谓之道"
+        },
+        "created_at": "2025-11-08T18:08:14.495729"
+      }
+    ]
+  }
+}

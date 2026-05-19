@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>错误 - Excel上传分析汇总工具</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>发生错误</h1>
+        
+        <div class="alert alert-danger">
+            <h3>😢 抱歉，操作过程中出现了错误</h3>
+            <p>{{ error_message or '未知错误' }}</p>
+        </div>
+        
+        <div class="error-details">
+            {% if error_details %}
+                <h4>错误详情：</h4>
+                <pre>{{ error_details }}</pre>
+            {% endif %}
+        </div>
+        
+        <div class="suggestions">
+            <h4>建议操作：</h4>
+            <ul>
+                <li>📱 <strong>手机用户注意：</strong>确保网络连接稳定，建议使用WiFi</li>
+                <li>📊 检查文件格式是否正确（支持.xlsx, .xls, .csv）</li>
+                <li>📏 确保文件大小不超过50MB</li>
+                <li>🔄 尝试重新上传文件</li>
+                <li>📞 如果问题持续，请联系管理员</li>
+            </ul>
+        </div>
+        
+        <div class="actions">
+            <a href="{{ url_for('index') }}" class="btn">返回首页</a>
+        </div>
+        
+        <style>
+            .error-details pre {
+                background-color: #f8f9fa;
+                padding: 15px;
+                border-radius: 4px;
+                border: 1px solid #e9ecef;
+                max-height: 300px;
+                overflow-y: auto;
+                font-family: monospace;
+                font-size: 14px;
+                white-space: pre-wrap;
+                word-break: break-word;
+            }
+            
+            .suggestions {
+                margin: 20px 0;
+            }
+            
+            .suggestions ul {
+                line-height: 1.8;
+            }
+            
+            .actions {
+                margin-top: 30px;
+            }
+        </style>
+    </div>
+</body>
+</html>

@@ -1,0 +1,25 @@
+{
+  "a732_template": {
+    "enabled": true,
+    "format": "【{count}】{prefix} {suffixes}, {total_weight}kg",
+    "description": "A732型号批号显示格式",
+    "example": "【7】466TCMK16J06 1_1  1_2  2_1  2_2  3_1  3_2  4_1, 1164.0kg"
+  },
+  "general_template": {
+    "enabled": true,
+    "format": "{batch_display}, {weight_str}",
+    "description": "通用批号显示格式"
+  },
+  "table_data_template": {
+    "enabled": true,
+    "format": "表格数据处理：{row_count}行数据，{column_count}列，包含{data_types}",
+    "description": "表格数据处理结果展示格式",
+    "example": "表格数据处理：150行数据，8列，包含批号、重量、日期、状态"
+  },
+  "excel_analysis_template": {
+    "enabled": true,
+    "format": "Excel分析结果：{analysis_type} - {summary}",
+    "description": "Excel数据分析结果展示格式",
+    "example": "Excel分析结果：数据统计 - 总计重量：15,680kg，平均重量：104.5kg"
+  }
+}

@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>列设置 - Excel上传分析汇总工具</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>列设置</h1>
+        
+        <div class="file-info">
+            <h3>文件信息</h3>
+            <p><strong>文件名:</strong> {{ filename }}</p>
+            <p><strong>数据规模:</strong> {{ shape.rows }} 行 × {{ shape.columns }} 列</p>
+        </div>
+        
+        <div class="columns-section">
+            <h2>列信息</h2>
+            <p>以下是文件中的所有列，请确认后开始分析：</p>
+            
+            <form id="analyze-form" method="post" action="/analyze">
+                <input type="hidden" name="filename" value="{{ filename }}">
+                
+                <div class="columns-list">
+                    {% for column in columns %}
+                    <div class="column-item {% if loop.index > 20 %}collapsed-column{% endif %}" data-index="{{ loop.index }}">
+                        <input type="checkbox" id="col-{{ loop.index }}" name="columns" value="{{ column }}" {% if loop.index <= 5 %}checked{% endif %}>
+                        <label for="col-{{ loop.index }}">{{ column }}</label>
+                    </div>
+                    {% endfor %}
+                </div>
+                
+                {% if columns|length > 20 %}
+                <div class="column-toggle">
+                    <button type="button" id="toggleColumns" class="btn btn-sm btn-secondary">
+                        显示全部 {{ columns|length - 20 }} 列
+                    </button>
+                </div>
+                {% endif %}
+                
+                <div style="margin: 15px 0; display: flex; gap: 10px; justify-content: center;">
+                    <button type="button" id="selectAllColumns" class="btn btn-sm btn-secondary">全选</button>
+                    <button type="button" id="deselectAllColumns" class="btn btn-sm btn-secondary">全不选</button>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="submit" class="btn">开始分析</button>
+                    <a href="{{ url_for('index') }}" class="btn btn-secondary">重新上传</a>
+                </div>
+            </form>
+        </div>
+        
+        <style>
+            .columns-list {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+                gap: 6px;
+                margin: 15px 0;
+                max-height: 500px;
+                overflow-y: auto;
+            }
+            
+            .column-item {
+                display: flex;
+                align-items: center;
+                padding: 4px 8px;
+                background-color: #f8f9fa;
+                border-radius: 4px;
+                font-size: 12px;
+                min-height: 28px;
+                transition: all 0.2s ease;
+            }
+            
+            .column-item:hover {
+                background-color: #e9ecef;
+            }
+            
+            .column-item input[type="checkbox"] {
+                margin-right: 6px;
+                transform: scale(0.9);
+            }
+            
+            .column-item label {
+                font-size: 12px;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                flex: 1;
+                cursor: pointer;
+            }
+            
+            .collapsed-column {
+                display: none;
+            }
+            
+            .column-toggle {
+                margin: 10px 0;
+                text-align: center;
+            }
+            
+            .form-actions {
+                margin-top: 20px;
+                display: flex;
+                gap: 10px;
+            }
+        </style>
+    </div>
+    
+    <script>
+        // 列折叠/展开功能
+        document.addEventListener('DOMContentLoaded', function() {
+            const toggleButton = document.getElementById('toggleColumns');
+            const collapsedColumns = document.querySelectorAll('.collapsed-column');
+            let isExpanded = false;
+            
+            if (toggleButton) {
+                toggleButton.addEventListener('click', function() {
+                    isExpanded = !isExpanded;
+                    
+                    collapsedColumns.forEach(column => {
+                        column.style.display = isExpanded ? 'flex' : 'none';
+                    });
+                    
+                    if (isExpanded) {
+                        toggleButton.textContent = '折叠多余列';
+                    } else {
+                        toggleButton.textContent = '显示全部 ' + collapsedColumns.length + ' 列';
+                    }
+                });
+            }
+            
+            // 全选/全不选功能
+            document.getElementById('selectAllColumns').addEventListener('click', function() {
+                const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+                checkboxes.forEach(checkbox => {
+                    checkbox.checked = true;
+                });
+            });
+            
+            document.getElementById('deselectAllColumns').addEventListener('click', function() {
+                const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+                checkboxes.forEach(checkbox => {
+                    checkbox.checked = false;
+                });
+            });
+        });
+    </script>
+    
+    <script src="{{ url_for('static', filename='js/scripts.js') }}"></script>
+</body>
+</html>

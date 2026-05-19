@@ -1,0 +1,759 @@
+{
+  "employees": [
+    {
+      "id": "00f667a2-a52c-4ad2-ac84-295d1f846b0f",
+      "name": "赵恩辉",
+      "employee_id": "18951",
+      "created_at": "2025-11-23 17:23:30"
+    },
+    {
+      "id": "45be6d51-2927-4629-99ff-56dbc14a2a3d",
+      "name": "王健儒",
+      "employee_id": "20377",
+      "created_at": "2025-11-23 17:47:20"
+    },
+    {
+      "id": "6ed055a5-4f87-4878-b230-862f95cb9a0d",
+      "name": "单文线",
+      "employee_id": "4560",
+      "created_at": "2025-11-23 18:26:00"
+    },
+    {
+      "id": "c7f6004c-5197-4fce-9323-0d07eb9e7333",
+      "name": "黎俊",
+      "employee_id": "5820",
+      "created_at": "2025-11-23 19:28:01"
+    },
+    {
+      "id": "a7fe95c4-2cae-4ff2-9158-1e089903e421",
+      "name": "刘建",
+      "employee_id": "5115",
+      "created_at": "2025-11-23 23:08:24"
+    },
+    {
+      "id": "7cb872fe-4097-45ef-a0bf-bcbd0d2c6748",
+      "name": "王腾",
+      "employee_id": "20112",
+      "created_at": "2025-11-25 14:04:04"
+    }
+  ],
+  "uniform_types": [
+    {
+      "id": "1cb555ab-2cc7-459a-9a2f-a9d032d02e05",
+      "name": "劳保鞋",
+      "description": "一年一双，坏了以旧换新",
+      "created_at": "2025-11-23 17:20:15"
+    },
+    {
+      "id": "85ba7fc7-e9d9-4acb-bf41-d940fada3898",
+      "name": "无尘服",
+      "description": "一年4套",
+      "created_at": "2025-11-23 18:13:55"
+    },
+    {
+      "id": "e948379b-4bd6-46e4-bbdc-e69d3179fbe9",
+      "name": "陶瓷刀",
+      "description": "半月一个",
+      "created_at": "2025-11-23 18:14:34"
+    },
+    {
+      "id": "6656956a-1ef0-4b2c-879c-70ae065755e4",
+      "name": "袖套",
+      "description": "",
+      "created_at": "2025-11-24 08:08:11"
+    },
+    {
+      "id": "b243d603-1763-401a-a110-72a09b13601f",
+      "name": "加农炮",
+      "description": "",
+      "created_at": "2025-11-24 17:26:05"
+    },
+    {
+      "id": "f7d20eca-6723-4da8-9b20-682ac550804c",
+      "name": "DF-5C",
+      "description": "",
+      "created_at": "2025-11-24 17:26:30"
+    },
+    {
+      "id": "865b8b3d-2679-44f9-a4f3-2644deada1a7",
+      "name": "粒子加速器",
+      "description": "",
+      "created_at": "2025-11-24 17:26:45"
+    },
+    {
+      "id": "5270e9ad-bc19-4549-853f-f21f91093787",
+      "name": "奥特曼变身器",
+      "description": "",
+      "created_at": "2025-11-24 17:26:58"
+    },
+    {
+      "id": "fdb62e7e-3782-48df-bb4a-85a627838dc4",
+      "name": "驱逐舰",
+      "description": "",
+      "created_at": "2025-11-24 17:27:17"
+    },
+    {
+      "id": "aef67c46-9f32-4f89-8522-4ad438673aef",
+      "name": "巡洋舰",
+      "description": "",
+      "created_at": "2025-11-24 17:27:25"
+    },
+    {
+      "id": "28590a47-d839-49c3-b831-4687780a7dff",
+      "name": "时光机",
+      "description": "",
+      "created_at": "2025-11-24 17:28:53"
+    },
+    {
+      "id": "ff96e1a2-b7d5-47c6-895b-f9745faf6f4f",
+      "name": "二向箔",
+      "description": "",
+      "created_at": "2025-11-24 17:29:03"
+    },
+    {
+      "id": "fafaaddf-e0e8-49d0-8f55-474bfd5c4f29",
+      "name": "盘古斧",
+      "description": "",
+      "created_at": "2025-11-24 17:29:19"
+    },
+    {
+      "id": "dd908b71-7eb5-419f-b9ea-236c179a7607",
+      "name": "陆地巡洋舰",
+      "description": "",
+      "created_at": "2025-11-25 14:13:21"
+    },
+    {
+      "id": "2b2ff68e-5efb-4e4b-94dd-567467f6bad3",
+      "name": "苦茶子",
+      "description": "",
+      "created_at": "2025-11-25 15:31:16"
+    }
+  ],
+  "uniform_records": [
+    {
+      "id": "aee38005-16fc-4c1a-b2bc-84b803697d37",
+      "employee_id": "18951",
+      "employee_name": "赵恩辉",
+      "uniform_type_id": "1cb555ab-2cc7-459a-9a2f-a9d032d02e05",
+      "uniform_type_name": "劳保鞋",
+      "issue_date": "2025-11-23",
+      "recorded_at": "2025-11-23 23:08:57"
+    },
+    {
+      "id": "8c44a6a7-7c8b-4d76-8fae-1a1d99e83170",
+      "employee_id": "20377",
+      "employee_name": "王健儒",
+      "uniform_type_id": "1cb555ab-2cc7-459a-9a2f-a9d032d02e05",
+      "uniform_type_name": "劳保鞋",
+      "issue_date": "2025-11-23",
+      "recorded_at": "2025-11-24 06:52:50"
+    },
+    {
+      "id": "05f200a3-e892-4915-ab52-3754aa4dd43e",
+      "employee_id": "4560",
+      "employee_name": "单文线",
+      "uniform_type_id": "1cb555ab-2cc7-459a-9a2f-a9d032d02e05",
+      "uniform_type_name": "劳保鞋",
+      "issue_date": "2025-11-23",
+      "recorded_at": "2025-11-24 06:52:50"
+    },
+    {
+      "id": "c49445d6-b50f-4155-93e9-d24ee1f507ca",
+      "employee_id": "18951",
+      "employee_name": "赵恩辉",
+      "uniform_type_id": "85ba7fc7-e9d9-4acb-bf41-d940fada3898",
+      "uniform_type_name": "无尘服",
+      "issue_date": "2025-11-13",
+      "recorded_at": "2025-11-24 07:01:08"
+    },
+    {
+      "id": "1cfe2bbe-a004-4ff2-9a67-de19ae4b210a",
+      "employee_id": "20377",
+      "employee_name": "王健儒",
+      "uniform_type_id": "85ba7fc7-e9d9-4acb-bf41-d940fada3898",
+      "uniform_type_name": "无尘服",
+      "issue_date": "2025-11-13",
+      "recorded_at": "2025-11-24 07:01:08"
+    },
+    {
+      "id": "e901811b-1857-4bef-8e9b-ff1a08153d20",
+      "employee_id": "4560",
+      "employee_name": "单文线",
+      "uniform_type_id": "85ba7fc7-e9d9-4acb-bf41-d940fada3898",
+      "uniform_type_name": "无尘服",
+      "issue_date": "2025-11-13",
+      "recorded_at": "2025-11-24 07:01:08"
+    },
+    {
+      "id": "834b4534-568c-47d3-9d64-e4888cb42f37",
+      "employee_id": "5820",
+      "employee_name": "黎俊",
+      "uniform_type_id": "85ba7fc7-e9d9-4acb-bf41-d940fada3898",
+      "uniform_type_name": "无尘服",
+      "issue_date": "2025-11-13",
+      "recorded_at": "2025-11-24 07:01:08"
+    },
+    {
+      "id": "e773a373-4994-427a-b40c-3aad6ad1587e",
+      "employee_id": "5115",
+      "employee_name": "刘建",
+      "uniform_type_id": "85ba7fc7-e9d9-4acb-bf41-d940fada3898",
+      "uniform_type_name": "无尘服",
+      "issue_date": "2025-11-13",
+      "recorded_at": "2025-11-24 07:01:08"
+    },
+    {
+      "id": "d078e36f-d5ac-4b06-835f-5c5085058274",
+      "employee_id": "18951",
+      "employee_name": "赵恩辉",
+      "uniform_type_id": "e948379b-4bd6-46e4-bbdc-e69d3179fbe9",
+      "uniform_type_name": "陶瓷刀",
+      "issue_date": "2025-11-23",
+      "recorded_at": "2025-11-24 07:01:46"
+    },
+    {
+      "id": "1deada55-6826-4d33-83be-8938e8fa173c",
+      "employee_id": "20377",
+      "employee_name": "王健儒",
+      "uniform_type_id": "e948379b-4bd6-46e4-bbdc-e69d3179fbe9",
+      "uniform_type_name": "陶瓷刀",
+      "issue_date": "2025-11-23",
+      "recorded_at": "2025-11-24 07:01:46"
+    },
+    {
+      "id": "2301e22d-9b8b-4ce5-920f-a28efdc2354c",
+      "employee_id": "4560",
+      "employee_name": "单文线",
+      "uniform_type_id": "e948379b-4bd6-46e4-bbdc-e69d3179fbe9",
+      "uniform_type_name": "陶瓷刀",
+      "issue_date": "2025-11-23",
+      "recorded_at": "2025-11-24 07:01:46"
+    },
+    {
+      "id": "b6e9c994-acc0-4c47-8cfe-78864b3c6cdc",
+      "employee_id": "5820",
+      "employee_name": "黎俊",
+      "uniform_type_id": "e948379b-4bd6-46e4-bbdc-e69d3179fbe9",
+      "uniform_type_name": "陶瓷刀",
+      "issue_date": "2025-11-23",
+      "recorded_at": "2025-11-24 07:01:46"
+    },
+    {
+      "id": "8a14b202-c362-4a22-a818-9a2fb52b0fa8",
+      "employee_id": "5115",
+      "employee_name": "刘建",
+      "uniform_type_id": "e948379b-4bd6-46e4-bbdc-e69d3179fbe9",
+      "uniform_type_name": "陶瓷刀",
+      "issue_date": "2025-11-23",
+      "recorded_at": "2025-11-24 07:01:46"
+    },
+    {
+      "id": "588a9ccc-3a5d-42ef-98d5-2c5ea19f6bd2",
+      "employee_id": "18951",
+      "employee_name": "赵恩辉",
+      "uniform_type_id": "e948379b-4bd6-46e4-bbdc-e69d3179fbe9",
+      "uniform_type_name": "陶瓷刀",
+      "issue_date": "2025-11-23",
+      "recorded_at": "2025-11-24 07:01:46"
+    },
+    {
+      "id": "b862e918-ed9d-418e-b984-ce7290cff70c",
+      "employee_id": "20377",
+      "employee_name": "王健儒",
+      "uniform_type_id": "e948379b-4bd6-46e4-bbdc-e69d3179fbe9",
+      "uniform_type_name": "陶瓷刀",
+      "issue_date": "2025-11-23",
+      "recorded_at": "2025-11-24 07:01:46"
+    },
+    {
+      "id": "96bd06a0-cfe2-4ca4-9e1c-288f8d7fe660",
+      "employee_id": "4560",
+      "employee_name": "单文线",
+      "uniform_type_id": "e948379b-4bd6-46e4-bbdc-e69d3179fbe9",
+      "uniform_type_name": "陶瓷刀",
+      "issue_date": "2025-11-23",
+      "recorded_at": "2025-11-24 07:01:46"
+    },
+    {
+      "id": "f45586af-8a71-4955-a7f4-132db32470af",
+      "employee_id": "5820",
+      "employee_name": "黎俊",
+      "uniform_type_id": "e948379b-4bd6-46e4-bbdc-e69d3179fbe9",
+      "uniform_type_name": "陶瓷刀",
+      "issue_date": "2025-11-23",
+      "recorded_at": "2025-11-24 07:01:46"
+    },
+    {
+      "id": "76d9d7f5-5c11-49cb-81ee-3d77e0080084",
+      "employee_id": "5115",
+      "employee_name": "刘建",
+      "uniform_type_id": "e948379b-4bd6-46e4-bbdc-e69d3179fbe9",
+      "uniform_type_name": "陶瓷刀",
+      "issue_date": "2025-11-23",
+      "recorded_at": "2025-11-24 07:01:46"
+    },
+    {
+      "id": "252b4fc8-b4f8-461f-8344-8ffd85143849",
+      "employee_id": "18951",
+      "employee_name": "赵恩辉",
+      "uniform_type_id": "6656956a-1ef0-4b2c-879c-70ae065755e4",
+      "uniform_type_name": "袖套",
+      "issue_date": "2025-11-24",
+      "recorded_at": "2025-11-24 08:08:29"
+    },
+    {
+      "id": "35629b82-0f9e-49de-b04f-1ef1159e8e57",
+      "employee_id": "20377",
+      "employee_name": "王健儒",
+      "uniform_type_id": "6656956a-1ef0-4b2c-879c-70ae065755e4",
+      "uniform_type_name": "袖套",
+      "issue_date": "2025-11-24",
+      "recorded_at": "2025-11-24 08:08:29"
+    },
+    {
+      "id": "e77b0026-be97-4455-980e-8bf34314bc14",
+      "employee_id": "4560",
+      "employee_name": "单文线",
+      "uniform_type_id": "6656956a-1ef0-4b2c-879c-70ae065755e4",
+      "uniform_type_name": "袖套",
+      "issue_date": "2025-11-24",
+      "recorded_at": "2025-11-24 08:08:29"
+    },
+    {
+      "id": "47dbfc8b-81b4-49da-b7e4-118ada265dd0",
+      "employee_id": "5820",
+      "employee_name": "黎俊",
+      "uniform_type_id": "6656956a-1ef0-4b2c-879c-70ae065755e4",
+      "uniform_type_name": "袖套",
+      "issue_date": "2025-11-24",
+      "recorded_at": "2025-11-24 08:08:29"
+    },
+    {
+      "id": "63c74391-0c08-42a7-b274-8317061f8fd1",
+      "employee_id": "5115",
+      "employee_name": "刘建",
+      "uniform_type_id": "6656956a-1ef0-4b2c-879c-70ae065755e4",
+      "uniform_type_name": "袖套",
+      "issue_date": "2025-11-24",
+      "recorded_at": "2025-11-24 08:08:29"
+    },
+    {
+      "id": "dae8ccad-79d8-4788-8f2d-02b9193b95bd",
+      "employee_id": "20377",
+      "employee_name": "王健儒",
+      "uniform_type_id": "1cb555ab-2cc7-459a-9a2f-a9d032d02e05",
+      "uniform_type_name": "劳保鞋",
+      "issue_date": "2025-11-24",
+      "recorded_at": "2025-11-24 11:49:14"
+    },
+    {
+      "id": "798f58e2-6fce-4cf8-aa84-87c48169e19c",
+      "employee_id": "18951",
+      "employee_name": "赵恩辉",
+      "uniform_type_id": "6656956a-1ef0-4b2c-879c-70ae065755e4",
+      "uniform_type_name": "袖套",
+      "issue_date": "2025-11-01",
+      "recorded_at": "2025-11-24 16:47:48"
+    },
+    {
+      "id": "e50f0f70-d04a-4da1-8fdd-20fb468c30c8",
+      "employee_id": "20377",
+      "employee_name": "王健儒",
+      "uniform_type_id": "6656956a-1ef0-4b2c-879c-70ae065755e4",
+      "uniform_type_name": "袖套",
+      "issue_date": "2025-11-01",
+      "recorded_at": "2025-11-24 16:47:48"
+    },
+    {
+      "id": "8f10b47e-a37c-45e9-82c3-98b6fc4bf9bf",
+      "employee_id": "4560",
+      "employee_name": "单文线",
+      "uniform_type_id": "6656956a-1ef0-4b2c-879c-70ae065755e4",
+      "uniform_type_name": "袖套",
+      "issue_date": "2025-11-01",
+      "recorded_at": "2025-11-24 16:47:48"
+    },
+    {
+      "id": "406a83cd-ea63-483e-8751-3c92e2cde436",
+      "employee_id": "5820",
+      "employee_name": "黎俊",
+      "uniform_type_id": "6656956a-1ef0-4b2c-879c-70ae065755e4",
+      "uniform_type_name": "袖套",
+      "issue_date": "2025-11-01",
+      "recorded_at": "2025-11-24 16:47:48"
+    },
+    {
+      "id": "03ce1be1-f547-42bb-9164-d4e768060c7d",
+      "employee_id": "5115",
+      "employee_name": "刘建",
+      "uniform_type_id": "6656956a-1ef0-4b2c-879c-70ae065755e4",
+      "uniform_type_name": "袖套",
+      "issue_date": "2025-11-01",
+      "recorded_at": "2025-11-24 16:47:48"
+    },
+    {
+      "id": "c7411f6c-fbff-4aa2-84c4-dc99beea8279",
+      "employee_id": "18951",
+      "employee_name": "赵恩辉",
+      "uniform_type_id": "aef67c46-9f32-4f89-8522-4ad438673aef",
+      "uniform_type_name": "巡洋舰",
+      "issue_date": "2025-11-25",
+      "recorded_at": "2025-11-25 14:03:13"
+    },
+    {
+      "id": "009b2ff3-0eef-4b22-9918-02943b7358e5",
+      "employee_id": "20112",
+      "employee_name": "王腾",
+      "uniform_type_id": "aef67c46-9f32-4f89-8522-4ad438673aef",
+      "uniform_type_name": "巡洋舰",
+      "issue_date": "2025-11-25",
+      "recorded_at": "2025-11-25 14:04:17"
+    },
+    {
+      "id": "69844539-1a92-4bfa-aa31-6ae9e15c62eb",
+      "employee_id": "20377",
+      "employee_name": "王健儒",
+      "uniform_type_id": "fdb62e7e-3782-48df-bb4a-85a627838dc4",
+      "uniform_type_name": "驱逐舰",
+      "issue_date": "2025-11-25",
+      "recorded_at": "2025-11-25 14:07:03"
+    },
+    {
+      "id": "dcb9432b-0688-430c-9dc5-53760f003c63",
+      "employee_id": "20377",
+      "employee_name": "王健儒",
+      "uniform_type_id": "fdb62e7e-3782-48df-bb4a-85a627838dc4",
+      "uniform_type_name": "驱逐舰",
+      "issue_date": "2025-11-25",
+      "recorded_at": "2025-11-25 14:07:03"
+    },
+    {
+      "id": "9550b787-0995-4aa8-b039-70ab25ecd2c9",
+      "employee_id": "20112",
+      "employee_name": "王腾",
+      "uniform_type_id": "fdb62e7e-3782-48df-bb4a-85a627838dc4",
+      "uniform_type_name": "驱逐舰",
+      "issue_date": "2025-11-25",
+      "recorded_at": "2025-11-25 14:07:03"
+    },
+    {
+      "id": "e2226d02-8ad0-473b-a761-c956fbeee64f",
+      "employee_id": "20112",
+      "employee_name": "王腾",
+      "uniform_type_id": "fdb62e7e-3782-48df-bb4a-85a627838dc4",
+      "uniform_type_name": "驱逐舰",
+      "issue_date": "2025-11-25",
+      "recorded_at": "2025-11-25 14:07:03"
+    },
+    {
+      "id": "1b255fe5-e37a-445c-b422-dc184efc7aed",
+      "employee_id": "18951",
+      "employee_name": "赵恩辉",
+      "uniform_type_id": "dd908b71-7eb5-419f-b9ea-236c179a7607",
+      "uniform_type_name": "陆地巡洋舰",
+      "issue_date": "2025-11-25",
+      "recorded_at": "2025-11-25 14:17:03",
+      "quantity": 1
+    },
+    {
+      "id": "78621892-83cc-4385-b8bd-3707eebdb61d",
+      "employee_id": "18951",
+      "employee_name": "赵恩辉",
+      "uniform_type_id": "fafaaddf-e0e8-49d0-8f55-474bfd5c4f29",
+      "uniform_type_name": "盘古斧",
+      "issue_date": "2025-11-25",
+      "recorded_at": "2025-11-25 14:30:06",
+      "quantity": 1
+    },
+    {
+      "id": "142f2945-ecc8-4813-b409-a3ac1a8d7596",
+      "employee_id": "18951",
+      "employee_name": "赵恩辉",
+      "uniform_type_id": "fafaaddf-e0e8-49d0-8f55-474bfd5c4f29",
+      "uniform_type_name": "盘古斧",
+      "issue_date": "2025-11-25",
+      "recorded_at": "2025-11-25 14:30:06",
+      "quantity": 1
+    },
+    {
+      "id": "53f0de22-c71d-43cb-ace9-331df8c72f0a",
+      "employee_id": "20377",
+      "employee_name": "王健儒",
+      "uniform_type_id": "fafaaddf-e0e8-49d0-8f55-474bfd5c4f29",
+      "uniform_type_name": "盘古斧",
+      "issue_date": "2025-11-25",
+      "recorded_at": "2025-11-25 14:31:27",
+      "quantity": 1
+    },
+    {
+      "id": "f664edcb-0338-483e-b988-8392dcd93a63",
+      "employee_id": "20377",
+      "employee_name": "王健儒",
+      "uniform_type_id": "fafaaddf-e0e8-49d0-8f55-474bfd5c4f29",
+      "uniform_type_name": "盘古斧",
+      "issue_date": "2025-11-25",
+      "recorded_at": "2025-11-25 14:31:27",
+      "quantity": 1
+    },
+    {
+      "id": "48c67f59-6fab-4df1-ae0a-6657b8214f49",
+      "employee_id": "18951",
+      "employee_name": "赵恩辉",
+      "uniform_type_id": "6656956a-1ef0-4b2c-879c-70ae065755e4",
+      "uniform_type_name": "袖套",
+      "issue_date": "2025-11-25",
+      "recorded_at": "2025-11-25 14:31:27",
+      "quantity": 1
+    },
+    {
+      "id": "8b58d088-1452-4706-a836-8dbac1a954c9",
+      "employee_id": "20377",
+      "employee_name": "王健儒",
+      "uniform_type_id": "f7d20eca-6723-4da8-9b20-682ac550804c",
+      "uniform_type_name": "DF-5C",
+      "issue_date": "2025-11-25",
+      "recorded_at": "2025-11-25 14:33:51",
+      "quantity": 1
+    },
+    {
+      "id": "ea80f1b6-924c-467b-86dc-632128269631",
+      "employee_id": "18951",
+      "employee_name": "赵恩辉",
+      "uniform_type_id": "b243d603-1763-401a-a110-72a09b13601f",
+      "uniform_type_name": "加农炮",
+      "issue_date": "2025-11-25",
+      "recorded_at": "2025-11-25 15:18:31",
+      "quantity": 1
+    },
+    {
+      "id": "1f57a7d8-c661-4b54-ba84-fe544d2e5c4f",
+      "employee_id": "18951",
+      "employee_name": "赵恩辉",
+      "uniform_type_id": "b243d603-1763-401a-a110-72a09b13601f",
+      "uniform_type_name": "加农炮",
+      "issue_date": "2025-11-25",
+      "recorded_at": "2025-11-25 15:18:31",
+      "quantity": 1
+    },
+    {
+      "id": "c19a2a05-9827-4019-9d35-465d91ec503f",
+      "employee_id": "20377",
+      "employee_name": "王健儒",
+      "uniform_type_id": "b243d603-1763-401a-a110-72a09b13601f",
+      "uniform_type_name": "加农炮",
+      "issue_date": "2025-11-25",
+      "recorded_at": "2025-11-25 15:19:11",
+      "quantity": 1
+    },
+    {
+      "id": "baa2b5bb-f831-4c59-9d6e-3138101e8104",
+      "employee_id": "20377",
+      "employee_name": "王健儒",
+      "uniform_type_id": "b243d603-1763-401a-a110-72a09b13601f",
+      "uniform_type_name": "加农炮",
+      "issue_date": "2025-11-25",
+      "recorded_at": "2025-11-25 15:19:11",
+      "quantity": 1
+    },
+    {
+      "id": "6dbe65cd-0304-4cd1-942b-5426f2639305",
+      "employee_id": "20112",
+      "employee_name": "王腾",
+      "uniform_type_id": "b243d603-1763-401a-a110-72a09b13601f",
+      "uniform_type_name": "加农炮",
+      "issue_date": "2025-11-25",
+      "recorded_at": "2025-11-25 15:19:11",
+      "quantity": 1
+    },
+    {
+      "id": "3a92940d-e918-4b99-947f-df07f9320c83",
+      "employee_id": "20112",
+      "employee_name": "王腾",
+      "uniform_type_id": "b243d603-1763-401a-a110-72a09b13601f",
+      "uniform_type_name": "加农炮",
+      "issue_date": "2025-11-25",
+      "recorded_at": "2025-11-25 15:19:11",
+      "quantity": 1
+    },
+    {
+      "id": "1cc23a68-4ce0-432f-affe-4c02b2b1445a",
+      "employee_id": "18951",
+      "employee_name": "赵恩辉",
+      "uniform_type_id": "5270e9ad-bc19-4549-853f-f21f91093787",
+      "uniform_type_name": "奥特曼变身器",
+      "issue_date": "2025-11-25",
+      "recorded_at": "2025-11-25 15:19:47",
+      "quantity": 1
+    },
+    {
+      "id": "dd61ad6e-bd4b-486f-83e4-637f493e77d7",
+      "employee_id": "20112",
+      "employee_name": "王腾",
+      "uniform_type_id": "2b2ff68e-5efb-4e4b-94dd-567467f6bad3",
+      "uniform_type_name": "苦茶子",
+      "issue_date": "2025-11-25",
+      "recorded_at": "2025-11-25 15:44:40",
+      "quantity": 1
+    },
+    {
+      "id": "abd57fff-7311-42be-9991-9de4473097af",
+      "employee_id": "5115",
+      "employee_name": "刘建",
+      "uniform_type_id": "1cb555ab-2cc7-459a-9a2f-a9d032d02e05",
+      "uniform_type_name": "劳保鞋",
+      "issue_date": "2026-01-18",
+      "recorded_at": "2026-01-18 23:36:27",
+      "quantity": 1
+    },
+    {
+      "id": "c4c2d055-0175-49d8-a232-47d453b9906c",
+      "employee_id": "5115",
+      "employee_name": "刘建",
+      "uniform_type_id": "1cb555ab-2cc7-459a-9a2f-a9d032d02e05",
+      "uniform_type_name": "劳保鞋",
+      "issue_date": "2026-01-18",
+      "recorded_at": "2026-01-18 23:37:02",
+      "quantity": 1
+    },
+    {
+      "id": "01005453-33ff-40cf-8aa2-435ff279135d",
+      "employee_id": "18951",
+      "employee_name": "赵恩辉",
+      "uniform_type_id": "dd908b71-7eb5-419f-b9ea-236c179a7607",
+      "uniform_type_name": "陆地巡洋舰",
+      "issue_date": "2026-01-30",
+      "recorded_at": "2026-01-30 16:18:36",
+      "quantity": 1
+    },
+    {
+      "id": "e8c8ad1e-3d5f-4ee6-bad6-186d67b88012",
+      "employee_id": "18951",
+      "employee_name": "赵恩辉",
+      "uniform_type_id": "dd908b71-7eb5-419f-b9ea-236c179a7607",
+      "uniform_type_name": "陆地巡洋舰",
+      "issue_date": "2026-01-30",
+      "recorded_at": "2026-01-30 16:18:36",
+      "quantity": 1
+    },
+    {
+      "id": "65312cb7-9b7d-4b1d-8b2d-0b3e174e8be5",
+      "employee_id": "20377",
+      "employee_name": "王健儒",
+      "uniform_type_id": "dd908b71-7eb5-419f-b9ea-236c179a7607",
+      "uniform_type_name": "陆地巡洋舰",
+      "issue_date": "2026-01-30",
+      "recorded_at": "2026-01-30 16:18:36",
+      "quantity": 1
+    },
+    {
+      "id": "22fc6caa-061f-4b43-9fcf-b85322c696d8",
+      "employee_id": "20377",
+      "employee_name": "王健儒",
+      "uniform_type_id": "dd908b71-7eb5-419f-b9ea-236c179a7607",
+      "uniform_type_name": "陆地巡洋舰",
+      "issue_date": "2026-01-30",
+      "recorded_at": "2026-01-30 16:18:36",
+      "quantity": 1
+    },
+    {
+      "id": "791c4e72-4e18-4bc2-b37d-7685f1deb802",
+      "employee_id": "4560",
+      "employee_name": "单文线",
+      "uniform_type_id": "dd908b71-7eb5-419f-b9ea-236c179a7607",
+      "uniform_type_name": "陆地巡洋舰",
+      "issue_date": "2026-01-30",
+      "recorded_at": "2026-01-30 16:18:36",
+      "quantity": 1
+    },
+    {
+      "id": "3bcfd751-9478-4c0e-b4db-f711d98a147d",
+      "employee_id": "4560",
+      "employee_name": "单文线",
+      "uniform_type_id": "dd908b71-7eb5-419f-b9ea-236c179a7607",
+      "uniform_type_name": "陆地巡洋舰",
+      "issue_date": "2026-01-30",
+      "recorded_at": "2026-01-30 16:18:36",
+      "quantity": 1
+    },
+    {
+      "id": "6dc2740b-6a30-4a18-85a7-08f6558e7908",
+      "employee_id": "5820",
+      "employee_name": "黎俊",
+      "uniform_type_id": "dd908b71-7eb5-419f-b9ea-236c179a7607",
+      "uniform_type_name": "陆地巡洋舰",
+      "issue_date": "2026-01-30",
+      "recorded_at": "2026-01-30 16:18:36",
+      "quantity": 1
+    },
+    {
+      "id": "883a1471-5d09-4223-9460-1e5760d87dfa",
+      "employee_id": "5820",
+      "employee_name": "黎俊",
+      "uniform_type_id": "dd908b71-7eb5-419f-b9ea-236c179a7607",
+      "uniform_type_name": "陆地巡洋舰",
+      "issue_date": "2026-01-30",
+      "recorded_at": "2026-01-30 16:18:36",
+      "quantity": 1
+    },
+    {
+      "id": "cd228c0c-21b0-48e5-8e87-54a6885b7266",
+      "employee_id": "5115",
+      "employee_name": "刘建",
+      "uniform_type_id": "dd908b71-7eb5-419f-b9ea-236c179a7607",
+      "uniform_type_name": "陆地巡洋舰",
+      "issue_date": "2026-01-30",
+      "recorded_at": "2026-01-30 16:18:36",
+      "quantity": 1
+    },
+    {
+      "id": "1b031f89-c873-435d-954d-3db11db4a17c",
+      "employee_id": "5115",
+      "employee_name": "刘建",
+      "uniform_type_id": "dd908b71-7eb5-419f-b9ea-236c179a7607",
+      "uniform_type_name": "陆地巡洋舰",
+      "issue_date": "2026-01-30",
+      "recorded_at": "2026-01-30 16:18:36",
+      "quantity": 1
+    },
+    {
+      "id": "8fa73121-fb2e-4a1d-b67d-be4b8dbc3eaf",
+      "employee_id": "20112",
+      "employee_name": "王腾",
+      "uniform_type_id": "dd908b71-7eb5-419f-b9ea-236c179a7607",
+      "uniform_type_name": "陆地巡洋舰",
+      "issue_date": "2026-01-30",
+      "recorded_at": "2026-01-30 16:18:36",
+      "quantity": 1
+    },
+    {
+      "id": "fe081359-0063-479d-ad64-9e2a80e467cf",
+      "employee_id": "20112",
+      "employee_name": "王腾",
+      "uniform_type_id": "dd908b71-7eb5-419f-b9ea-236c179a7607",
+      "uniform_type_name": "陆地巡洋舰",
+      "issue_date": "2026-01-30",
+      "recorded_at": "2026-01-30 16:18:36",
+      "quantity": 1
+    },
+    {
+      "id": "cccb7547-56d0-4ce0-9ddb-101975093185",
+      "employee_id": "18951",
+      "employee_name": "赵恩辉",
+      "uniform_type_id": "85ba7fc7-e9d9-4acb-bf41-d940fada3898",
+      "uniform_type_name": "无尘服",
+      "issue_date": "2026-01-30",
+      "recorded_at": "2026-01-30 16:19:28",
+      "quantity": 1
+    },
+    {
+      "id": "4af96595-6050-4802-a6b7-0f8dda8a76a1",
+      "employee_id": "18951",
+      "employee_name": "赵恩辉",
+      "uniform_type_id": "85ba7fc7-e9d9-4acb-bf41-d940fada3898",
+      "uniform_type_name": "无尘服",
+      "issue_date": "2026-01-30",
+      "recorded_at": "2026-01-30 16:19:28",
+      "quantity": 1
+    }
+  ]
+}

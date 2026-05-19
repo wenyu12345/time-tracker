@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">📝 创建新笔记</h4>
+                </div>
+                <div class="card-body">
+                    {% if error %}
+                    <div class="alert alert-danger mb-4">
+                        {{ error }}
+                    </div>
+                    {% endif %}
+                    
+                    <form method="POST">
+                        <div class="form-group">
+                            <label for="title"><strong>笔记标题</strong></label>
+                            <input type="text" class="form-control" id="title" name="title" 
+                                   placeholder="请输入笔记标题" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="content"><strong>笔记内容</strong></label>
+                            <div class="mb-2">
+                                <!-- AI辅助功能按钮组 -->
+                                <div class="btn-group" role="group">
+                                    <button type="button" class="btn btn-outline-info btn-sm" id="btn-ai-generate">
+                                        <i class="fas fa-magic"></i> AI生成
+                                    </button>
+                                    <button type="button" class="btn btn-outline-success btn-sm" id="btn-ai-suggest-tags">
+                                        <i class="fas fa-tags"></i> 推荐标签
+                                    </button>
+                                </div>
+                            </div>
+                            <textarea class="form-control" id="content" name="content" rows="15" 
+                                      placeholder="请输入笔记内容..."></textarea>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="tags"><strong>标签</strong></label>
+                            <input type="text" class="form-control" id="tags" name="tags" 
+                                   placeholder="请输入标签，用逗号分隔（例如：工作,学习,重要）">
+                        </div>
+                        
+                        <div class="mt-4 d-flex justify-content-end">
+                            <a href="{{ url_for('notebook.notes_list') }}" class="btn btn-secondary mr-2">
+                                取消
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                保存笔记
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+$(document).ready(function() {
+    // AI生成内容
+    $('#btn-ai-generate').click(function() {
+        const prompt = prompt('请输入您希望AI生成内容的提示词：');
+        if (prompt) {
+            $(this).prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> 生成中...');
+            
+            $.ajax({
+                url: '{{ url_for('notebook.ai_generate') }}',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ prompt: prompt, type: 'general' }),
+                success: function(response) {
+                    if (response.success) {
+                        $('#content').val(response.result);
+                    } else {
+                        alert('生成失败: ' + (response.error || '请检查AI服务配置'));
+                    }
+                },
+                error: function() {
+                    alert('请求失败，请稍后重试');
+                },
+                complete: function() {
+                    $('#btn-ai-generate').prop('disabled', false).html('<i class="fas fa-magic"></i> AI生成');
+                }
+            });
+        }
+    });
+    
+    // AI推荐标签
+    $('#btn-ai-suggest-tags').click(function() {
+        const content = $('#content').val();
+        if (!content.trim()) {
+            alert('请先输入笔记内容');
+            return;
+        }
+        
+        $(this).prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> 分析中...');
+        
+        $.ajax({
+            url: '{{ url_for('notebook.ai_generate') }}',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ prompt: content, type: 'suggest_tags' }),
+            success: function(response) {
+                if (response.success && response.result && response.result.length > 0) {
+                    const currentTags = $('#tags').val();
+                    const newTags = response.result.join(', ');
+                    $('#tags').val(currentTags ? `${currentTags}, ${newTags}` : newTags);
+                } else {
+                    alert('标签推荐失败: ' + (response.error || '请检查AI服务配置'));
+                }
+            },
+            error: function() {
+                alert('请求失败，请稍后重试');
+            },
+            complete: function() {
+                $('#btn-ai-suggest-tags').prop('disabled', false).html('<i class="fas fa-tags"></i> 推荐标签');
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

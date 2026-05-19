@@ -1,0 +1,247 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">⚙️ 系统设置</h4>
+                </div>
+                <div class="card-body">
+                    {% if success %}
+                    <div class="alert alert-success mb-4">
+                        {{ success }}
+                    </div>
+                    {% endif %}
+                    {% if error %}
+                    <div class="alert alert-danger mb-4">
+                        {{ error }}
+                    </div>
+                    {% endif %}
+                    
+                    <div class="row">
+                        <!-- AI服务配置 -->
+                        <div class="col-md-6">
+                            <div class="card mb-4">
+                                <div class="card-header bg-info text-white">
+                                    <h5 class="mb-0">🤖 AI服务配置</h5>
+                                </div>
+                                <div class="card-body">
+                                    <form method="POST" action="{{ url_for('notebook.config_ai_service') }}">
+                                        <div class="form-group">
+                                            <label for="api_key"><strong>豆包AI API密钥</strong></label>
+                                            <input type="password" class="form-control" id="api_key" name="api_key" 
+                                                   placeholder="请输入您的豆包AI API密钥" required>
+                                            <small class="form-text text-muted">
+                                                API密钥将用于AI内容生成、摘要、标签推荐等功能。
+                                                请妥善保管您的密钥信息。
+                                            </small>
+                                        </div>
+                                        
+                                        <div class="form-group">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="show_api_key">
+                                                <label class="form-check-label" for="show_api_key">
+                                                    显示API密钥
+                                                </label>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="form-group">
+                                            <div class="alert {% if ai_enabled %}alert-success{% else %}alert-warning{% endif %}">
+                                                <strong>当前状态:</strong> 
+                                                {% if ai_enabled %}
+                                                <i class="fas fa-check-circle"></i> AI服务已启用
+                                                {% else %}
+                                                <i class="fas fa-exclamation-circle"></i> AI服务未启用
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        
+                                        <button type="submit" class="btn btn-info">
+                                            保存并验证API密钥
+                                        </button>
+                                    </form>
+                                    
+                                    <!-- 豆包AI API获取说明 -->
+                                    <div class="mt-4 p-3 bg-light rounded">
+                                        <h6 class="text-primary"><i class="fas fa-question-circle"></i> 如何获取豆包AI API密钥？</h6>
+                                        <ol class="mt-2 text-sm">
+                                            <li>访问 <a href="https://console.doubao.com/" target="_blank">豆包开发者平台</a></li>
+                                            <li>注册/登录您的账号</li>
+                                            <li>进入「API密钥管理」页面</li>
+                                            <li>点击「创建新密钥」按钮</li>
+                                            <li>复制生成的API密钥</li>
+                                            <li>将密钥粘贴到上方输入框中</li>
+                                        </ol>
+                                        <div class="mt-2 alert alert-warning text-xs">
+                                            <i class="fas fa-shield-alt"></i> 注意：API密钥属于敏感信息，请不要分享给他人或在代码中硬编码。
+                                        </div>
+                                        
+                                        <div class="mt-3 alert alert-info text-xs">
+                                            <i class="fas fa-info-circle"></i> 系统当前使用豆包AI API，而非火山API。如果您想使用火山API，需要修改系统代码以支持火山引擎的API调用方式。
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 钉钉通知配置 -->
+                        <div class="col-md-6">
+                            <div class="card mb-4">
+                                <div class="card-header bg-success text-white">
+                                    <h5 class="mb-0">🔔 钉钉通知配置</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="alert alert-info">
+                                        <strong>配置说明:</strong> 钉钉机器人需要通过环境变量进行配置
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label for="test_message"><strong>发送测试消息</strong></label>
+                                        <textarea class="form-control" id="test_message" rows="3" 
+                                                  placeholder="请输入测试消息内容"></textarea>
+                                    </div>
+                                    
+                                    <button type="button" class="btn btn-success" id="send-test-message">
+                                        发送测试消息
+                                    </button>
+                                    
+                                    <!-- 钉钉机器人配置说明 -->
+                                    <div class="mt-4 p-3 bg-light rounded">
+                                        <h6 class="text-success"><i class="fas fa-question-circle"></i> 如何配置钉钉机器人？</h6>
+                                        <ol class="mt-2 text-sm">
+                                            <li>打开钉钉，创建一个群聊或选择现有群聊</li>
+                                            <li>点击群设置 → 智能群助手 → 添加机器人</li>
+                                            <li>选择「自定义」机器人</li>
+                                            <li>填写机器人名称，选择安全设置（推荐使用「自定义关键词」）</li>
+                                            <li>点击「完成」后，复制生成的Webhook URL</li>
+                                            <li>设置环境变量：
+                                                <ul class="mt-1">
+                                                    <li>Windows: 在命令行中执行 <code>set DINGTALK_WEBHOOK=您的webhook_url</code></li>
+                                                    <li>Linux/Mac: 在终端执行 <code>export DINGTALK_WEBHOOK=您的webhook_url</code></li>
+                                                </ul>
+                                            </li>
+                                            <li>重启应用程序使配置生效</li>
+                                        </ol>
+                                        <div class="mt-2 alert alert-warning text-xs">
+                                            <i class="fas fa-info-circle"></i> 注意：请确保在安全设置中添加关键词，如「通知」、「测试」等，否则消息可能发送失败。
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 系统信息 -->
+                    <div class="card mb-4">
+                        <div class="card-header bg-secondary text-white">
+                            <h5 class="mb-0">ℹ️ 系统信息</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-borderless">
+                                    <tbody>
+                                        <tr>
+                                            <td class="font-weight-bold">应用名称</td>
+                                            <td>豆包AI记事本</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="font-weight-bold">当前版本</td>
+                                            <td>v1.0.0</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="font-weight-bold">数据存储位置</td>
+                                            <td>本地JSON文件</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="font-weight-bold">AI功能支持</td>
+                                            <td>
+                                                {% if ai_enabled %}
+                                                <span class="text-success"><i class="fas fa-check-circle"></i> 已启用</span>
+                                                {% else %}
+                                                <span class="text-danger"><i class="fas fa-times-circle"></i> 未启用</span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 使用说明 -->
+                    <div class="card">
+                        <div class="card-header bg-warning text-white">
+                            <h5 class="mb-0">📖 使用说明</h5>
+                        </div>
+                        <div class="card-body">
+                            <ul class="list-group list-group-flush">
+                                <li class="list-group-item">
+                                    <strong>笔记管理:</strong> 创建、编辑、删除笔记，支持AI内容生成和优化
+                                </li>
+                                <li class="list-group-item">
+                                    <strong>计划任务:</strong> 设置任务提醒，支持状态跟踪和钉钉通知
+                                </li>
+                                <li class="list-group-item">
+                                    <strong>AI功能:</strong> 配置豆包AI API后可使用内容生成、摘要、标签推荐等功能
+                                </li>
+                                <li class="list-group-item">
+                                    <strong>数据存储:</strong> 所有数据存储在本地，请注意定期备份
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+$(document).ready(function() {
+    // 显示/隐藏API密钥
+    $('#show_api_key').change(function() {
+        const apiKeyInput = $('#api_key');
+        if ($(this).is(':checked')) {
+            apiKeyInput.attr('type', 'text');
+        } else {
+            apiKeyInput.attr('type', 'password');
+        }
+    });
+    
+    // 发送测试消息
+    $('#send-test-message').click(function() {
+        const message = $('#test_message').val();
+        if (!message.trim()) {
+            alert('请输入测试消息内容');
+            return;
+        }
+        
+        $(this).prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> 发送中...');
+        
+        $.ajax({
+            url: '{{ url_for('notebook.send_dingtalk_notification') }}',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ message: message }),
+            success: function(response) {
+                if (response.success) {
+                    alert('测试消息发送成功！');
+                    $('#test_message').val('');
+                } else {
+                    alert('发送失败: ' + (response.error || '请检查钉钉机器人配置'));
+                }
+            },
+            error: function() {
+                alert('请求失败，请稍后重试');
+            },
+            complete: function() {
+                $('#send-test-message').prop('disabled', false).html('发送测试消息');
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

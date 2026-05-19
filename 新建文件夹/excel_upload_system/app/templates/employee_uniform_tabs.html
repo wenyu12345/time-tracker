@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>员工工装管理</title>
+    <!-- 关键CSS预加载 -->
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    
+    <!-- 关键内联CSS -->
+    <style>
+        /* 关键样式内联以提高渲染速度 */
+        body { background-color: #f8f9fa; font-size: 0.9rem; }
+        .container { max-width: 1200px; }
+        .fade-in { animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .tab-pane { display: none; }
+        .tab-pane.active { display: block; }
+        .loading { text-align: center; padding: 2rem; color: #6c757d; }
+    </style>
+    
+    <!-- 非关键样式延迟加载 -->
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-size: 0.9rem;
+        }
+        .card {
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+        }
+        .card-header {
+            background-color: #007bff;
+            color: white;
+            font-weight: 600;
+            border-radius: 8px 8px 0 0;
+        }
+        .btn-primary {
+            background-color: #007bff;
+            border-color: #007bff;
+        }
+        .btn-primary:hover {
+            background-color: #0056b3;
+            border-color: #0056b3;
+        }
+        .btn-danger {
+            background-color: #dc3545;
+            border-color: #dc3545;
+        }
+        .btn-danger:hover {
+            background-color: #c82333;
+            border-color: #c82333;
+        }
+        .table th,
+        .table td {
+            text-align: center;
+            vertical-align: middle;
+        }
+        .table-hover tbody tr:hover {
+            background-color: #f5f5f5;
+        }
+        .form-control:focus {
+            border-color: #007bff;
+            box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+        }
+        .badge {
+            font-size: 0.875rem;
+            padding: 0.5em 0.75em;
+        }
+        /* 自定义动画效果 */
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        /* 选项卡样式优化 */
+        .nav-tabs .nav-link {
+            font-weight: 500;
+        }
+        .nav-tabs .nav-link.active {
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-5 fade-in">
+        <h1 class="text-center mb-5">👔 员工工装管理系统</h1>
+        
+        <!-- 选项卡导航 -->
+        <ul class="nav nav-tabs mb-4" id="employeeUniformTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="employees-tab" data-bs-toggle="tab" data-bs-target="#employees" type="button" role="tab" aria-controls="employees" aria-selected="true">
+                    <i class="bi bi-people"></i> 员工管理
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="uniform-types-tab" data-bs-toggle="tab" data-bs-target="#uniform-types" type="button" role="tab" aria-controls="uniform-types" aria-selected="false">
+                    <i class="bi bi-tags"></i> 工装类型
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="issuance-tab" data-bs-toggle="tab" data-bs-target="#issuance" type="button" role="tab" aria-controls="issuance" aria-selected="false">
+                    <i class="bi bi-box-seam"></i> 工装发放
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="records-tab" data-bs-toggle="tab" data-bs-target="#records" type="button" role="tab" aria-controls="records" aria-selected="false">
+                    <i class="bi bi-list-check"></i> 领取记录
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="summary-tab" data-bs-toggle="tab" data-bs-target="#summary" type="button" role="tab" aria-controls="summary" aria-selected="false">
+                    <i class="bi bi-bar-chart"></i> 汇总统计
+                </button>
+            </li>
+        </ul>
+        
+        <!-- 选项卡内容区域 -->
+        <div class="tab-content" id="employeeUniformTabContent">
+            <!-- 员工管理选项卡 -->
+            <div class="tab-pane fade show active" id="employees" role="tabpanel" aria-labelledby="employees-tab">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">👥 员工管理</h5>
+                        <div>
+                            <button id="addEmployeeBtn" class="btn btn-primary btn-sm me-2">
+                                <i class="bi bi-person-plus"></i> 添加员工
+                            </button>
+                            <button id="batchAddEmployeeBtn" class="btn btn-outline-primary btn-sm">
+                                <i class="bi bi-people-fill"></i> 批量添加
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <input type="text" id="employeeSearch" class="form-control" placeholder="搜索员工工号或姓名...">
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-hover table-striped">
+                                <thead class="bg-light">
+                                    <tr>
+                                        <th>工号</th>
+                                        <th>姓名</th>
+                                        <th>添加时间</th>
+                                        <th>操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="employeeTableBody">
+                                    <!-- 员工数据将通过JavaScript动态添加 -->
+                                    <tr>
+                                        <td colspan="4" class="text-center text-muted">加载中...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 工装类型选项卡 -->
+            <div class="tab-pane fade" id="uniform-types" role="tabpanel" aria-labelledby="uniform-types-tab">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">👕 工装类型管理</h5>
+                        <button id="addUniformTypeBtn" class="btn btn-success btn-sm">
+                            <i class="bi bi-plus-circle"></i> 添加类型
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <input type="text" id="uniformSearch" class="form-control" placeholder="搜索工装类型...">
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-hover table-striped">
+                                <thead class="bg-light">
+                                    <tr>
+                                        <th>类型ID</th>
+                                        <th>类型名称</th>
+                                        <th>描述</th>
+                                        <th>操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="uniformTypeTableBody">
+                                    <!-- 工装类型数据将通过JavaScript动态添加 -->
+                                    <tr>
+                                        <td colspan="4" class="text-center text-muted">加载中...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 工装发放选项卡 -->
+            <div class="tab-pane fade" id="issuance" role="tabpanel" aria-labelledby="issuance-tab">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">📦 工装发放管理</h5>
+                        <div>
+                            <button id="issueUniformBtn" class="btn btn-warning btn-sm me-2">
+                                <i class="bi bi-box-seam"></i> 单个发放
+                            </button>
+                            <button id="batchIssueUniformBtn" class="btn btn-outline-warning btn-sm">
+                                <i class="bi bi-box-seam-fill"></i> 批量发放
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-info">
+                            <h6><i class="bi bi-info-circle"></i> 功能说明</h6>
+                            <p>您可以选择以下方式发放工装：</p>
+                            <ul>
+                                <li><strong>单个发放：</strong>为单个员工发放特定工装类型</li>
+                                <li><strong>批量发放：</strong>一次选择多个员工，统一发放同一种工装</li>
+                            </ul>
+                        </div>
+                        
+                        <!-- 快速操作区域 -->
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <div class="card bg-light">
+                                    <div class="card-body text-center">
+                                        <h6 class="card-title">员工总数</h6>
+                                        <h3 class="text-primary" id="quickEmployeeCount">-</h3>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card bg-light">
+                                    <div class="card-body text-center">
+                                        <h6 class="card-title">工装类型</h6>
+                                        <h3 class="text-success" id="quickUniformTypeCount">-</h3>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 领取记录选项卡 -->
+            <div class="tab-pane fade" id="records" role="tabpanel" aria-labelledby="records-tab">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">📋 工装领取记录</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <input type="text" id="recordSearch" class="form-control" placeholder="搜索员工工号或姓名...">
+                                </div>
+                                <div class="col-md-4">
+                                    <select id="uniformTypeFilter" class="form-control">
+                                        <option value="">所有工装类型</option>
+                                        <!-- 工装类型选项将通过JavaScript动态添加 -->
+                                    </select>
+                                </div>
+                                <div class="col-md-2">
+                                    <button id="filterRecordsBtn" class="btn btn-secondary w-100">筛选</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-hover table-striped">
+                                <thead class="bg-light">
+                                    <tr>
+                                        <th>记录ID</th>
+                                        <th>员工工号</th>
+                                        <th>员工姓名</th>
+                                        <th>工装类型</th>
+                                        <th>领取日期</th>
+                                        <th>记录时间</th>
+                                        <th>操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="recordTableBody">
+                                    <!-- 领取记录数据将通过JavaScript动态添加 -->
+                                    <tr>
+                                        <td colspan="7" class="text-center text-muted">加载中...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="text-center mt-3">
+                            <button id="prevPageBtn" class="btn btn-outline-secondary me-2">上一页</button>
+                            <span id="pageInfo">第 1 页</span>
+                            <button id="nextPageBtn" class="btn btn-outline-secondary ms-2">下一页</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 汇总统计选项卡 -->
+            <div class="tab-pane fade" id="summary" role="tabpanel" aria-labelledby="summary-tab">
+                <div class="card">
+                    <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            📊 工装领取汇总统计
+                        </h5>
+                        <button class="btn btn-sm btn-light" id="refreshSummaryBtn">
+                            <i class="bi bi-arrow-clockwise"></i> 刷新数据
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <!-- 筛选区域 -->
+                        <div class="card bg-light mb-3">
+                            <div class="card-body">
+                                <div class="row align-items-center">
+                                    <div class="col-md-3">
+                                        <div class="input-group">
+                                            <span class="input-group-text">🔍</span>
+                                            <input type="text" id="summarySearch" class="form-control" placeholder="搜索员工工号或姓名...">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <select id="summaryUniformTypeFilter" class="form-control">
+                                            <option value="">🧥 所有工装类型</option>
+                                            <!-- 工装类型选项将通过JavaScript动态添加 -->
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <select id="summaryYearFilter" class="form-control">
+                                            <option value="">📅 所有年份</option>
+                                            <!-- 年份选项将通过JavaScript动态添加 -->
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="btn-group w-100" role="group">
+                                            <button type="button" class="btn btn-primary" id="applySummaryFilter">
+                                                <i class="bi bi-funnel"></i> 筛选
+                                            </button>
+                                            <button type="button" class="btn btn-outline-secondary" id="resetSummaryFilter">
+                                                <i class="bi bi-arrow-counterclockwise"></i> 重置
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 表格视图 -->
+                        <div id="summaryTableView">
+                            <div class="table-responsive">
+                                <table class="table table-hover table-striped">
+                                    <thead class="bg-light">
+                                        <tr>
+                                            <th>员工工号</th>
+                                            <th>员工姓名</th>
+                                            <th>今年领取套数</th>
+                                            <th>距离上次领取天数</th>
+                                            <th>领取状态</th>
+                                            <th>操作</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="summaryTableBody">
+                                        <!-- 汇总数据将通过JavaScript动态添加 -->
+                                        <tr>
+                                            <td colspan="6" class="text-center text-muted">
+                                                <i class="bi bi-hourglass-split"></i> 加载中...
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        
+                        <!-- 统计信息 -->
+                        <div class="row mt-3">
+                            <div class="col-md-3">
+                                <div class="card text-center bg-light">
+                                    <div class="card-body">
+                                        <h6 class="card-title">员工总数</h6>
+                                        <h3 class="text-primary" id="totalEmployeesCount">-</h3>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card text-center bg-light">
+                                    <div class="card-body">
+                                        <h6 class="card-title">今年总发放套数</h6>
+                                        <h3 class="text-success" id="totalThisYearCount">-</h3>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card text-center bg-light">
+                                    <div class="card-body">
+                                        <h6 class="card-title">平均领取间隔(天)</h6>
+                                        <h3 class="text-info" id="avgDaysBetweenIssuance">-</h3>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card text-center bg-light">
+                                    <div class="card-body">
+                                        <h6 class="card-title">超期未领人数</h6>
+                                        <h3 class="text-warning" id="overdueCount">-</h3>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 添加员工模态框 -->
+    <div class="modal fade" id="addEmployeeModal" tabindex="-1" aria-labelledby="addEmployeeModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="addEmployeeModalLabel">添加新员工</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addEmployeeForm">
+                        <div class="mb-3">
+                            <label for="employeeId" class="form-label">员工工号 <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="employeeId" name="employee_id" required placeholder="请输入员工工号">
+                        </div>
+                        <div class="mb-3">
+                            <label for="employeeName" class="form-label">员工姓名 <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="employeeName" name="name" required placeholder="请输入员工姓名">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" id="saveEmployeeBtn">保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 更新员工模态框 -->
+    <div class="modal fade" id="updateEmployeeModal" tabindex="-1" aria-labelledby="updateEmployeeModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-info text-white">
+                    <h5 class="modal-title" id="updateEmployeeModalLabel">更新员工信息</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="updateEmployeeForm">
+                        <input type="hidden" id="updateEmployeeId" name="employee_id">
+                        <div class="mb-3">
+                            <label for="updateEmployeeIdDisplay" class="form-label">员工工号</label>
+                            <input type="text" class="form-control" id="updateEmployeeIdDisplay" disabled>
+                        </div>
+                        <div class="mb-3">
+                            <label for="updateEmployeeName" class="form-label">员工姓名 <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="updateEmployeeName" name="name" required placeholder="请输入员工姓名">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-info" id="confirmUpdateEmployeeBtn">更新</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 添加工装类型模态框 -->
+    <div class="modal fade" id="addUniformTypeModal" tabindex="-1" aria-labelledby="addUniformTypeModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title" id="addUniformTypeModalLabel">添加工装类型</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addUniformTypeForm">
+                        <div class="mb-3">
+                            <label for="uniformTypeName" class="form-label">类型名称 <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="uniformTypeName" name="type_name" required placeholder="请输入工装类型名称">
+                        </div>
+                        <div class="mb-3">
+                            <label for="uniformTypeDesc" class="form-label">类型描述</label>
+                            <textarea class="form-control" id="uniformTypeDesc" name="description" rows="3" placeholder="请输入工装类型描述"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-success" id="saveUniformTypeBtn">保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 发放工装模态框 -->
+    <div class="modal fade" id="issueUniformModal" tabindex="-1" aria-labelledby="issueUniformModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-warning text-white">
+                    <h5 class="modal-title" id="issueUniformModalLabel">发放工装</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="issueUniformForm">
+                        <div class="mb-3">
+                            <label for="issueEmployeeId" class="form-label">员工工号 <span class="text-danger">*</span></label>
+                            <select class="form-control" id="issueEmployeeId" name="employee_id" required>
+                                <option value="">请选择员工</option>
+                                <!-- 员工选项将通过JavaScript动态添加 -->
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="issueUniformTypeId" class="form-label">工装类型 <span class="text-danger">*</span></label>
+                            <select class="form-control" id="issueUniformTypeId" name="type_id" required>
+                                <option value="">请选择工装类型</option>
+                                <!-- 工装类型选项将通过JavaScript动态添加 -->
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="issueDate" class="form-label">领取日期</label>
+                            <input type="date" class="form-control" id="issueDate" name="issue_date">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-warning" id="confirmIssueBtn">确认发放</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 批量添加员工模态框 -->
+    <div class="modal fade" id="batchAddEmployeeModal" tabindex="-1" aria-labelledby="batchAddEmployeeModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="batchAddEmployeeModalLabel">批量添加员工</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <h6><i class="bi bi-info-circle"></i> 使用说明</h6>
+                        <p>请按照"工号,姓名"或"工号 姓名"的格式输入员工信息，每行一位员工。支持逗号或空格分隔。例如：</p>
+                        <pre>1001,张三
+1002 李四
+1003,王五</pre>
+                        <p class="mb-0"><strong>注意：</strong></p>
+                        <ul class="mb-0">
+                            <li>可以使用逗号分隔：<code>1001,张三</code></li>
+                            <li>也可以使用空格分隔：<code>1002 李四</code></li>
+                            <li>系统会自动识别分隔符并处理</li>
+                            <li>重复的工号会被自动跳过</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="batchEmployeeData" class="form-label">员工数据 <span class="text-danger">*</span></label>
+                        <textarea class="form-control" id="batchEmployeeData" rows="10" required placeholder="工号,姓名&#10;工号,姓名&#10;..."></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <button type="button" class="btn btn-outline-secondary" id="previewBatchEmployees">预览数据</button>
+                        <button type="button" class="btn btn-outline-warning" id="clearBatchData">清空数据</button>
+                    </div>
+                    
+                    <div id="batchPreviewArea" class="mb-3" style="display: none;">
+                        <h6>数据预览</h6>
+                        <div class="table-responsive">
+                            <table class="table table-sm table-bordered">
+                                <thead class="bg-light">
+                                    <tr>
+                                        <th>序号</th>
+                                        <th>工号</th>
+                                        <th>姓名</th>
+                                        <th>状态</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="batchPreviewTableBody">
+                                    <!-- 预览数据将在这里显示 -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" id="saveBatchEmployeesBtn">批量保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 批量发放工装模态框 -->
+    <div class="modal fade" id="batchIssueUniformModal" tabindex="-1" aria-labelledby="batchIssueUniformModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-warning text-white">
+                    <h5 class="modal-title" id="batchIssueUniformModalLabel">批量发放工装</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <h6><i class="bi bi-info-circle"></i> 使用说明</h6>
+                        <p>1. 先选择工装类型</p>
+                        <p>2. 然后选择需要发放的员工（可多选）</p>
+                        <p>3. 设置发放日期（默认为今天）</p>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="batchUniformTypeId" class="form-label">工装类型 <span class="text-danger">*</span></label>
+                        <select class="form-control" id="batchUniformTypeId" required>
+                            <option value="">请选择工装类型</option>
+                            <!-- 工装类型选项将通过JavaScript动态添加 -->
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">选择员工 <span class="text-danger">*</span></label>
+                        <div class="row mb-2">
+                            <div class="col-md-8">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="selectAllEmployees">
+                                    <label class="form-check-label" for="selectAllEmployees">
+                                        全选/取消全选
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <button type="button" class="btn btn-sm btn-outline-secondary" id="filterByDepartment">按部门筛选</button>
+                            </div>
+                        </div>
+                        
+                        <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
+                            <table class="table table-sm table-hover table-striped">
+                                <thead class="bg-light sticky-top">
+                                    <tr>
+                                        <th width="40px">选择</th>
+                                        <th>工号</th>
+                                        <th>姓名</th>
+                                        <th>部门</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="batchEmployeeTableBody">
+                                    <!-- 员工列表将通过JavaScript动态添加 -->
+                                    <tr>
+                                        <td colspan="4" class="text-center text-muted">加载中...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label for="batchIssueDate" class="form-label">发放日期</label>
+                                <input type="date" class="form-control" id="batchIssueDate">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="batchIssueCount" class="form-label">发放数量</label>
+                                <input type="number" class="form-control" id="batchIssueCount" value="1" min="1">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3" id="batchIssuePreview" style="display: none;">
+                        <h6>发放预览</h6>
+                        <div class="alert alert-light">
+                            <p><strong>工装类型：</strong><span id="previewUniformType">-</span></p>
+                            <p><strong>发放日期：</strong><span id="previewIssueDate">-</span></p>
+                            <p><strong>发放数量：</strong><span id="previewIssueCount">-</span></p>
+                            <p><strong>选中员工：</strong><span id="previewSelectedEmployees">-</span></p>
+                        </div>
+                        
+                        <!-- 可编辑备注区域 -->
+                        <div class="mb-3">
+                            <label for="batchIssueNotes" class="form-label">💾 备注信息</label>
+                            <textarea class="form-control" id="batchIssueNotes" rows="3" placeholder="请输入发放备注信息（将显示在钉钉消息最后）"></textarea>
+                            <div class="form-text">此备注信息将显示在钉钉通知消息的最后</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-warning" id="confirmBatchIssueBtn">确认批量发放</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 确认删除模态框 -->
+    <div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title" id="confirmDeleteModalLabel">确认删除</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p id="deleteConfirmMessage">确定要删除此项吗？此操作不可撤销。</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-danger" id="confirmDeleteBtn">删除</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 提示消息组件 -->
+    <div id="toastContainer" class="position-fixed bottom-5 end-5 z-50"></div>
+    
+    <!-- Bootstrap Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- 员工工装管理脚本 -->
+    <script src="{{ url_for('static', filename='js/employee_uniform.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ollama Chat - 本地大模型聊天界面</title>
+    <meta name="description" content="现代化的Ollama本地大模型网页聊天界面">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        /* 基础样式重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #1f2937;
+            background-color: #f8fafc;
+            overflow: hidden;
+        }
+        
+        code {
+            font-family: 'Fira Code', Consolas, Monaco, 'Courier New', monospace;
+        }
+        
+        /* 布局样式 */
+        .app {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+        }
+        
+        /* 左侧边栏 */
+        .sidebar {
+            width: 250px;
+            height: 100vh;
+            background: #ffffff;
+            border-right: 1px solid #e5e7eb;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .logo {
+            padding: 20px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .logo h1 {
+            font-size: 20px;
+            font-weight: 600;
+            color: #3b82f6;
+        }
+        
+        .model-selector {
+            padding: 20px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .model-selector select {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        
+        .conversation-list {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        
+        .new-chat-btn {
+            width: 100%;
+            padding: 12px;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
+        
+        /* 聊天区域 */
+        .chat-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+        
+        .chat-header {
+            padding: 20px;
+            background: #ffffff;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: #f8fafc;
+        }
+        
+        .message {
+            margin-bottom: 20px;
+            max-width: 70%;
+        }
+        
+        .user-message {
+            margin-left: auto;
+            text-align: right;
+        }
+        
+        .ai-message {
+            margin-right: auto;
+        }
+        
+        .message-bubble {
+            padding: 12px 16px;
+            border-radius: 12px;
+            display: inline-block;
+            word-wrap: break-word;
+        }
+        
+        .user-message .message-bubble {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        .ai-message .message-bubble {
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+        }
+        
+        .message-time {
+            font-size: 12px;
+            color: #6b7280;
+            margin-top: 4px;
+        }
+        
+        .chat-input {
+            padding: 20px;
+            background: #ffffff;
+            border-top: 1px solid #e5e7eb;
+        }
+        
+        .input-container {
+            display: flex;
+            gap: 12px;
+        }
+        
+        .message-input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 14px;
+            resize: none;
+            min-height: 44px;
+            max-height: 120px;
+        }
+        
+        .send-btn {
+            padding: 12px 20px;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        /* 右侧设置面板 */
+        .settings-panel {
+            width: 300px;
+            height: 100vh;
+            background: #ffffff;
+            border-left: 1px solid #e5e7eb;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        
+        .setting-group {
+            margin-bottom: 24px;
+        }
+        
+        .setting-group h3 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: #374151;
+        }
+        
+        .slider-container {
+            margin-bottom: 16px;
+        }
+        
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        
+        .slider {
+            width: 100%;
+            height: 6px;
+            background: #e5e7eb;
+            border-radius: 3px;
+            outline: none;
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .sidebar, .settings-panel {
+                display: none;
+            }
+            
+            .chat-container {
+                width: 100vw;
+            }
+        }
+        
+        /* 加载动画 */
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            font-size: 18px;
+            color: #6b7280;
+        }
+        
+        .loading::after {
+            content: '';
+            width: 20px;
+            height: 20px;
+            border: 2px solid #e5e7eb;
+            border-top: 2px solid #3b82f6;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 12px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* 深色主题 */
+        [data-theme="dark"] body {
+            background-color: #111827;
+            color: #f9fafb;
+        }
+        
+        [data-theme="dark"] .sidebar,
+        [data-theme="dark"] .chat-header,
+        [data-theme="dark"] .chat-input,
+        [data-theme="dark"] .settings-panel {
+            background: #1f2937;
+            border-color: #374151;
+        }
+        
+        [data-theme="dark"] .chat-messages {
+            background: #111827;
+        }
+        
+        [data-theme="dark"] .ai-message .message-bubble {
+            background: #374151;
+            border-color: #4b5563;
+            color: #f9fafb;
+        }
+        
+        [data-theme="dark"] .message-input {
+            background: #374151;
+            border-color: #4b5563;
+            color: #f9fafb;
+        }
+        
+        [data-theme="dark"] .slider {
+            background: #4b5563;
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <!-- 左侧边栏 -->
+        <div class="sidebar">
+            <div class="logo">
+                <h1>Ollama Chat</h1>
+            </div>
+            
+            <div class="model-selector">
+                <select id="model-select">
+                    <option value="">选择模型...</option>
+                    <option value="llama2">Llama 2</option>
+                    <option value="mistral">Mistral</option>
+                    <option value="codellama">Code Llama</option>
+                </select>
+            </div>
+            
+            <div class="conversation-list">
+                <button class="new-chat-btn" onclick="newChat()">+ 新建对话</button>
+                <div id="conversation-list">
+                    <!-- 对话列表将在这里动态生成 -->
+                </div>
+            </div>
+        </div>
+        
+        <!-- 中央聊天区域 -->
+        <div class="chat-container">
+            <div class="chat-header">
+                <h2 id="conversation-title">新对话</h2>
+                <div class="chat-actions">
+                    <button onclick="toggleTheme()">切换主题</button>
+                </div>
+            </div>
+            
+            <div class="chat-messages" id="chat-messages">
+                <div class="welcome-message">
+                    <div class="ai-message">
+                        <div class="message-bubble">
+                            <h3>欢迎使用 Ollama Chat!</h3>
+                            <p>请选择一个模型并开始对话。</p>
+                            <p>您可以：</p>
+                            <ul>
+                                <li>在左侧选择或切换模型</li>
+                                <li>在右侧调整模型参数</li>
+                                <li>开始与AI进行对话</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="chat-input">
+                <div class="input-container">
+                    <textarea 
+                        class="message-input" 
+                        id="message-input" 
+                        placeholder="输入消息... (按Enter发送，Shift+Enter换行)"
+                        rows="1"
+                        onkeydown="handleKeydown(event)"
+                    ></textarea>
+                    <button class="send-btn" onclick="sendMessage()">发送</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 右侧设置面板 -->
+        <div class="settings-panel">
+            <div class="setting-group">
+                <h3>模型参数</h3>
+                
+                <div class="slider-container">
+                    <div class="slider-label">
+                        <span>温度 (Temperature)</span>
+                        <span id="temperature-value">0.7</span>
+                    </div>
+                    <input 
+                        type="range" 
+                        class="slider" 
+                        id="temperature" 
+                        min="0" 
+                        max="1" 
+                        step="0.01" 
+                        value="0.7"
+                        oninput="updateTemperature(this.value)"
+                    >
+                </div>
+                
+                <div class="slider-container">
+                    <div class="slider-label">
+                        <span>最大长度 (Max Tokens)</span>
+                        <span id="max-tokens-value">2048</span>
+                    </div>
+                    <input 
+                        type="range" 
+                        class="slider" 
+                        id="max-tokens" 
+                        min="0" 
+                        max="32768" 
+                        step="1" 
+                        value="2048"
+                        oninput="updateMaxTokens(this.value)"
+                    >
+                </div>
+                
+                <div class="slider-container">
+                    <div class="slider-label">
+                        <span>Top P</span>
+                        <span id="top-p-value">0.9</span>
+                    </div>
+                    <input 
+                        type="range" 
+                        class="slider" 
+                        id="top-p" 
+                        min="0" 
+                        max="1" 
+                        step="0.01" 
+                        value="0.9"
+                        oninput="updateTopP(this.value)"
+                    >
+                </div>
+            </div>
+            
+            <div class="setting-group">
+                <h3>模型信息</h3>
+                <div id="model-info">
+                    <p>请先选择一个模型</p>
+                </div>
+            </div>
+            
+            <div class="setting-group">
+                <h3>系统提示</h3>
+                <textarea 
+                    class="message-input" 
+                    id="system-prompt" 
+                    placeholder="输入系统提示词..."
+                    rows="3"
+                ></textarea>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 应用状态
+        let currentConversation = {
+            id: 'default',
+            title: '新对话',
+            messages: [],
+            model: '',
+            temperature: 0.7,
+            maxTokens: 2048,
+            topP: 0.9
+        };
+        
+        let conversations = [currentConversation];
+        
+        // 初始化
+        function init() {
+            loadTheme();
+            loadConversations();
+            updateUI();
+        }
+        
+        // 主题管理
+        function loadTheme() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        }
+        
+        function toggleTheme() {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+        }
+        
+        // 对话管理
+        function newChat() {
+            const newConv = {
+                id: 'conversation-' + Date.now(),
+                title: '新对话',
+                messages: [],
+                model: currentConversation.model,
+                temperature: currentConversation.temperature,
+                maxTokens: currentConversation.maxTokens,
+                topP: currentConversation.topP
+            };
+            
+            conversations.push(newConv);
+            switchConversation(newConv.id);
+            saveConversations();
+        }
+        
+        function switchConversation(conversationId) {
+            const conv = conversations.find(c => c.id === conversationId);
+            if (conv) {
+                currentConversation = conv;
+                updateUI();
+            }
+        }
+        
+        function saveConversations() {
+            localStorage.setItem('conversations', JSON.stringify(conversations));
+        }
+        
+        function loadConversations() {
+            const saved = localStorage.getItem('conversations');
+            if (saved) {
+                conversations = JSON.parse(saved);
+                if (conversations.length > 0) {
+                    currentConversation = conversations[0];
+                }
+            }
+        }
+        
+        // 消息处理
+        function sendMessage() {
+            const input = document.getElementById('message-input');
+            const message = input.value.trim();
+            
+            if (!message) return;
+            
+            if (!currentConversation.model) {
+                alert('请先选择一个模型');
+                return;
+            }
+            
+            // 添加用户消息
+            addMessage('user', message);
+            input.value = '';
+            
+            // 显示AI思考状态
+            showThinking();
+            
+            // 模拟AI回复（实际使用时需要连接Ollama API）
+            setTimeout(() => {
+                const aiResponse = generateAIResponse(message);
+                addMessage('ai', aiResponse);
+                
+                // 更新对话标题（基于第一条消息）
+                if (currentConversation.messages.length === 2) {
+                    currentConversation.title = message.substring(0, 30) + (message.length > 30 ? '...' : '');
+                    updateUI();
+                }
+                
+                saveConversations();
+            }, 1000);
+        }
+        
+        function addMessage(role, content) {
+            const message = {
+                role: role,
+                content: content,
+                timestamp: new Date().toLocaleTimeString()
+            };
+            
+            currentConversation.messages.push(message);
+            renderMessages();
+        }
+        
+        function showThinking() {
+            const messagesContainer = document.getElementById('chat-messages');
+            const thinkingDiv = document.createElement('div');
+            thinkingDiv.className = 'ai-message thinking';
+            thinkingDiv.innerHTML = `
+                <div class="message-bubble">
+                    <div class="loading">思考中...</div>
+                </div>
+            `;
+            messagesContainer.appendChild(thinkingDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+        
+        function renderMessages() {
+            const container = document.getElementById('chat-messages');
+            container.innerHTML = '';
+            
+            currentConversation.messages.forEach(msg => {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `message ${msg.role}-message`;
+                
+                messageDiv.innerHTML = `
+                    <div class="message-bubble">${msg.content}</div>
+                    <div class="message-time">${msg.timestamp}</div>
+                `;
+                
+                container.appendChild(messageDiv);
+            });
+            
+            container.scrollTop = container.scrollHeight;
+        }
+        
+        // 模拟AI回复（实际使用时需要连接Ollama API）
+        function generateAIResponse(userMessage) {
+            const responses = [
+                `这是一个很好的问题！关于"${userMessage}"，我可以为您提供一些信息。`,
+                `我理解您对"${userMessage}"的兴趣。让我来为您详细解释一下。`,
+                `感谢您的提问！"${userMessage}"是一个很有深度的话题。`,
+                `关于"${userMessage}"，我可以从几个不同的角度来为您分析。`,
+                `您提到的"${userMessage}"确实值得深入探讨。`
+            ];
+            
+            return responses[Math.floor(Math.random() * responses.length)];
+        }
+        
+        // 参数更新
+        function updateTemperature(value) {
+            currentConversation.temperature = parseFloat(value);
+            document.getElementById('temperature-value').textContent = value;
+        }
+        
+        function updateMaxTokens(value) {
+            currentConversation.maxTokens = parseInt(value);
+            document.getElementById('max-tokens-value').textContent = value;
+        }
+        
+        function updateTopP(value) {
+            currentConversation.topP = parseFloat(value);
+            document.getElementById('top-p-value').textContent = value;
+        }
+        
+        // 模型选择
+        document.getElementById('model-select').addEventListener('change', function(e) {
+            currentConversation.model = e.target.value;
+            updateModelInfo();
+        });
+        
+        function updateModelInfo() {
+            const modelInfo = document.getElementById('model-info');
+            if (currentConversation.model) {
+                modelInfo.innerHTML = `
+                    <p><strong>模型:</strong> ${currentConversation.model}</p>
+                    <p><strong>状态:</strong> 已选择</p>
+                    <p><strong>温度:</strong> ${currentConversation.temperature}</p>
+                    <p><strong>最大长度:</strong> ${currentConversation.maxTokens}</p>
+                `;
+            } else {
+                modelInfo.innerHTML = '<p>请先选择一个模型</p>';
+            }
+        }
+        
+        // 键盘快捷键
+        function handleKeydown(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
+            }
+        }
+        
+        // UI更新
+        function updateUI() {
+            document.getElementById('conversation-title').textContent = currentConversation.title;
+            renderMessages();
+            updateModelInfo();
+            
+            // 更新参数显示
+            document.getElementById('temperature').value = currentConversation.temperature;
+            document.getElementById('temperature-value').textContent = currentConversation.temperature;
+            document.getElementById('max-tokens').value = currentConversation.maxTokens;
+            document.getElementById('max-tokens-value').textContent = currentConversation.maxTokens;
+            document.getElementById('top-p').value = currentConversation.topP;
+            document.getElementById('top-p-value').textContent = currentConversation.topP;
+            
+            // 更新模型选择
+            document.getElementById('model-select').value = currentConversation.model;
+        }
+        
+        // 启动应用
+        window.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>

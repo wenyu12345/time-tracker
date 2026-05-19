@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}文档中心 - Excel上传分析汇总工具{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <style>
+        .docs-container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        .docs-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .docs-nav {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+        .docs-nav h3 {
+            margin-top: 0;
+            color: #3498db;
+        }
+        .docs-nav ul {
+            list-style: none;
+            padding: 0;
+        }
+        .docs-nav li {
+            margin-bottom: 10px;
+        }
+        .docs-nav a {
+            color: #333;
+            text-decoration: none;
+            display: block;
+            padding: 8px 12px;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+        .docs-nav a:hover, .docs-nav a.active {
+            background-color: #e3f2fd;
+            color: #3498db;
+        }
+        .docs-content {
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        .docs-content h2 {
+            color: #2c3e50;
+            margin-top: 0;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+        .docs-content h3 {
+            color: #34495e;
+            margin-top: 25px;
+        }
+        .docs-content p {
+            line-height: 1.8;
+            color: #555;
+        }
+        .docs-content ul, .docs-content ol {
+            line-height: 1.8;
+            color: #555;
+        }
+        .docs-content li {
+            margin-bottom: 8px;
+        }
+        .code-block {
+            background-color: #f5f5f5;
+            padding: 15px;
+            border-radius: 4px;
+            font-family: monospace;
+            overflow-x: auto;
+            margin: 20px 0;
+        }
+        .back-link {
+            display: inline-block;
+            margin-bottom: 20px;
+            color: #3498db;
+            text-decoration: none;
+        }
+        .back-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container docs-container">
+        <div class="docs-header">
+            <h1>文档中心</h1>
+            <span class="version-tag" style="background-color: #3498db; color: white; padding: 5px 10px; border-radius: 15px; font-size: 14px;">
+                v3.1.0
+            </span>
+        </div>
+        
+        <div class="docs-nav">
+            <h3>文档导航</h3>
+            <ul>
+                <li><a href="{{ url_for('development_docs') }}" {% if active_page == 'development' %}class="active"{% endif %}>开发文档</a></li>
+                <li><a href="{{ url_for('technical_docs') }}" {% if active_page == 'technical' %}class="active"{% endif %}>技术协议</a></li>
+                <li><a href="{{ url_for('changelog_docs') }}" {% if active_page == 'changelog' %}class="active"{% endif %}>版本更新公告</a></li>
+                <li><a href="{{ url_for('version_management_docs') }}" {% if active_page == 'versioning' %}class="active"{% endif %}>版本管理</a></li>
+            </ul>
+        </div>
+        
+        <a href="{{ url_for('index') }}" class="back-link">&larr; 返回首页</a>
+        
+        <div class="docs-content">
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+</body>
+</html>

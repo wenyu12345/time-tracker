@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>卷重量卷径计算</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .card {
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .card-header {
+            background-color: #007bff;
+            color: white;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .btn {
+            margin-right: 10px;
+        }
+        .result {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #28a745;
+            margin-top: 15px;
+        }
+        .models-list {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 10px;
+        }
+        .model-item {
+            padding: 10px;
+            margin-bottom: 10px;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+        }
+        .model-item:last-child {
+            margin-bottom: 0;
+        }
+        .model-actions {
+            float: right;
+        }
+        .calculator-section {
+            background-color: #e9ecef;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-center mb-4">卷重量卷径计算</h1>
+        
+        <!-- 型号管理卡片 -->
+        <div class="card">
+            <div class="card-header">
+                <h2>型号管理</h2>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <!-- 添加型号表单 -->
+                    <div class="col-md-6">
+                        <h3>添加/编辑型号</h3>
+                        <form id="model-form">
+                            <input type="hidden" id="model-id">
+                            <div class="form-group">
+                                <label for="model-name">型号名称</label>
+                                <input type="text" class="form-control" id="model-name" placeholder="例如：D652正极" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="core-diameter">卷筒直径 (mm)</label>
+                                <input type="number" class="form-control" id="core-diameter" placeholder="例如：180" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="max-diameter">大卷径 (mm)</label>
+                                <input type="number" class="form-control" id="max-diameter" placeholder="例如：615" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="max-weight">大卷重量 (kg)</label>
+                                <input type="number" class="form-control" id="max-weight" placeholder="例如：300" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary" id="save-btn">保存型号</button>
+                            <button type="button" class="btn btn-secondary" id="cancel-btn" style="display: none;">取消编辑</button>
+                        </form>
+                    </div>
+                    
+                    <!-- 型号列表 -->
+                    <div class="col-md-6">
+                        <h3>型号列表</h3>
+                        <div class="models-list" id="models-list">
+                            <!-- 型号列表将通过JavaScript动态生成 -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 计算卡片 -->
+        <div class="card calculator-section">
+            <div class="card-header">
+                <h2>卷径重量计算</h2>
+            </div>
+            <div class="card-body">
+                <form id="calculator-form">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="select-model">选择型号</label>
+                                <select class="form-control" id="select-model" required>
+                                    <!-- 型号选项将通过JavaScript动态生成 -->
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="input-type">输入类型</label>
+                                <select class="form-control" id="input-type" required>
+                                    <option value="diameter">卷径 (mm)</option>
+                                    <option value="weight">重量 (kg)</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label id="input-label">卷径 (mm)</label>
+                                <input type="number" class="form-control" id="input-value" placeholder="请输入数值" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary">计算</button>
+                        </div>
+                        
+                        <!-- 计算结果 -->
+                        <div class="col-md-6">
+                            <h3>计算结果</h3>
+                            <div class="result" id="result">
+                                <!-- 计算结果将通过JavaScript动态生成 -->
+                            </div>
+                            <div id="model-info" class="mt-4">
+                                <!-- 当前型号信息将通过JavaScript动态生成 -->
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // 全局变量
+        let currentModel = null;
+        
+        // 页面加载时初始化
+        $(document).ready(function() {
+            loadModels();
+            
+            // 输入类型改变事件
+            $('#input-type').change(function() {
+                updateInputLabel();
+            });
+            
+            // 保存型号表单提交
+            $('#model-form').submit(function(e) {
+                e.preventDefault();
+                saveModel();
+            });
+            
+            // 取消编辑
+            $('#cancel-btn').click(function() {
+                resetForm();
+            });
+            
+            // 计算表单提交
+            $('#calculator-form').submit(function(e) {
+                e.preventDefault();
+                calculate();
+            });
+        });
+        
+        // 更新输入标签
+        function updateInputLabel() {
+            const inputType = $('#input-type').val();
+            if (inputType === 'diameter') {
+                $('#input-label').text('卷径 (mm)');
+                $('#input-value').attr('placeholder', '请输入卷径');
+            } else {
+                $('#input-label').text('重量 (kg)');
+                $('#input-value').attr('placeholder', '请输入重量');
+            }
+        }
+        
+        // 加载型号列表
+        function loadModels() {
+            $.getJSON('/get_coil_models')
+                .done(function(data) {
+                    if (data && Array.isArray(data.models)) {
+                        const models = data.models;
+                        
+                        // 更新型号列表
+                        const modelsList = $('#models-list');
+                        modelsList.empty();
+                        
+                        // 更新型号选择下拉框
+                        const selectModel = $('#select-model');
+                        selectModel.empty();
+                        
+                        models.forEach(model => {
+                            // 添加到型号列表
+                            const modelItem = $('<div class="model-item"></div>');
+                            modelItem.html(`
+                                <strong>${model.name}</strong>
+                                <div>卷筒直径: ${model.core_diameter} mm</div>
+                                <div>大卷径: ${model.max_diameter} mm</div>
+                                <div>大卷重量: ${model.max_weight} kg</div>
+                                <div class="model-actions">
+                                    <button class="btn btn-sm btn-warning edit-btn" data-id="${model.id}">编辑</button>
+                                    <button class="btn btn-sm btn-danger delete-btn" data-id="${model.id}">删除</button>
+                                </div>
+                            `);
+                            modelsList.append(modelItem);
+                            
+                            // 添加到选择下拉框
+                            selectModel.append(`<option value="${model.id}">${model.name}</option>`);
+                        });
+                        
+                        // 绑定编辑和删除事件
+                        $('.edit-btn').click(function() {
+                            const modelId = $(this).data('id');
+                            editModel(modelId, models);
+                        });
+                        
+                        $('.delete-btn').click(function() {
+                            const modelId = $(this).data('id');
+                            deleteModel(modelId);
+                        });
+                    } else {
+                        console.error('获取型号数据失败：返回格式不正确', data);
+                        alert('获取型号数据失败：返回格式不正确');
+                    }
+                })
+                .fail(function(jqXHR, textStatus, errorThrown) {
+                    console.error('获取型号数据失败：', textStatus, errorThrown);
+                    alert(`获取型号数据失败：${textStatus} - ${errorThrown}`);
+                });
+        }
+        
+        // 编辑型号
+        function editModel(modelId, models) {
+            const model = models.find(m => m.id === modelId);
+            if (model) {
+                $('#model-id').val(model.id);
+                $('#model-name').val(model.name);
+                $('#core-diameter').val(model.core_diameter);
+                $('#max-diameter').val(model.max_diameter);
+                $('#max-weight').val(model.max_weight);
+                $('#save-btn').text('更新型号');
+                $('#cancel-btn').show();
+            }
+        }
+        
+        // 删除型号
+        function deleteModel(modelId) {
+            if (confirm('确定要删除这个型号吗？')) {
+                $.ajax({
+                    url: '/delete_coil_model',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({id: modelId}),
+                    success: function(response) {
+                        if (response.success) {
+                            loadModels();
+                            alert('型号删除成功');
+                        }
+                    },
+                    error: function() {
+                        alert('删除失败，请重试');
+                    }
+                });
+            }
+        }
+        
+        // 保存型号
+        function saveModel() {
+            // 获取表单数据
+            const modelData = {
+                id: $('#model-id').val(),
+                name: $('#model-name').val().trim(),
+                core_diameter: parseFloat($('#core-diameter').val()),
+                max_diameter: parseFloat($('#max-diameter').val()),
+                max_weight: parseFloat($('#max-weight').val())
+            };
+            
+            // 客户端验证
+            if (!modelData.name) {
+                alert('请输入型号名称');
+                return;
+            }
+            
+            if (isNaN(modelData.core_diameter) || modelData.core_diameter <= 0) {
+                alert('请输入有效的卷筒直径');
+                return;
+            }
+            
+            if (isNaN(modelData.max_diameter) || modelData.max_diameter <= modelData.core_diameter) {
+                alert('大卷径必须大于卷筒直径');
+                return;
+            }
+            
+            if (isNaN(modelData.max_weight) || modelData.max_weight <= 0) {
+                alert('请输入有效的大卷重量');
+                return;
+            }
+            
+            console.log('保存型号数据:', modelData);
+            
+            $.ajax({
+                url: '/save_coil_model',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(modelData),
+                dataType: 'json',
+                success: function(response) {
+                    console.log('保存型号响应:', response);
+                    if (response.success) {
+                        loadModels(); // 更新型号列表和选择下拉框
+                        resetForm();
+                        alert('型号保存成功');
+                    } else {
+                        console.error('保存型号失败:', response.error);
+                        alert(`型号保存失败: ${response.error || '未知错误'}`);
+                    }
+                },
+                error: function(jqXHR, textStatus, errorThrown) {
+                    console.error('保存型号AJAX失败:', textStatus, errorThrown);
+                    console.error('响应详情:', jqXHR.responseText);
+                    
+                    let errorMsg = '保存失败，请重试';
+                    if (jqXHR.responseJSON && jqXHR.responseJSON.error) {
+                        errorMsg = `保存失败: ${jqXHR.responseJSON.error}`;
+                    } else if (textStatus === 'timeout') {
+                        errorMsg = '保存超时，请重试';
+                    } else if (textStatus === 'error') {
+                        errorMsg = `保存错误: ${errorThrown}`;
+                    }
+                    
+                    alert(errorMsg);
+                }
+            });
+        }
+        
+        // 重置表单
+        function resetForm() {
+            $('#model-form')[0].reset();
+            $('#model-id').val('');
+            $('#save-btn').text('保存型号');
+            $('#cancel-btn').hide();
+        }
+        
+        // 计算
+        function calculate() {
+            const modelId = $('#select-model').val();
+            const inputType = $('#input-type').val();
+            const inputValue = parseFloat($('#input-value').val());
+            
+            $.ajax({
+                url: '/calculate_coil',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    model_id: modelId,
+                    input_type: inputType,
+                    input_value: inputValue
+                }),
+                success: function(response) {
+                    if (response.success) {
+                        const result = response.result;
+                        let resultText = '';
+                        if (result.type === 'weight') {
+                            resultText = `计算结果：<br>当前重量：${result.value} kg`;
+                        } else {
+                            resultText = `计算结果：<br>当前卷径：${result.value} mm`;
+                        }
+                        $('#result').html(resultText);
+                        
+                        // 更新型号信息
+                        updateModelInfo(modelId);
+                    } else {
+                        $('#result').html(`<span style="color: red;">计算失败：${response.error}</span>`);
+                    }
+                },
+                error: function() {
+                    $('#result').html('<span style="color: red;">计算失败，请重试</span>');
+                }
+            });
+        }
+        
+        // 更新型号信息
+        function updateModelInfo(modelId) {
+            $.getJSON('/get_coil_models', function(data) {
+                const model = data.models.find(m => m.id === modelId);
+                if (model) {
+                    $('#model-info').html(`
+                        <h4>当前型号信息</h4>
+                        <div>型号：${model.name}</div>
+                        <div>卷筒直径：${model.core_diameter} mm</div>
+                        <div>大卷径：${model.max_diameter} mm</div>
+                        <div>大卷重量：${model.max_weight} kg</div>
+                    `);
+                }
+            });
+        }
+    </script>
+</body>
+</html>

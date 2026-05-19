@@ -1,0 +1,112 @@
+{
+  "fields": [
+    {
+      "key": "model",
+      "label": "型号",
+      "visible": true,
+      "order": 1,
+      "required": false
+    },
+    {
+      "key": "test_type",
+      "label": "试验类型",
+      "visible": true,
+      "order": 2,
+      "required": false
+    },
+    {
+      "key": "electrode_type",
+      "label": "正负极",
+      "visible": true,
+      "order": 4,
+      "required": false,
+      "options": [
+        "正",
+        "负"
+      ]
+    },
+    {
+      "key": "roll1_thickness",
+      "label": "一辊厚度",
+      "visible": true,
+      "order": 5,
+      "required": false
+    },
+    {
+      "key": "roll2_thickness",
+      "label": "二辊厚度",
+      "visible": true,
+      "order": 6,
+      "required": false
+    },
+    {
+      "key": "roll1_gap_operate",
+      "label": "一辊辊缝(操作侧)",
+      "visible": true,
+      "order": 7,
+      "required": false
+    },
+    {
+      "key": "roll1_gap_drive",
+      "label": "一辊辊缝(传动侧)",
+      "visible": true,
+      "order": 8,
+      "required": false
+    },
+    {
+      "key": "roll1_pressure_operate",
+      "label": "一辊压力(操作侧)",
+      "visible": true,
+      "order": 9,
+      "required": false
+    },
+    {
+      "key": "roll1_pressure_drive",
+      "label": "一辊压力(传动侧)",
+      "visible": true,
+      "order": 10,
+      "required": false
+    },
+    {
+      "key": "roll2_gap_operate",
+      "label": "二辊辊缝(操作侧)",
+      "visible": true,
+      "order": 11,
+      "required": false
+    },
+    {
+      "key": "roll2_gap_drive",
+      "label": "二辊辊缝(传动侧)",
+      "visible": true,
+      "order": 12,
+      "required": false
+    },
+    {
+      "key": "roll2_pressure_operate",
+      "label": "二辊压力(操作侧)",
+      "visible": true,
+      "order": 13,
+      "required": false
+    },
+    {
+      "key": "roll2_pressure_drive",
+      "label": "二辊压力(传动侧)",
+      "visible": true,
+      "order": 14,
+      "required": false
+    },
+    {
+      "key": "jth",
+      "label": "机台号",
+      "type": "text",
+      "visible": true,
+      "order": 3,
+      "required": false
+    }
+  ],
+  "ui_settings": {
+    "detail_modal_width": 800,
+    "detail_textarea_height": 1300,
+    "detail_font_size": 19
+  }
+}

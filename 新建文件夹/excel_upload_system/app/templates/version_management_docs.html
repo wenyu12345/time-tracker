@@ -1,0 +1,1337 @@
+{% extends 'docs_base.html' %}
+
+{% block title %}版本管理系统 - Excel上传分析汇总工具{% endblock %}
+
+{% block content %}
+    <div class="version-management-container">
+        <!-- 页面头部 -->
+        <div class="page-header">
+            <h1>版本管理系统</h1>
+            <p class="header-description">全面的版本控制策略、数据隔离机制与升级流程管理</p>
+            <div class="current-version-info">
+                <span class="version-badge">当前版本: <strong>Excel数据分析 3.1.0</strong></span>
+                <span class="release-date">发布日期: 2026年02月10日</span>
+            </div>
+        </div>
+
+        <!-- 1. 版本管理体系 -->
+        <section class="management-section">
+            <h2 class="section-title">1. 版本管理体系</h2>
+            
+            <div class="section-content">
+                <p>Excel上传分析汇总工具采用企业级版本管理体系，严格遵循语义化版本控制规范，确保系统演进的可追溯性、兼容性和稳定性。</p>
+                
+                <div class="version-format-section">
+                    <h3>1.1 版本标识系统</h3>
+                    
+                    <div class="version-format-visual">
+                        <div class="version-component">
+                            <div class="component-label">主版本号</div>
+                            <div class="component-value">X</div>
+                            <div class="component-desc">架构变更/不兼容API</div>
+                        </div>
+                        <div class="version-separator">.</div>
+                        <div class="version-component">
+                            <div class="component-label">次版本号</div>
+                            <div class="component-value">Y</div>
+                            <div class="component-desc">新功能/向后兼容</div>
+                        </div>
+                        <div class="version-separator">.</div>
+                        <div class="version-component">
+                            <div class="component-label">修订号</div>
+                            <div class="component-value">Z</div>
+                            <div class="component-desc">Bug修复/向后兼容</div>
+                        </div>
+                    </div>
+                    
+                    <div class="version-rules">
+                        <h4>版本递增规则</h4>
+                        <ul>
+                            <li><strong>主版本号(X)</strong>：当API不兼容变更或架构重构时递增</li>
+                            <li><strong>次版本号(Y)</strong>：当添加新功能且向后兼容时递增</li>
+                            <li><strong>修订号(Z)</strong>：当修复问题且向后兼容时递增</li>
+                            <li><strong>先行版本号</strong>：使用<code>-beta.1</code>、<code>-rc.2</code>等格式表示预发布版本</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="version-status-section">
+                    <h3>1.2 版本状态分类</h3>
+                    
+                    <div class="version-status-cards">
+                        <div class="status-card stable">
+                            <div class="status-icon">✅</div>
+                            <h4>稳定版本</h4>
+                            <p>经过全面测试验证的正式发布版本，适合生产环境使用</p>
+                            <div class="example">示例: 1.0.0</div>
+                        </div>
+                        
+                        <div class="status-card rc">
+                            <div class="status-icon">🔄</div>
+                            <h4>候选版本</h4>
+                            <p>预发布版本，功能冻结，仅修复关键问题，接近正式发布</p>
+                            <div class="example">示例: 1.0.0-rc.1</div>
+                        </div>
+                        
+                        <div class="status-card beta">
+                            <div class="status-icon">🚧</div>
+                            <h4>测试版本</h4>
+                            <p>包含新功能的预发布版本，用于用户测试和反馈收集</p>
+                            <div class="example">示例: 1.0.0-beta.3</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. 多层数据隔离架构 -->
+        <section class="management-section">
+            <h2 class="section-title">2. 多层数据隔离架构</h2>
+            
+            <div class="section-content">
+                <p>系统实现了多层次的数据隔离机制，确保不同版本间的数据安全、功能独立性和向后兼容性。</p>
+                
+                <div class="isolation-layers">
+                    <div class="isolation-layer">
+                        <div class="layer-header">
+                            <div class="layer-number">01</div>
+                            <h3>存储层隔离</h3>
+                        </div>
+                        
+                        <div class="layer-details">
+                            <ul>
+                                <li><strong>版本化路径结构</strong>：采用<code>/uploads/v{major}_{minor}/</code>格式</li>
+                                <li><strong>当前版本路径</strong>：<code>/uploads/v1_0/</code></li>
+                                <li><strong>文件元数据</strong>：每个文件包含创建版本、修改时间等信息</li>
+                                <li><strong>历史版本存档</strong>：保留所有版本的文件，但默认仅显示当前版本</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="isolation-layer">
+                        <div class="layer-header">
+                            <div class="layer-number">02</div>
+                            <h3>会话与状态隔离</h3>
+                        </div>
+                        
+                        <div class="layer-details">
+                            <ul>
+                                <li><strong>会话版本绑定</strong>：用户会话中嵌入版本标识信息</li>
+                                <li><strong>会话生命周期</strong>：24小时有效，支持自动续期</li>
+                                <li><strong>状态持久化</strong>：关键操作状态按版本独立保存</li>
+                                <li><strong>并发访问控制</strong>：防止不同版本间的数据竞争</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="isolation-layer">
+                        <div class="layer-header">
+                            <div class="layer-number">03</div>
+                            <h3>处理逻辑隔离</h3>
+                        </div>
+                        
+                        <div class="layer-details">
+                            <ul>
+                                <li><strong>模块版本化</strong>：核心处理模块按版本独立部署</li>
+                                <li><strong>日志隔离</strong>：错误日志和操作记录按版本分类存储</li>
+                                <li><strong>性能监控</strong>：各版本独立的性能指标收集</li>
+                                <li><strong>资源隔离</strong>：计算资源按版本分配，避免相互影响</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="data-isolation-visual">
+                    <h3>数据隔离架构图</h3>
+                    <div class="architecture-diagram">
+                        <div class="diagram-layer user-layer">用户交互层</div>
+                        <div class="diagram-layer session-layer">会话管理层</div>
+                        <div class="diagram-layer version-router">版本路由</div>
+                        <div class="diagram-module-group">
+                            <div class="module-box">版本1.0模块</div>
+                            <div class="module-box">版本1.1模块</div>
+                            <div class="module-box">版本2.0模块</div>
+                        </div>
+                        <div class="diagram-layer storage-layer">隔离存储层</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. 版本升级与迁移 -->
+        <section class="management-section">
+            <h2 class="section-title">3. 版本升级与迁移</h2>
+            
+            <div class="section-content">
+                <p>系统提供完整的版本升级流程，确保数据安全和功能平滑过渡。</p>
+                
+                <div class="upgrade-flow">
+                    <div class="flow-step">
+                        <div class="step-number">01</div>
+                        <div class="step-content">
+                            <h3>升级准备阶段</h3>
+                            <ul>
+                                <li>创建新版本的配置文件和目录结构</li>
+                                <li>更新版本标识和版本信息数据库</li>
+                                <li>准备必要的数据迁移脚本和工具</li>
+                                <li>制定详细的升级计划和回滚预案</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="flow-step">
+                        <div class="step-number">02</div>
+                        <div class="step-content">
+                            <h3>数据迁移阶段</h3>
+                            <ul>
+                                <li>执行用户数据备份（全量备份）</li>
+                                <li>将历史数据复制到新版本目录结构</li>
+                                <li>执行必要的数据格式转换和验证</li>
+                                <li>更新数据索引和元数据信息</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="flow-step">
+                        <div class="step-number">03</div>
+                        <div class="step-content">
+                            <h3>功能更新阶段</h3>
+                            <ul>
+                                <li>部署新版本的功能模块和API</li>
+                                <li>更新前端界面和静态资源文件</li>
+                                <li>配置版本路由和兼容性中间件</li>
+                                <li>更新系统文档和用户指南</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="flow-step">
+                        <div class="step-number">04</div>
+                        <div class="step-content">
+                            <h3>验证与上线阶段</h3>
+                            <ul>
+                                <li>执行自动化功能和回归测试</li>
+                                <li>验证数据完整性和一致性</li>
+                                <li>执行性能基准测试</li>
+                                <li>切换流量至新版本并监控</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="rollback-mechanism">
+                    <h3>3.1 回滚保障机制</h3>
+                    <p>系统内置全面的回滚机制，确保在升级异常时能够快速恢复：</p>
+                    
+                    <div class="rollback-features">
+                        <div class="feature-item">
+                            <div class="feature-icon">🛡️</div>
+                            <div class="feature-content">
+                                <h4>完整备份</h4>
+                                <p>升级前自动创建系统和数据的完整备份</p>
+                            </div>
+                        </div>
+                        
+                        <div class="feature-item">
+                            <div class="feature-icon">📋</div>
+                            <div class="feature-content">
+                                <h4>操作日志</h4>
+                                <p>记录所有升级步骤，支持精确到步骤的回滚</p>
+                            </div>
+                        </div>
+                        
+                        <div class="feature-item">
+                            <div class="feature-icon">⚡</div>
+                            <div class="feature-content">
+                                <h4>一键回滚</h4>
+                                <p>提供自动化回滚工具，快速恢复到升级前状态</p>
+                            </div>
+                        </div>
+                        
+                        <div class="feature-item">
+                            <div class="feature-icon">⚠️</div>
+                            <div class="feature-content">
+                                <h4>异常检测</h4>
+                                <p>自动监控升级过程，检测到异常时自动触发回滚</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 4. 兼容性管理 -->
+        <section class="management-section">
+            <h2 class="section-title">4. 兼容性管理</h2>
+            
+            <div class="section-content">
+                <p>系统严格遵循兼容性管理策略，确保不同版本间的无缝衔接和数据互通。</p>
+                
+                <div class="compatibility-matrix">
+                    <h3>4.1 兼容性矩阵</h3>
+                    <div class="matrix-container">
+                        <table class="compatibility-table">
+                            <thead>
+                                <tr>
+                                    <th>兼容性维度</th>
+                                    <th>相同主版本</th>
+                                    <th>不同主版本</th>
+                                    <th>保障机制</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>API接口</td>
+                                    <td><span class="compatibility-full">完全兼容</span></td>
+                                    <td><span class="compatibility-partial">部分兼容</span></td>
+                                    <td>API版本控制、兼容性中间件</td>
+                                </tr>
+                                <tr>
+                                    <td>数据格式</td>
+                                    <td><span class="compatibility-full">完全兼容</span></td>
+                                    <td><span class="compatibility-convert">自动转换</span></td>
+                                    <td>数据转换器、格式验证</td>
+                                </tr>
+                                <tr>
+                                    <td>配置文件</td>
+                                    <td><span class="compatibility-full">完全兼容</span></td>
+                                    <td><span class="compatibility-migration">需迁移</span></td>
+                                    <td>配置迁移工具</td>
+                                </tr>
+                                <tr>
+                                    <td>用户界面</td>
+                                    <td><span class="compatibility-consistent">保持一致</span></td>
+                                    <td><span class="compatibility-major">可能重构</span></td>
+                                    <td>渐进式UI更新</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <div class="compatibility-strategies">
+                    <div class="strategy-box">
+                        <h3>4.2 向后兼容性策略</h3>
+                        <p>确保新版本能够无缝处理旧版本的数据和请求：</p>
+                        <ul>
+                            <li><strong>API兼容性</strong>：次版本和修订版本升级保持API向后兼容</li>
+                            <li><strong>数据读取</strong>：新版本能识别并正确处理所有旧版本数据格式</li>
+                            <li><strong>配置继承</strong>：新配置自动继承旧配置的合理默认值</li>
+                            <li><strong>功能降级</strong>：在不支持某些新特性时提供优雅降级方案</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="strategy-box">
+                        <h3>4.3 文件格式兼容性</h3>
+                        <p>系统保证Excel文件格式的稳定和兼容：</p>
+                        <ul>
+                            <li><strong>读取兼容</strong>：新版本支持读取所有历史版本生成的文件</li>
+                            <li><strong>格式一致</strong>：核心数据结构和导出格式保持稳定</li>
+                            <li><strong>版本标记</strong>：生成的文件包含版本信息，便于追溯</li>
+                            <li><strong>转换工具</strong>：提供旧版文件到新版格式的转换工具</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="deprecation-policy">
+                    <h3>4.4 功能废弃策略</h3>
+                    <p>系统采用透明的功能废弃流程，确保用户有充分时间适应变更：</p>
+                    <div class="deprecation-timeline">
+                        <div class="timeline-stage">
+                            <div class="stage-number">1</div>
+                            <div class="stage-content">
+                                <h4>标记阶段</h4>
+                                <p>在文档和界面中标记为废弃，但功能继续可用（至少保持2个次版本）</p>
+                            </div>
+                        </div>
+                        
+                        <div class="timeline-stage">
+                            <div class="stage-number">2</div>
+                            <div class="stage-content">
+                                <h4>警告阶段</h4>
+                                <p>使用时显示警告信息，推荐替代方案（至少保持1个次版本）</p>
+                            </div>
+                        </div>
+                        
+                        <div class="timeline-stage">
+                            <div class="stage-number">3</div>
+                            <div class="stage-content">
+                                <h4>移除阶段</h4>
+                                <p>仅在主版本更新时完全移除已废弃功能，并提供迁移工具</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 5. 开发与发布规范 -->
+        <section class="management-section">
+            <h2 class="section-title">5. 开发与发布规范</h2>
+            
+            <div class="section-content">
+                <p>系统严格遵循标准化的开发与发布流程，确保代码质量和版本稳定性。</p>
+                
+                <div class="development-workflow">
+                    <h3>5.1 分支管理策略</h3>
+                    
+                    <div class="branch-management">
+                        <div class="branch-types">
+                            <div class="branch-type">
+                                <div class="branch-color main"></div>
+                                <div class="branch-info">
+                                    <h4>main 分支</h4>
+                                    <p>稳定发布版本，只接受从release分支合并</p>
+                                </div>
+                            </div>
+                            
+                            <div class="branch-type">
+                                <div class="branch-color develop"></div>
+                                <div class="branch-info">
+                                    <h4>develop 分支</h4>
+                                    <p>日常开发集成，包含下一个版本的所有功能</p>
+                                </div>
+                            </div>
+                            
+                            <div class="branch-type">
+                                <div class="branch-color feature"></div>
+                                <div class="branch-info">
+                                    <h4>feature/* 分支</h4>
+                                    <p>新功能开发，从develop分支创建，完成后合并回develop</p>
+                                </div>
+                            </div>
+                            
+                            <div class="branch-type">
+                                <div class="branch-color bugfix"></div>
+                                <div class="branch-info">
+                                    <h4>bugfix/* 分支</h4>
+                                    <p>问题修复，可从main或develop分支创建</p>
+                                </div>
+                            </div>
+                            
+                            <div class="branch-type">
+                                <div class="branch-color release"></div>
+                                <div class="branch-info">
+                                    <h4>release/* 分支</h4>
+                                    <p>版本发布准备，从develop分支创建，完成后合并到main和develop</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="release-process">
+                    <h3>5.2 标准发布流程</h3>
+                    
+                    <div class="release-steps">
+                        <div class="step-item">
+                            <h4>计划阶段</h4>
+                            <ul>
+                                <li>确定版本范围和功能清单</li>
+                                <li>制定发布时间表和里程碑</li>
+                                <li>分配开发和测试资源</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="step-item">
+                            <h4>开发阶段</h4>
+                            <ul>
+                                <li>在feature分支开发新功能</li>
+                                <li>完成代码审查和单元测试</li>
+                                <li>合并到develop分支进行集成测试</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="step-item">
+                            <h4>发布准备</h4>
+                            <ul>
+                                <li>创建release分支并冻结功能</li>
+                                <li>进行回归测试和性能测试</li>
+                                <li>准备发布文档和变更日志</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="step-item">
+                            <h4>正式发布</h4>
+                            <ul>
+                                <li>合并到main分支并打上版本标签</li>
+                                <li>执行生产环境部署</li>
+                                <li>监控系统运行状态</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="quality-assurance">
+                    <h3>5.3 质量保证措施</h3>
+                    
+                    <div class="qa-pillars">
+                        <div class="qa-pillar">
+                            <div class="pillar-icon">🧪</div>
+                            <h4>自动化测试</h4>
+                            <ul>
+                                <li>单元测试覆盖率 ≥ 80%</li>
+                                <li>集成测试覆盖所有关键流程</li>
+                                <li>持续集成环境自动执行测试</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="qa-pillar">
+                            <div class="pillar-icon">🔍</div>
+                            <h4>代码审查</h4>
+                            <ul>
+                                <li>所有代码变更必须经过至少一人审查</li>
+                                <li>遵循编码规范和最佳实践</li>
+                                <li>使用静态代码分析工具</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="qa-pillar">
+                            <div class="pillar-icon">⚡</div>
+                            <h4>性能验证</h4>
+                            <ul>
+                                <li>每个版本进行性能基准测试</li>
+                                <li>监控关键操作响应时间</li>
+                                <li>确保版本间性能不退化</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 6. 用户指南与常见问题 -->
+        <section class="management-section">
+            <h2 class="section-title">6. 用户指南与常见问题</h2>
+            
+            <div class="section-content">
+                <div class="user-guides">
+                    <h3>6.1 版本使用指南</h3>
+                    
+                    <div class="guide-content">
+                        <div class="guide-item">
+                            <h4>查看当前版本</h4>
+                            <p>您可以通过以下方式查看当前系统版本：</p>
+                            <ul>
+                                <li>在系统首页顶部导航栏右侧查看当前版本号</li>
+                                <li>访问「版本更新公告」页面获取详细的版本信息</li>
+                                <li>在系统设置页面查看完整版本信息和发布日期</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="guide-item">
+                            <h4>版本升级通知</h4>
+                            <p>当系统有新版本发布时：</p>
+                            <ul>
+                                <li>登录系统时会显示升级通知</li>
+                                <li>重要更新会通过系统消息推送</li>
+                                <li>详细变更内容可在版本公告中查看</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="guide-item">
+                            <h4>数据管理建议</h4>
+                            <p>为确保数据安全，建议您：</p>
+                            <ul>
+                                <li>定期导出重要数据并保存到本地</li>
+                                <li>系统升级前检查是否有未完成的重要工作</li>
+                                <li>临时文件仅保留24小时，请及时保存重要结果</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="faq-section">
+                    <h3>6.2 常见问题解答</h3>
+                    
+                    <div class="faq-items">
+                        <div class="faq-item">
+                            <div class="faq-question">
+                                <span class="faq-icon">❓</span>
+                                <h4>如何判断我使用的是最新版本？</h4>
+                            </div>
+                            <div class="faq-answer">
+                                <p>系统会自动保持更新到最新版本。您可以在首页顶部查看当前版本号，并与「版本更新公告」中的最新版本进行比较。</p>
+                            </div>
+                        </div>
+                        
+                        <div class="faq-item">
+                            <div class="faq-question">
+                                <span class="faq-icon">❓</span>
+                                <h4>系统升级会影响我正在进行的工作吗？</h4>
+                            </div>
+                            <div class="faq-answer">
+                                <p>我们会选择在低峰时段进行系统升级，并尽可能减少服务中断时间。建议在看到升级通知后，保存当前工作并在升级完成后重新登录。</p>
+                            </div>
+                        </div>
+                        
+                        <div class="faq-item">
+                            <div class="faq-question">
+                                <span class="faq-icon">❓</span>
+                                <h4>升级后发现功能异常怎么办？</h4>
+                            </div>
+                            <div class="faq-answer">
+                                <p>如果升级后遇到功能异常，请尝试以下步骤：</p>
+                                <ol>
+                                    <li>清除浏览器缓存后重新登录系统</li>
+                                    <li>确认您使用的是推荐的浏览器版本</li>
+                                    <li>如问题依然存在，请联系技术支持并提供详细的错误信息</li>
+                                </ol>
+                            </div>
+                        </div>
+                        
+                        <div class="faq-item">
+                            <div class="faq-question">
+                                <span class="faq-icon">❓</span>
+                                <h4>我可以保留使用旧版本吗？</h4>
+                            </div>
+                            <div class="faq-answer">
+                                <p>为确保您获得最佳的功能体验和安全保障，系统不支持用户手动选择版本，所有用户将自动使用最新版本。新版本完全兼容旧版本数据。</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="support-contact">
+                    <h3>6.3 技术支持</h3>
+                    <p>如遇版本相关问题，请通过以下方式获取支持：</p>
+                    <ul>
+                        <li>系统内的「帮助与反馈」功能提交问题</li>
+                        <li>发送邮件至 support@excelsystem.com</li>
+                        <li>工作时间内拨打技术支持热线：400-123-4567</li>
+                    </ul>
+                    <p class="support-note">* 提交问题时，请提供完整的系统版本信息和详细的错误描述，以便我们更快地解决您的问题。</p>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <style>
+        /* 基础样式 */
+        .version-management-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        /* 页面头部 */
+        .page-header {
+            text-align: center;
+            margin-bottom: 50px;
+            padding: 30px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        
+        .page-header h1 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 36px;
+            font-weight: 700;
+        }
+        
+        .header-description {
+            color: #6c757d;
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+        
+        .current-version-info {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            flex-wrap: wrap;
+        }
+        
+        .version-badge {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-weight: 500;
+        }
+        
+        .release-date {
+            background-color: #6c757d;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+        }
+        
+        /* 章节样式 */
+        .management-section {
+            margin-bottom: 60px;
+            padding: 30px;
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            border-left: 5px solid #007bff;
+        }
+        
+        .section-title {
+            color: #2c3e50;
+            margin-top: 0;
+            margin-bottom: 25px;
+            font-size: 28px;
+            font-weight: 600;
+        }
+        
+        .section-content p {
+            color: #5a6c7d;
+            line-height: 1.7;
+            margin-bottom: 25px;
+            font-size: 16px;
+        }
+        
+        .section-content h3 {
+            color: #34495e;
+            margin-top: 35px;
+            margin-bottom: 20px;
+            font-size: 22px;
+            font-weight: 600;
+        }
+        
+        .section-content h4 {
+            color: #495057;
+            margin-top: 25px;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+        
+        .section-content ul,
+        .section-content ol {
+            margin-bottom: 25px;
+            padding-left: 30px;
+        }
+        
+        .section-content li {
+            margin-bottom: 12px;
+            color: #5a6c7d;
+            line-height: 1.6;
+            font-size: 16px;
+        }
+        
+        .section-content code {
+            background-color: #f8f9fa;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            color: #e83e8c;
+            font-size: 14px;
+        }
+        
+        /* 版本格式可视化 */
+        .version-format-visual {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+        
+        .version-component {
+            background-color: #f8f9fa;
+            border: 2px solid #007bff;
+            border-radius: 10px;
+            padding: 20px 30px;
+            text-align: center;
+            min-width: 180px;
+            transition: all 0.3s ease;
+        }
+        
+        .version-component:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,123,255,0.15);
+        }
+        
+        .component-label {
+            font-size: 14px;
+            color: #6c757d;
+            margin-bottom: 10px;
+        }
+        
+        .component-value {
+            font-size: 48px;
+            font-weight: bold;
+            color: #007bff;
+            margin-bottom: 10px;
+        }
+        
+        .component-desc {
+            font-size: 14px;
+            color: #495057;
+        }
+        
+        .version-separator {
+            font-size: 48px;
+            font-weight: bold;
+            color: #adb5bd;
+        }
+        
+        .version-rules {
+            background-color: #e3f2fd;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        
+        /* 版本状态卡片 */
+        .version-status-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+        
+        .status-card {
+            background-color: #f8f9fa;
+            border-radius: 12px;
+            padding: 25px;
+            text-align: center;
+            transition: all 0.3s ease;
+            border-top: 4px solid #007bff;
+        }
+        
+        .status-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        
+        .status-card.stable {
+            border-top-color: #28a745;
+        }
+        
+        .status-card.rc {
+            border-top-color: #ffc107;
+        }
+        
+        .status-card.beta {
+            border-top-color: #fd7e14;
+        }
+        
+        .status-icon {
+            font-size: 40px;
+            margin-bottom: 15px;
+        }
+        
+        .status-card h4 {
+            margin-top: 0;
+            margin-bottom: 10px;
+            color: #495057;
+        }
+        
+        .status-card .example {
+            margin-top: 15px;
+            font-family: 'Courier New', monospace;
+            color: #6c757d;
+            font-size: 14px;
+            background-color: #e9ecef;
+            padding: 5px 10px;
+            border-radius: 4px;
+            display: inline-block;
+        }
+        
+        /* 隔离层样式 */
+        .isolation-layers {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+            margin: 30px 0;
+        }
+        
+        .isolation-layer {
+            background-color: #f8f9fa;
+            border-radius: 12px;
+            padding: 25px;
+            border-left: 4px solid #17a2b8;
+        }
+        
+        .layer-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .layer-number {
+            background-color: #17a2b8;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        
+        .layer-header h3 {
+            margin: 0;
+            color: #17a2b8;
+        }
+        
+        /* 架构图样式 */
+        .architecture-diagram {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            margin: 30px 0;
+        }
+        
+        .diagram-layer {
+            background-color: #007bff;
+            color: white;
+            padding: 15px 30px;
+            border-radius: 8px;
+            text-align: center;
+            min-width: 400px;
+            font-weight: 600;
+        }
+        
+        .diagram-layer.session-layer {
+            background-color: #28a745;
+        }
+        
+        .diagram-layer.version-router {
+            background-color: #6f42c1;
+        }
+        
+        .diagram-layer.storage-layer {
+            background-color: #dc3545;
+        }
+        
+        .diagram-module-group {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .module-box {
+            background-color: #17a2b8;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            text-align: center;
+            min-width: 150px;
+        }
+        
+        /* 升级流程样式 */
+        .upgrade-flow {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+            margin: 30px 0;
+        }
+        
+        .flow-step {
+            display: flex;
+            gap: 20px;
+            align-items: flex-start;
+        }
+        
+        .step-number {
+            background-color: #007bff;
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+        
+        .step-content h3 {
+            margin-top: 0;
+            color: #007bff;
+        }
+        
+        /* 回滚机制 */
+        .rollback-mechanism {
+            background-color: #fff3cd;
+            border-radius: 12px;
+            padding: 25px;
+            border-left: 4px solid #ffc107;
+            margin-top: 40px;
+        }
+        
+        .rollback-features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .feature-item {
+            display: flex;
+            gap: 15px;
+            align-items: flex-start;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        
+        .feature-icon {
+            font-size: 30px;
+            flex-shrink: 0;
+        }
+        
+        .feature-content h4 {
+            margin-top: 0;
+            color: #856404;
+        }
+        
+        /* 兼容性表格 */
+        .matrix-container {
+            overflow-x: auto;
+            margin: 30px 0;
+        }
+        
+        .compatibility-table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        
+        .compatibility-table th,
+        .compatibility-table td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        .compatibility-table th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            color: #495057;
+        }
+        
+        .compatibility-table tr:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .compatibility-full {
+            color: #28a745;
+            font-weight: 600;
+        }
+        
+        .compatibility-partial {
+            color: #ffc107;
+            font-weight: 600;
+        }
+        
+        .compatibility-convert {
+            color: #17a2b8;
+            font-weight: 600;
+        }
+        
+        .compatibility-migration {
+            color: #fd7e14;
+            font-weight: 600;
+        }
+        
+        .compatibility-major {
+            color: #dc3545;
+            font-weight: 600;
+        }
+        
+        .compatibility-consistent {
+            color: #6f42c1;
+            font-weight: 600;
+        }
+        
+        /* 兼容性策略 */
+        .compatibility-strategies {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 30px;
+            margin: 30px 0;
+        }
+        
+        .strategy-box {
+            background-color: #f8f9fa;
+            border-radius: 12px;
+            padding: 25px;
+            border-left: 4px solid #6f42c1;
+        }
+        
+        /* 废弃策略时间线 */
+        .deprecation-timeline {
+            display: flex;
+            gap: 30px;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+        
+        .timeline-stage {
+            flex: 1;
+            min-width: 250px;
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            position: relative;
+        }
+        
+        .timeline-stage:not(:last-child)::after {
+            content: '→';
+            position: absolute;
+            right: -20px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 24px;
+            color: #007bff;
+        }
+        
+        .stage-number {
+            background-color: #007bff;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+        
+        .stage-content h4 {
+            margin-top: 0;
+            color: #007bff;
+        }
+        
+        /* 分支管理 */
+        .branch-types {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin: 25px 0;
+        }
+        
+        .branch-type {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            transition: transform 0.2s;
+        }
+        
+        .branch-type:hover {
+            transform: translateX(5px);
+        }
+        
+        .branch-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+        }
+        
+        .branch-color.main {
+            background-color: #dc3545;
+        }
+        
+        .branch-color.develop {
+            background-color: #28a745;
+        }
+        
+        .branch-color.feature {
+            background-color: #007bff;
+        }
+        
+        .branch-color.bugfix {
+            background-color: #ffc107;
+        }
+        
+        .branch-color.release {
+            background-color: #17a2b8;
+        }
+        
+        .branch-info h4 {
+            margin: 0 0 5px 0;
+            color: #495057;
+        }
+        
+        .branch-info p {
+            margin: 0;
+            font-size: 14px;
+            color: #6c757d;
+        }
+        
+        /* 发布流程 */
+        .release-steps {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
+            margin: 30px 0;
+        }
+        
+        .step-item {
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            border-left: 4px solid #007bff;
+        }
+        
+        .step-item h4 {
+            color: #007bff;
+            margin-top: 0;
+        }
+        
+        /* 质量保证 */
+        .qa-pillars {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin: 30px 0;
+        }
+        
+        .qa-pillar {
+            background-color: #f8f9fa;
+            border-radius: 12px;
+            padding: 25px;
+            text-align: center;
+            transition: transform 0.3s;
+        }
+        
+        .qa-pillar:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+        }
+        
+        .pillar-icon {
+            font-size: 40px;
+            margin-bottom: 20px;
+        }
+        
+        .qa-pillar h4 {
+            color: #007bff;
+            margin-top: 0;
+            margin-bottom: 15px;
+        }
+        
+        /* 用户指南 */
+        .guide-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin: 30px 0;
+        }
+        
+        .guide-item {
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            padding: 25px;
+            border-left: 4px solid #28a745;
+        }
+        
+        .guide-item h4 {
+            color: #28a745;
+            margin-top: 0;
+        }
+        
+        /* FAQ */
+        .faq-items {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            margin: 30px 0;
+        }
+        
+        .faq-item {
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+        }
+        
+        .faq-question {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .faq-icon {
+            font-size: 20px;
+        }
+        
+        .faq-question h4 {
+            margin: 0;
+            color: #495057;
+        }
+        
+        .faq-answer {
+            color: #5a6c7d;
+            padding-left: 35px;
+        }
+        
+        /* 技术支持 */
+        .support-contact {
+            background-color: #e3f2fd;
+            border-radius: 12px;
+            padding: 25px;
+            margin-top: 30px;
+        }
+        
+        .support-note {
+            font-style: italic;
+            color: #6c757d;
+            margin-top: 20px;
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .version-format-visual {
+                flex-direction: column;
+            }
+            
+            .version-separator {
+                transform: rotate(90deg);
+                margin: 10px 0;
+            }
+            
+            .flow-step {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .step-number {
+                align-self: center;
+            }
+            
+            .diagram-layer {
+                min-width: 250px;
+            }
+            
+            .diagram-module-group {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .module-box {
+                width: 200px;
+            }
+            
+            .timeline-stage:not(:last-child)::after {
+                display: none;
+            }
+            
+            .timeline-stage {
+                margin-bottom: 15px;
+            }
+            
+            .compatibility-strategies {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+{% endblock %}

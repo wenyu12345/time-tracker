@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="theme-color" content="#3498db">
+    <title>Excel上传分析汇总工具</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link rel="preload" href="{{ url_for('static', filename='js/scripts.js') }}" as="script">
+    <!-- 针对移动设备的触摸优化 -->
+    <style>
+        /* 消除移动设备上的点击延迟 */
+        * {
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        /* 确保输入框在移动设备上正常显示 */
+        input, button, select, textarea {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Excel上传分析汇总工具</h1>
+            <div class="version-info">
+                <span class="version-tag">版本 4.0.0</span>
+            </div>
+        </div>
+        
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        <div class="upload-section">
+            <h2>上传文件</h2>
+            <p>请上传Excel或CSV文件进行数据分析和图表生成。支持的格式：.xlsx, .xls, .csv</p>
+            <div class="mobile-tips" style="background-color: #e3f2fd; padding: 10px; border-radius: 5px; margin: 10px 0;">
+                <strong>📱 手机用户提示：</strong>建议使用WiFi网络上传大文件，文件大小不超过50MB
+                <br><small style="color: #666;">移动设备上传限制：建议文件小于10MB以获得最佳体验</small>
+            </div>
+            
+            <form id="upload-form" method="post" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="file">选择文件</label>
+                <input type="file" id="file" name="file" accept=".xlsx,.xls,.csv" required>
+            </div>
+            <!-- 隐藏字段用于标识是否为开红莲模式 -->
+            <input type="hidden" id="mode" name="mode" value="normal">
+            
+            <!-- 操作时间设置区域 -->
+            <div class="form-group mt-4">
+                <label>操作时间设置</label>
+                <div class="ml-3">
+                    <div class="custom-control custom-radio custom-control-inline">
+                        <input type="radio" id="time-auto" name="time_option" value="auto" checked class="custom-control-input">
+                        <label class="custom-control-label" for="time-auto">自动提取时间（文件中）</label>
+                    </div>
+                    <div class="custom-control custom-radio custom-control-inline">
+                        <input type="radio" id="time-today" name="time_option" value="today" class="custom-control-input">
+                        <label class="custom-control-label" for="time-today">使用当天时间</label>
+                    </div>
+                    <div class="custom-control custom-radio custom-control-inline">
+                        <input type="radio" id="time-shift" name="time_option" value="shift" class="custom-control-input">
+                        <label class="custom-control-label" for="time-shift">按班次</label>
+                    </div>
+                    <div class="custom-control custom-radio custom-control-inline">
+                        <input type="radio" id="time-custom" name="time_option" value="custom" class="custom-control-input">
+                        <label class="custom-control-label" for="time-custom">自定义</label>
+                    </div>
+                </div>
+                
+                <!-- 班次选择 -->
+                <div id="shift-selector" class="mt-2 ml-4" style="display:none;">
+                    <div class="custom-control custom-radio custom-control-inline">
+                        <input type="radio" id="shift-day" name="shift_type" value="day" class="custom-control-input">
+                        <label class="custom-control-label" for="shift-day">白班 (9:00-21:00)</label>
+                    </div>
+                    <div class="custom-control custom-radio custom-control-inline">
+                        <input type="radio" id="shift-night" name="shift_type" value="night" class="custom-control-input">
+                        <label class="custom-control-label" for="shift-night">夜班 (21:00-次日9:00)</label>
+                    </div>
+                </div>
+                
+                <!-- 自定义时间输入 -->
+                <div id="custom-time" class="mt-2 ml-4" style="display:none;">
+                    <div class="row">
+                        <div class="col-md-5">
+                            <label for="time_start">开始时间</label>
+                            <input type="datetime-local" id="time_start" name="time_start" class="form-control">
+                        </div>
+                        <div class="col-md-5 ml-4">
+                            <label for="time_end">结束时间</label>
+                            <input type="datetime-local" id="time_end" name="time_end" class="form-control">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="button-group">
+                <button type="submit" class="btn btn-primary btn-block" onclick="document.getElementById('mode').value='normal';">上传并分析</button>
+                <button type="button" id="honglian-mode-btn" class="btn btn-secondary btn-block">开红莲专用模式</button>
+                <a href="/csv_double_header" class="btn btn-info btn-block">CSV双层表头处理</a>
+                <a href="/process_files/" class="btn btn-warning btn-block">📑 工艺文件管理（新）</a>
+            </div>
+        </form>
+        </div>
+        
+        <div class="features-section">
+            <h2>功能特点</h2>
+            <div class="features-grid">
+                <div class="feature-item">
+                    <h3>📊 数据可视化</h3>
+                    <p>自动生成直方图、相关性热图和箱线图等多种图表</p>
+                </div>
+                <div class="feature-item">
+                    <h3>📈 统计分析</h3>
+                    <p>提供详细的数据统计摘要和质量报告</p>
+                </div>
+                <div class="feature-item">
+                    <h3>📋 数据汇总</h3>
+                    <p>生成包含原始数据、统计和质量报告的Excel汇总文件</p>
+                </div>
+                <div class="feature-item">
+                    <h3>🔧 智能处理</h3>
+                    <p>自动处理编码问题和数据类型转换</p>
+                </div>
+                <div class="feature-item">
+                    <h3>⚙️ 型号映射管理</h3>
+                    <p>自定义批号前缀与极片型号的映射规则</p>
+                    <a href="{{ url_for('manage_model_mapping') }}" class="btn">管理映射</a>
+                </div>
+                <div class="feature-item">
+                    <h3>🧹 系统维护</h3>
+                    <p>清理服务器缓存和临时文件，优化系统性能</p>
+                    <button type="button" class="btn" onclick="clearServerCache()">清理缓存</button>
+                </div>
+                <div class="feature-item">
+                    <h3>📁 文件管理</h3>
+                    <p>查看和管理已上传的文件，支持重命名操作</p>
+                    <a href="{{ url_for('file_manager') }}" class="btn">文件管理</a>
+                </div>
+                <div class="feature-item">
+                    <h3>📝 模板管理</h3>
+                    <p>管理钉钉消息模板，自定义消息格式和内容</p>
+                    <a href="/template/" class="btn">模板管理</a>
+                </div>
+                <div class="feature-item">
+                    <h3>👔 员工工装管理</h3>
+                    <p>管理员工信息和工装领取记录，支持添加、删除和查询操作</p>
+                    <a href="/employee_uniform/" class="btn">工装管理</a>
+                </div>
+                <div class="feature-item">
+                    <h3>⚖️ 卷重量卷径计算</h3>
+                    <p>根据卷径计算重量，根据重量计算卷径，支持多种型号管理</p>
+                    <a href="/coil_calculator" class="btn">卷径计算</a>
+                </div>
+                <div class="feature-item">
+                    <h3>📑 工艺文件管理</h3>
+                    <p>管理工艺文件数据，支持自定义字段、排序、搜索、导出和分享到钉钉</p>
+                    <a href="/process_files/" class="btn">工艺文件</a>
+                </div>
+
+
+            </div>
+        </div>
+        
+        <!-- 文档和公告区域 -->
+        <div class="docs-section">
+            <h2>相关文档</h2>
+            <div class="docs-grid">
+                <div class="doc-item">
+                    <h3>📚 开发文档</h3>
+                    <p>详细的系统开发文档，包含架构设计和API说明</p>
+                    <button class="btn" onclick="window.open('/development_docs', '_blank')">查看文档</button>
+                </div>
+                <div class="doc-item">
+                    <h3>🔧 技术协议</h3>
+                    <p>系统技术规范和数据处理协议说明</p>
+                    <button class="btn" onclick="window.open('/technical_docs', '_blank')">查看协议</button>
+                </div>
+                <div class="doc-item">
+                    <h3>📢 版本更新公告</h3>
+                    <p>最新版本更新内容和功能说明</p>
+                    <button class="btn" onclick="window.open('/changelog_docs', '_blank')">查看公告</button>
+                </div>
+                <div class="doc-item">
+                    <h3>🔄 版本管理</h3>
+                    <p>版本控制和数据隔离机制说明</p>
+                    <button class="btn" onclick="window.open('/version_management_docs', '_blank')">版本策略</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 版本信息区域 -->
+        <div class="version-management">
+            <h3>当前版本</h3>
+            <p>Excel数据分析系统 v3.1.0</p>
+            <p class="version-note">本系统采用版本化管理，后续功能开发将基于当前版本进行迭代。数据将在不同版本间隔离，确保数据安全。</p>
+        </div>
+    </div>
+    
+    <script src="{{ url_for('static', filename='js/scripts.js') }}"></script>
+    <script>
+        // 清理服务器缓存功能
+        function clearServerCache() {
+            if (confirm('确定要清理服务器缓存吗？这将删除所有上传的临时文件和会话数据。')) {
+                // 显示加载状态
+                const btn = event.target;
+                const originalText = btn.textContent;
+                btn.textContent = '清理中...';
+                btn.disabled = true;
+                
+                fetch('/clear_cache', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('缓存清理成功！' + (data.message || ''));
+                        console.log('缓存清理结果:', data);
+                    } else {
+                        alert('缓存清理失败：' + (data.error || '未知错误'));
+                    }
+                })
+                .catch(error => {
+                    console.error('清理缓存时发生错误:', error);
+                    alert('清理缓存时发生错误，请查看控制台日志');
+                })
+                .finally(() => {
+                    // 恢复按钮状态
+                    btn.textContent = originalText;
+                    btn.disabled = false;
+                });
+            }
+        }
+    </script>
+    <script>
+        // 立即执行函数，避免全局变量污染
+        (function() {
+            console.log('初始化开红莲专用模式');
+            
+            // 获取DOM元素
+            const honglianBtn = document.getElementById('honglian-mode-btn');
+            const uploadForm = document.getElementById('upload-form');
+            const modeInput = document.getElementById('mode');
+            const fileInput = document.getElementById('file');
+            
+            // 设置表单action为通用处理路由
+            if (uploadForm) {
+                uploadForm.action = '/process';
+                console.log('表单action已设置为/process');
+            }
+            
+            // 为文件输入框添加change事件，用于调试
+            if (fileInput) {
+                fileInput.onchange = function() {
+                    console.log('文件已选择:', this.files.length > 0 ? this.files[0].name : '没有文件');
+                };
+            }
+            
+            // 为开红莲专用模式按钮添加点击事件
+            if (honglianBtn) {
+                honglianBtn.onclick = function() {
+                    console.log('开红莲专用模式按钮点击事件触发');
+                    
+                    // 确保所有必要的元素都存在
+                    if (!modeInput || !fileInput || !uploadForm) {
+                        console.error('缺少必要的DOM元素');
+                        alert('系统错误，请刷新页面重试');
+                        return;
+                    }
+                    
+                    // 直接设置模式为honglian
+                    modeInput.value = 'honglian';
+                    console.log('模式已设置为honglian');
+                    
+                    // 检查文件是否已选择
+                    if (!fileInput.files || fileInput.files.length === 0) {
+                        console.log('没有选择文件，触发文件选择');
+                        // 为这次点击创建一个一次性的change事件处理器
+                        const handleFileSelect = function() {
+                            console.log('文件选择完成，提交表单');
+                            // 提交表单
+                            uploadForm.submit();
+                            // 移除事件处理器，避免重复提交
+                            fileInput.removeEventListener('change', handleFileSelect);
+                        };
+                        
+                        // 添加一次性事件监听器
+                        fileInput.addEventListener('change', handleFileSelect);
+                        
+                        // 触发文件选择对话框
+                        fileInput.click();
+                    } else {
+                        console.log('文件已存在，直接提交表单:', fileInput.files[0].name);
+                        // 直接提交表单
+                        uploadForm.submit();
+                    }
+                };
+            }
+            
+            // 初始化时间选择器的值为当前时间
+            const now = new Date();
+            const formattedNow = now.toISOString().slice(0, 16);
+            
+            // 为所有时间输入框设置默认值
+            const timeInputs = document.querySelectorAll('input[type="datetime-local"]');
+            timeInputs.forEach(input => {
+                input.value = formattedNow;
+            });
+            
+            // 时间选项切换
+            const timeOptions = document.querySelectorAll('input[name="time_option"]');
+            timeOptions.forEach(option => {
+                option.addEventListener('change', function() {
+                    document.getElementById('shift-selector').style.display = 
+                        this.value === 'shift' ? 'block' : 'none';
+                    document.getElementById('custom-time').style.display = 
+                        this.value === 'custom' ? 'block' : 'none';
+                });
+            });
+        })();
+    </script>
+</body>
+</html>

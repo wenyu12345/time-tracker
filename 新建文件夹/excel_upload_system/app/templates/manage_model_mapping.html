@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理极片型号映射规则</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <!-- 引入Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        }
+        .container {
+            max-width: 900px;
+            margin: 30px auto;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h2 {
+            color: #343a40;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 10px;
+        }
+        .btn {
+            margin-right: 5px;
+        }
+        .mapping-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            transition: all 0.2s ease;
+        }
+        .mapping-item:hover {
+            background: #e9ecef;
+        }
+        .mapping-prefix {
+            font-weight: bold;
+            margin-right: 10px;
+            min-width: 60px;
+        }
+        .mapping-arrow {
+            margin: 0 10px;
+            color: #6c757d;
+        }
+        .mapping-model {
+            flex-grow: 1;
+        }
+        .delete-btn {
+            transition: background-color 0.2s ease;
+        }
+        .delete-btn:hover {
+            background-color: #c82333;
+        }
+        .filter-section {
+            background: #f0f4f8;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .filter-label {
+            font-weight: 600;
+            margin-right: 10px;
+            color: #495057;
+        }
+        .filter-input {
+            max-width: 200px;
+        }
+        .clear-filters-btn {
+            white-space: nowrap;
+        }
+        .search-result-count {
+            color: #6c757d;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+        .highlight {
+            background-color: #fff3cd;
+            padding: 0 2px;
+            border-radius: 2px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>管理极片型号映射规则</h2>
+        <p>通过此页面可以添加、修改或删除基于批号前缀的极片型号映射规则。</p>
+        
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        <form id="mappingForm" method="POST" action="{{ url_for('save_model_mapping') }}">
+            <div class="mb-3">
+                <label for="newPrefix" class="form-label">添加新映射规则</label>
+                <div class="input-group">
+                    <input type="text" id="newPrefix" name="newPrefix" class="form-control" placeholder="批号前缀（如：466）" maxlength="3" required>
+                    <span class="input-group-text">→</span>
+                    <input type="text" id="newModel" name="newModel" class="form-control" placeholder="极片型号（如：A732正极片）" required>
+                    <button type="submit" class="btn btn-primary">添加</button>
+                </div>
+            </div>
+            
+            <!-- 筛选器部分 -->
+            <div class="filter-section">
+                <div class="row align-items-end">
+                    <div class="col-md-4">
+                        <label for="prefixFilter" class="form-label filter-label">按前缀筛选</label>
+                        <input type="text" id="prefixFilter" class="form-control filter-input" placeholder="输入前缀...">
+                    </div>
+                    <div class="col-md-4">
+                        <label for="modelFilter" class="form-label filter-label">按型号筛选</label>
+                        <input type="text" id="modelFilter" class="form-control filter-input" placeholder="输入型号...">
+                    </div>
+                    <div class="col-md-4">
+                        <label for="typeFilter" class="form-label filter-label">按类型筛选</label>
+                        <select id="typeFilter" class="form-select filter-input">
+                            <option value="">全部类型</option>
+                            <option value="正极">正极片</option>
+                            <option value="负极">负极片</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="row mt-2">
+                    <div class="col-12 d-flex justify-content-between align-items-center">
+                        <button type="button" id="clearFiltersBtn" class="btn btn-sm btn-outline-secondary clear-filters-btn">
+                            <i class="fas fa-times-circle"></i> 清除筛选
+                        </button>
+                        <div id="resultCount" class="search-result-count"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">当前映射规则</h5>
+                    <div id="mappingList">
+                        {% for prefix, model in mappings.items() %}
+                        <div class="mapping-item" data-prefix="{{ prefix }}" data-model="{{ model }}">
+                            <div class="mapping-prefix">- 前缀"{{ prefix }}"</div>
+                            <div class="mapping-arrow">→</div>
+                            <div class="mapping-model">"{{ model }}"</div>
+                            <button type="button" class="btn btn-sm btn-danger delete-btn" data-prefix="{{ prefix }}">删除</button>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            
+            <input type="hidden" id="deletedPrefixes" name="deletedPrefixes" value="">
+        </form>
+        
+        <div class="mt-4">
+            <a href="{{ url_for('index') }}" class="btn btn-secondary">返回首页</a>
+        </div>
+    </div>
+
+    <script>
+        // 性能优化：使用立即执行函数减少全局变量污染
+        (function() {
+            // 简化DOM查询，只查询一次
+            const deletedPrefixesInput = document.getElementById('deletedPrefixes');
+            const mappingForm = document.getElementById('mappingForm');
+            const newPrefixInput = document.getElementById('newPrefix');
+            const newModelInput = document.getElementById('newModel');
+            const mappingList = document.getElementById('mappingList');
+            const prefixFilterInput = document.getElementById('prefixFilter');
+            const modelFilterInput = document.getElementById('modelFilter');
+            const typeFilterSelect = document.getElementById('typeFilter');
+            const clearFiltersBtn = document.getElementById('clearFiltersBtn');
+            const resultCountDiv = document.getElementById('resultCount');
+            
+            // 存储所有映射项的原始数据
+            const allMappingItems = [];
+            
+            // 使用Set存储已删除前缀，提高查找效率
+            const deletedPrefixes = new Set();
+            
+            // 初始化：保存所有映射项
+            function initMappingData() {
+                const items = mappingList.querySelectorAll('.mapping-item');
+                items.forEach(item => {
+                    allMappingItems.push({
+                        element: item,
+                        prefix: item.getAttribute('data-prefix'),
+                        model: item.getAttribute('data-model'),
+                        isDeleted: false
+                    });
+                });
+                updateResultCount();
+            }
+            
+            // 筛选映射项
+            function filterMappings() {
+                const prefixFilter = prefixFilterInput.value.toLowerCase().trim();
+                const modelFilter = modelFilterInput.value.toLowerCase().trim();
+                const typeFilter = typeFilterSelect.value;
+                
+                let visibleCount = 0;
+                
+                allMappingItems.forEach(item => {
+                    let shouldShow = true;
+                    
+                    // 前缀筛选
+                    if (prefixFilter && !item.prefix.toLowerCase().includes(prefixFilter)) {
+                        shouldShow = false;
+                    }
+                    
+                    // 型号筛选
+                    if (shouldShow && modelFilter && !item.model.toLowerCase().includes(modelFilter)) {
+                        shouldShow = false;
+                    }
+                    
+                    // 类型筛选
+                    if (shouldShow && typeFilter && !item.model.includes(typeFilter)) {
+                        shouldShow = false;
+                    }
+                    
+                    // 检查是否已删除
+                    if (item.isDeleted) {
+                        shouldShow = false;
+                    }
+                    
+                    if (shouldShow) {
+                        item.element.classList.remove('d-none');
+                        visibleCount++;
+                        
+                        // 高亮匹配文本
+                        highlightText(item.element, prefixFilter, modelFilter);
+                    } else {
+                        item.element.classList.add('d-none');
+                        removeHighlight(item.element);
+                    }
+                });
+                
+                updateResultCount(visibleCount);
+            }
+            
+            // 高亮匹配文本
+            function highlightText(element, prefixFilter, modelFilter) {
+                const prefixDiv = element.querySelector('.mapping-prefix');
+                const modelDiv = element.querySelector('.mapping-model');
+                
+                if (prefixFilter) {
+                    const originalPrefix = prefixDiv.textContent;
+                    const regex = new RegExp(`(${escapeRegExp(prefixFilter)})`, 'gi');
+                    prefixDiv.innerHTML = originalPrefix.replace(regex, '<span class="highlight">$1</span>');
+                } else {
+                    removeHighlight(prefixDiv);
+                }
+                
+                if (modelFilter) {
+                    const originalModel = modelDiv.textContent;
+                    const regex = new RegExp(`(${escapeRegExp(modelFilter)})`, 'gi');
+                    modelDiv.innerHTML = originalModel.replace(regex, '<span class="highlight">$1</span>');
+                } else {
+                    removeHighlight(modelDiv);
+                }
+            }
+            
+            // 移除高亮
+            function removeHighlight(element) {
+                element.innerHTML = element.innerHTML.replace(/<span class="highlight">(.*?)<\/span>/g, '$1');
+            }
+            
+            // 转义正则表达式特殊字符
+            function escapeRegExp(string) {
+                return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            }
+            
+            // 更新结果计数
+            function updateResultCount(count) {
+                if (count === undefined) {
+                    count = allMappingItems.filter(item => !item.isDeleted).length;
+                }
+                const total = allMappingItems.length;
+                resultCountDiv.textContent = `显示 ${count} / ${total} 条规则`;
+            }
+            
+            // 清除所有筛选
+            function clearFilters() {
+                prefixFilterInput.value = '';
+                modelFilterInput.value = '';
+                typeFilterSelect.value = '';
+                filterMappings();
+            }
+            
+            // 性能优化：使用事件委托处理删除按钮点击
+            mappingList.addEventListener('click', function(e) {
+                if (e.target.classList.contains('delete-btn')) {
+                    handleDelete(e.target);
+                }
+            });
+            
+            function handleDelete(button) {
+                const prefix = button.getAttribute('data-prefix');
+                const row = button.closest('.mapping-item');
+                
+                if (confirm(`确定要删除前缀 "${prefix}" 的映射规则吗？`)) {
+                    // 标记为已删除
+                    const item = allMappingItems.find(i => i.prefix === prefix);
+                    if (item) {
+                        item.isDeleted = true;
+                    }
+                    
+                    // 性能优化：使用CSS类切换代替直接修改style
+                    row.classList.add('d-none');
+                    
+                    // 使用Set快速添加和检查
+                    deletedPrefixes.add(prefix);
+                    // 延迟更新隐藏字段，减少DOM操作频率
+                    updateDeletedPrefixes();
+                    
+                    // 更新筛选结果计数
+                    filterMappings();
+                }
+            }
+            
+            // 延迟更新函数，优化性能
+            let updateTimeout;
+            function updateDeletedPrefixes() {
+                if (updateTimeout) clearTimeout(updateTimeout);
+                updateTimeout = setTimeout(() => {
+                    deletedPrefixesInput.value = Array.from(deletedPrefixes).join(',');
+                }, 50);
+            }
+            
+            // 优化表单验证，减少重复代码
+            mappingForm.addEventListener('submit', function(e) {
+                const newPrefix = newPrefixInput.value.trim();
+                const newModel = newModelInput.value.trim();
+                
+                let isValid = true;
+                let errorMsg = '';
+                
+                if (!newPrefix) {
+                    errorMsg = '请输入批号前缀';
+                    isValid = false;
+                } else if (newPrefix.length > 3) {
+                    errorMsg = '批号前缀不能超过3个字符';
+                    isValid = false;
+                } else if (!newModel) {
+                    errorMsg = '请输入极片型号';
+                    isValid = false;
+                }
+                
+                if (!isValid) {
+                    alert(errorMsg);
+                    e.preventDefault();
+                }
+            });
+            
+            // 绑定筛选事件
+            prefixFilterInput.addEventListener('input', filterMappings);
+            modelFilterInput.addEventListener('input', filterMappings);
+            typeFilterSelect.addEventListener('change', filterMappings);
+            clearFiltersBtn.addEventListener('click', clearFilters);
+            
+            // 初始化
+            initMappingData();
+        })();
+    </script>
+    <!-- Font Awesome icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- 引入Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

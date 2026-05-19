@@ -1,0 +1,126 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AlgerMusicPlayer 简易启动器</title>
+  <style>
+    body {
+      font-family: 'Microsoft YaHei', Arial, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      margin: 0;
+      padding: 20px;
+      color: white;
+      text-align: center;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .container {
+      max-width: 450px;
+      width: 100%;
+      padding: 30px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 15px;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    }
+    
+    h1 {
+      margin-bottom: 30px;
+      font-size: 28px;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    }
+    
+    .button-group {
+      margin-bottom: 30px;
+    }
+    
+    button {
+      background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+      border: none;
+      color: white;
+      padding: 12px 24px;
+      margin: 10px;
+      border-radius: 25px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      width: 200px;
+    }
+    
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+    }
+    
+    button:active {
+      transform: translateY(0);
+    }
+    
+    .search-container {
+      margin-bottom: 20px;
+    }
+    
+    input[type="text"] {
+      padding: 10px 15px;
+      border: none;
+      border-radius: 20px;
+      width: 250px;
+      margin-right: 10px;
+      font-size: 14px;
+      outline: none;
+      margin-bottom: 10px;
+    }
+    
+    .tips {
+      font-size: 14px;
+      margin-bottom: 20px;
+      opacity: 0.9;
+    }
+    
+    .footer {
+      margin-top: 30px;
+      font-size: 12px;
+      opacity: 0.8;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🎵 AlgerMusicPlayer 启动器</h1>
+    
+    <div class="tips">
+      点击按钮启动程序
+    </div>
+    
+    <div class="button-group">
+      <form action="/run-music-player" method="post">
+        <button type="submit">启动音乐播放器</button>
+      </form>
+      
+      <form action="/open-downloads" method="post">
+        <button type="submit">打开下载文件夹</button>
+      </form>
+      
+      <div class="search-container">
+        <form action="/search-music" method="post">
+          <input type="text" name="searchText" placeholder="输入歌曲名称（如：周杰伦 稻香）" value="周杰伦 稻香" />
+          <br>
+          <button type="submit">搜索并下载</button>
+        </form>
+      </div>
+    </div>
+    
+    <div class="footer">
+      <p>© 2024 简易启动器 | 按Ctrl+C关闭此窗口</p>
+    </div>
+  </div>
+</body>
+</html>
+  

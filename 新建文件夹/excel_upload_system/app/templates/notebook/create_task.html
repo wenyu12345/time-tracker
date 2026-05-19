@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">📅 创建新任务</h4>
+                </div>
+                <div class="card-body">
+                    {% if error %}
+                    <div class="alert alert-danger mb-4">
+                        {{ error }}
+                    </div>
+                    {% endif %}
+                    
+                    <form method="POST">
+                        <div class="form-group">
+                            <label for="title"><strong>任务标题</strong></label>
+                            <input type="text" class="form-control" id="title" name="title" 
+                                   placeholder="请输入任务标题" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="description"><strong>任务描述</strong></label>
+                            <textarea class="form-control" id="description" name="description" rows="4" 
+                                      placeholder="请输入任务描述（可选）"></textarea>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="start_time"><strong>开始时间</strong></label>
+                                    <input type="datetime-local" class="form-control" id="start_time" name="start_time" 
+                                           value="{{ default_start_time }}" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="end_time"><strong>结束时间</strong></label>
+                                    <input type="datetime-local" class="form-control" id="end_time" name="end_time" 
+                                           value="{{ default_end_time }}" required>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="priority"><strong>优先级</strong></label>
+                                    <select class="form-control" id="priority" name="priority">
+                                        <option value="high">高</option>
+                                        <option value="medium" selected>中</option>
+                                        <option value="low">低</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="reminder_time"><strong>提醒时间</strong></label>
+                                    <input type="datetime-local" class="form-control" id="reminder_time" name="reminder_time">
+                                    <small class="form-text text-muted">
+                                        留空表示不设置提醒
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-4 d-flex justify-content-between">
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input" id="set_dingtalk_reminder">
+                                <label class="form-check-label" for="set_dingtalk_reminder">
+                                    同时设置钉钉提醒
+                                </label>
+                            </div>
+                            <div>
+                                <a href="{{ url_for('notebook.tasks_list') }}" class="btn btn-secondary mr-2">
+                                    取消
+                                </a>
+                                <button type="submit" class="btn btn-primary">
+                                    创建任务
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+$(document).ready(function() {
+    // 设置默认结束时间为开始时间后1小时
+    $('#start_time').change(function() {
+        if ($(this).val() && !$('#end_time').val()) {
+            const startDate = new Date($(this).val());
+            const endDate = new Date(startDate.getTime() + 60 * 60 * 1000); // 加1小时
+            const endDateString = endDate.toISOString().slice(0, 16);
+            $('#end_time').val(endDateString);
+        }
+    });
+    
+    // 简单的表单验证
+    $('form').submit(function(event) {
+        const startTime = new Date($('#start_time').val());
+        const endTime = new Date($('#end_time').val());
+        
+        if (endTime <= startTime) {
+            alert('结束时间必须晚于开始时间');
+            event.preventDefault();
+            return false;
+        }
+        
+        // 如果设置了提醒时间，验证提醒时间是否合理
+        const reminderTime = $('#reminder_time').val();
+        if (reminderTime) {
+            const reminder = new Date(reminderTime);
+            if (reminder >= endTime) {
+                alert('提醒时间必须早于结束时间');
+                event.preventDefault();
+                return false;
+            }
+        }
+    });
+    
+    // 钉钉提醒设置
+    $('#set_dingtalk_reminder').change(function() {
+        if ($(this).is(':checked')) {
+            // 自动设置提醒时间为开始时间前30分钟
+            const startDate = new Date($('#start_time').val());
+            if (startDate) {
+                const reminderDate = new Date(startDate.getTime() - 30 * 60 * 1000); // 减30分钟
+                const reminderDateString = reminderDate.toISOString().slice(0, 16);
+                $('#reminder_time').val(reminderDateString);
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

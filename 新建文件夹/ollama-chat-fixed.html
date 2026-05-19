@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ollama 本地大模型聊天界面</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .scrollbar-thin {
+            scrollbar-width: thin;
+            scrollbar-color: rgb(156 163 175) transparent;
+        }
+        .scrollbar-thin::-webkit-scrollbar {
+            width: 6px;
+        }
+        .scrollbar-thin::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .scrollbar-thin::-webkit-scrollbar-thumb {
+            background-color: rgb(156 163 175);
+            border-radius: 3px;
+        }
+        .typing-indicator {
+            animation: typing 1.5s infinite;
+        }
+        @keyframes typing {
+            0%, 60% { opacity: 1; }
+            30% { opacity: 0.3; }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <div id="app" class="flex flex-col h-screen">
+        <!-- 顶部导航栏 -->
+        <header class="bg-white shadow-sm border-b border-gray-200 px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div class="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+                        <span class="text-white font-bold text-sm">AI</span>
+                    </div>
+                    <h1 class="text-xl font-semibold text-gray-800">Ollama 本地大模型</h1>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <div id="connection-status" class="flex items-center space-x-2">
+                        <span class="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
+                        <span class="text-sm text-gray-600">连接中...</span>
+                    </div>
+                    <button onclick="checkConnection()" class="px-3 py-1 text-sm bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 transition-colors">
+                        检查连接
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- 主内容区域 -->
+        <div class="flex flex-1 overflow-hidden">
+            <!-- 左侧边栏 - 模型管理 -->
+            <aside class="w-64 bg-white border-r border-gray-200 flex flex-col">
+                <div class="p-4 border-b border-gray-200">
+                    <h2 class="font-semibold text-gray-700 mb-3">模型管理</h2>
+                    <div class="space-y-2">
+                        <button onclick="loadModels()" class="w-full px-3 py-2 text-sm bg-blue-50 text-blue-700 rounded-md hover:bg-blue-100 transition-colors flex items-center justify-center">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                            </svg>
+                            刷新模型列表
+                        </button>
+                    </div>
+                </div>
+                <div class="flex-1 overflow-y-auto scrollbar-thin">
+                    <div id="models-list" class="p-4 space-y-2">
+                        <!-- 模型列表将在这里动态生成 -->
+                    </div>
+                </div>
+            </aside>
+
+            <!-- 中央聊天区域 -->
+            <main class="flex-1 flex flex-col">
+                <!-- 聊天消息区域 -->
+                <div id="chat-messages" class="flex-1 overflow-y-auto p-6 space-y-4 scrollbar-thin">
+                    <div class="text-center text-gray-500 mt-8">
+                        <svg class="w-12 h-12 mx-auto text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+                        </svg>
+                        <p class="mt-2">开始与AI对话吧！选择一个模型后即可开始聊天。</p>
+                    </div>
+                </div>
+
+                <!-- 输入区域 -->
+                <div class="border-t border-gray-200 bg-white p-4">
+                    <div class="max-w-4xl mx-auto">
+                        <div class="flex space-x-3">
+                            <div class="flex-1">
+                                <textarea 
+                                    id="message-input" 
+                                    placeholder="输入您的问题..." 
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                                    rows="2"
+                                    onkeydown="handleKeyDown(event)"
+                                ></textarea>
+                            </div>
+                            <button 
+                                onclick="sendMessage()" 
+                                id="send-button"
+                                class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                disabled
+                            >
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
+                                </svg>
+                            </button>
+                        </div>
+                        <div class="mt-2 flex justify-between items-center">
+                            <span id="selected-model" class="text-sm text-gray-500">请先选择一个模型</span>
+                            <span id="token-count" class="text-sm text-gray-500">0 字符</span>
+                        </div>
+                    </div>
+                </div>
+            </main>
+
+            <!-- 右侧边栏 - 参数设置 -->
+            <aside class="w-80 bg-white border-l border-gray-200 p-4 overflow-y-auto scrollbar-thin">
+                <h2 class="font-semibold text-gray-700 mb-4">参数设置</h2>
+                
+                <div class="space-y-4">
+                    <!-- 温度设置 -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">温度 (Temperature)</label>
+                        <input type="range" id="temperature" min="0" max="2" step="0.1" value="0.7" class="w-full">
+                        <div class="flex justify-between text-xs text-gray-500">
+                            <span>严谨 (0.0)</span>
+                            <span id="temperature-value">0.7</span>
+                            <span>创意 (2.0)</span>
+                        </div>
+                    </div>
+
+                    <!-- 最大生成长度 -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">最大生成长度</label>
+                        <input type="number" id="max-tokens" min="1" max="8192" value="2048" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+
+                    <!-- 其他参数 -->
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Top-P</label>
+                            <input type="range" id="top-p" min="0" max="1" step="0.01" value="0.9" class="w-full">
+                            <div class="flex justify-between text-xs text-gray-500">
+                                <span>0.0</span>
+                                <span id="top-p-value">0.9</span>
+                                <span>1.0</span>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Top-K</label>
+                            <input type="number" id="top-k" min="0" max="100" value="40" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+
+                        <div class="flex items-center">
+                            <input type="checkbox" id="streaming" checked class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                            <label for="streaming" class="ml-2 text-sm text-gray-700">流式输出</label>
+                        </div>
+                    </div>
+
+                    <!-- 系统提示词 -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">系统提示词</label>
+                        <textarea 
+                            id="system-prompt" 
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                            rows="3"
+                            placeholder="你是一个有用的AI助手..."
+                        >你是一个有用的AI助手，请用中文回答用户的问题。</textarea>
+                    </div>
+                </div>
+            </aside>
+        </div>
+    </div>
+
+    <script>
+        // 全局状态
+        let currentModel = null;
+        let isConnected = false;
+        let isTyping = false;
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 绑定事件监听器
+            document.getElementById('temperature').addEventListener('input', updateTemperatureValue);
+            document.getElementById('top-p').addEventListener('input', updateTopPValue);
+            document.getElementById('message-input').addEventListener('input', updateTokenCount);
+            
+            // 检查连接状态
+            checkConnection();
+            
+            // 加载模型列表
+            loadModels();
+        });
+
+        // 更新温度显示值
+        function updateTemperatureValue() {
+            const temp = document.getElementById('temperature').value;
+            document.getElementById('temperature-value').textContent = temp;
+        }
+
+        // 更新Top-P显示值
+        function updateTopPValue() {
+            const topP = document.getElementById('top-p').value;
+            document.getElementById('top-p-value').textContent = topP;
+        }
+
+        // 更新字符计数
+        function updateTokenCount() {
+            const text = document.getElementById('message-input').value;
+            document.getElementById('token-count').textContent = text.length + ' 字符';
+        }
+
+        // 检查连接状态
+        async function checkConnection() {
+            const statusElement = document.getElementById('connection-status');
+            try {
+                const response = await fetch('http://localhost:8080/proxy/api/tags', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    statusElement.innerHTML = '<span class="w-2 h-2 bg-green-500 rounded-full"></span><span class="text-sm text-gray-600">已连接</span>';
+                    isConnected = true;
+                    console.log('Ollama连接成功');
+                } else {
+                    throw new Error('连接失败');
+                }
+            } catch (error) {
+                statusElement.innerHTML = '<span class="w-2 h-2 bg-red-500 rounded-full"></span><span class="text-sm text-gray-600">连接失败</span>';
+                isConnected = false;
+                console.error('Ollama连接失败:', error);
+            }
+        }
+
+        // 加载模型列表
+        async function loadModels() {
+            if (!isConnected) {
+                alert('请先确保Ollama服务已启动并连接成功');
+                return;
+            }
+
+            try {
+                const response = await fetch('http://localhost:8080/proxy/api/tags');
+                const data = await response.json();
+                
+                const modelsList = document.getElementById('models-list');
+                modelsList.innerHTML = '';
+                
+                if (data.models && data.models.length > 0) {
+                    data.models.forEach(model => {
+                        const modelElement = document.createElement('div');
+                        modelElement.className = 'p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors';
+                        modelElement.innerHTML = `
+                            <div class="font-medium text-gray-800">${model.name}</div>
+                            <div class="text-xs text-gray-500 mt-1">大小: ${(model.size / 1024 / 1024 / 1024).toFixed(1)}GB</div>
+                        `;
+                        modelElement.onclick = () => selectModel(model.name);
+                        modelsList.appendChild(modelElement);
+                    });
+                } else {
+                    modelsList.innerHTML = '<p class="text-gray-500 text-center">未找到模型，请先下载模型</p>';
+                }
+            } catch (error) {
+                console.error('加载模型失败:', error);
+                alert('加载模型列表失败，请检查Ollama服务状态');
+            }
+        }
+
+        // 选择模型
+        function selectModel(modelName) {
+            currentModel = modelName;
+            document.getElementById('selected-model').textContent = `当前模型: ${modelName}`;
+            document.getElementById('send-button').disabled = false;
+            
+            // 高亮选中的模型
+            document.querySelectorAll('#models-list > div').forEach(el => {
+                if (el.querySelector('.font-medium').textContent === modelName) {
+                    el.classList.add('bg-blue-50', 'border', 'border-blue-200');
+                } else {
+                    el.classList.remove('bg-blue-50', 'border', 'border-blue-200');
+                }
+            });
+        }
+
+        // 发送消息
+        async function sendMessage() {
+            if (!currentModel) {
+                alert('请先选择一个模型');
+                return;
+            }
+
+            const messageInput = document.getElementById('message-input');
+            const message = messageInput.value.trim();
+            
+            if (!message) {
+                alert('请输入消息');
+                return;
+            }
+
+            // 禁用发送按钮
+            document.getElementById('send-button').disabled = true;
+            
+            // 添加用户消息到聊天界面
+            addMessageToChat('user', message);
+            
+            // 清空输入框
+            messageInput.value = '';
+            updateTokenCount();
+            
+            // 显示AI正在输入
+            showTypingIndicator();
+            
+            try {
+                const response = await fetch('http://localhost:8080/proxy/api/generate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        model: currentModel,
+                        prompt: message,
+                        system: document.getElementById('system-prompt').value,
+                        stream: document.getElementById('streaming').checked,
+                        options: {
+                            temperature: parseFloat(document.getElementById('temperature').value),
+                            top_p: parseFloat(document.getElementById('top-p').value),
+                            top_k: parseInt(document.getElementById('top-k').value),
+                            num_predict: parseInt(document.getElementById('max-tokens').value)
+                        }
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                if (document.getElementById('streaming').checked) {
+                    // 流式输出处理
+                    await handleStreamResponse(response);
+                } else {
+                    // 非流式输出处理
+                    const data = await response.json();
+                    addMessageToChat('assistant', data.response);
+                }
+            } catch (error) {
+                console.error('发送消息失败:', error);
+                addMessageToChat('assistant', '抱歉，发生了错误：' + error.message);
+            } finally {
+                // 移除输入指示器
+                hideTypingIndicator();
+                // 重新启用发送按钮
+                document.getElementById('send-button').disabled = false;
+            }
+        }
+
+        // 处理流式响应
+        async function handleStreamResponse(response) {
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            let assistantMessage = '';
+            
+            // 移除之前的输入指示器并创建新的消息容器
+            hideTypingIndicator();
+            const messageId = 'assistant-' + Date.now();
+            const chatMessages = document.getElementById('chat-messages');
+            const messageDiv = document.createElement('div');
+            messageDiv.id = messageId;
+            messageDiv.className = 'flex justify-start';
+            messageDiv.innerHTML = `
+                <div class="max-w-3xl bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <div class="font-medium text-blue-800 mb-1">AI助手</div>
+                    <div class="text-gray-700 whitespace-pre-wrap" id="${messageId}-content"></div>
+                </div>
+            `;
+            chatMessages.appendChild(messageDiv);
+            
+            try {
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    
+                    const chunk = decoder.decode(value);
+                    const lines = chunk.split('\n');
+                    
+                    for (const line of lines) {
+                        if (line.trim() === '') continue;
+                        
+                        try {
+                            const data = JSON.parse(line);
+                            if (data.response) {
+                                assistantMessage += data.response;
+                                document.getElementById(messageId + '-content').textContent = assistantMessage;
+                            }
+                            
+                            if (data.done) {
+                                break;
+                            }
+                        } catch (e) {
+                            // 忽略JSON解析错误
+                        }
+                    }
+                }
+            } finally {
+                reader.releaseLock();
+            }
+            
+            // 滚动到最新消息
+            messageDiv.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // 显示输入指示器
+        function showTypingIndicator() {
+            isTyping = true;
+            const chatMessages = document.getElementById('chat-messages');
+            const typingDiv = document.createElement('div');
+            typingDiv.id = 'typing-indicator';
+            typingDiv.className = 'flex justify-start';
+            typingDiv.innerHTML = `
+                <div class="max-w-3xl bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <div class="font-medium text-blue-800 mb-1">AI助手</div>
+                    <div class="text-gray-500 flex items-center space-x-1">
+                        <span class="typing-indicator">●</span>
+                        <span class="typing-indicator" style="animation-delay: 0.2s">●</span>
+                        <span class="typing-indicator" style="animation-delay: 0.4s">●</span>
+                        <span class="text-sm">正在输入...</span>
+                    </div>
+                </div>
+            `;
+            chatMessages.appendChild(typingDiv);
+            typingDiv.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // 隐藏输入指示器
+        function hideTypingIndicator() {
+            isTyping = false;
+            const typingIndicator = document.getElementById('typing-indicator');
+            if (typingIndicator) {
+                typingIndicator.remove();
+            }
+        }
+
+        // 添加消息到聊天界面
+        function addMessageToChat(role, content) {
+            const chatMessages = document.getElementById('chat-messages');
+            
+            // 移除欢迎消息（如果有的话）
+            const welcomeMessage = chatMessages.querySelector('.text-center');
+            if (welcomeMessage) {
+                welcomeMessage.remove();
+            }
+            
+            const messageDiv = document.createElement('div');
+            messageDiv.className = role === 'user' ? 'flex justify-end' : 'flex justify-start';
+            
+            messageDiv.innerHTML = `
+                <div class="max-w-3xl ${role === 'user' ? 'bg-green-50 border border-green-200' : 'bg-blue-50 border border-blue-200'} rounded-lg p-4">
+                    <div class="font-medium ${role === 'user' ? 'text-green-800' : 'text-blue-800'} mb-1">
+                        ${role === 'user' ? '您' : 'AI助手'}
+                    </div>
+                    <div class="text-gray-700 whitespace-pre-wrap">${content}</div>
+                </div>
+            `;
+            
+            chatMessages.appendChild(messageDiv);
+            messageDiv.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // 处理键盘事件
+        function handleKeyDown(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
+            }
+        }
+
+        // 初始化显示值
+        updateTemperatureValue();
+        updateTopPValue();
+    </script>
+</body>
+</html>
