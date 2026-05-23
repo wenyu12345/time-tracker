@@ -1,0 +1,33 @@
+# 数据库文件
+*.db
+*.sqlite
+*.sqlite3
+
+# Python 缓存
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# IDE 配置
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# 日志文件
+*.log
+
+# 临时文件
+*.tmp
+*.bak
+
+# .trae 文件夹
+.trae/
+
+# 备份文件夹
+*_backup/
+
+# 下载文件夹
+downloads/
