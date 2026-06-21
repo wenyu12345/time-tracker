@@ -1,0 +1,1020 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>个人工时记录</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/responsive.css">
+    <link rel="stylesheet" href="css/modal.css">
+
+</head>
+<body>
+    <div class="app-container">
+        <!-- 顶部导航栏 -->
+        <header class="header">
+            <h1>工时记录</h1>
+        </header>
+
+        <!-- 主内容区 -->
+        <main class="main-content">
+            <!-- 选项卡导航 -->
+                <div class="tabs">
+                    <button class="tab-btn active" data-tab="home">首页</button>
+                    <button class="tab-btn" data-tab="records">工时记录</button>
+                    <button class="tab-btn" data-tab="salary">工资计算</button>
+                    <button class="tab-btn" data-tab="salary-config">工资算法配置</button>
+                    <button class="tab-btn" data-tab="stats">统计分析</button>
+                    <button class="tab-btn" data-tab="profile">个人中心</button>
+                    <button class="tab-btn" data-tab="message">留言墙</button>
+                <button class="tab-btn" data-tab="fund">基金持仓</button>
+                <button class="tab-btn" data-tab="wooden-fish">电子木鱼</button>
+                <button class="tab-btn" data-tab="sudoku">数独游戏</button>
+                <button class="tab-btn" data-tab="guess-number">猜数字游戏</button>
+                <button class="tab-btn" data-tab="mentorship">👨‍🏫 师带徒</button>
+                </div>
+
+            <!-- 选项卡内容 -->
+            <div class="tab-content">
+                <!-- 首页 -->
+                <div id="home" class="tab-pane active">
+                    <div class="home-section">
+                        <h2>当月工时</h2>
+                        <div class="today-stats">
+                            <div class="stat-item">
+                                <span class="stat-label">总工时</span>
+                                <span class="stat-value" id="monthly-total-hours">0.00</span>
+                                <span class="stat-unit">小时</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">白班</span>
+                                <span class="stat-value" id="monthly-day-shifts">0</span>
+                                <span class="stat-unit">天</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">夜班</span>
+                                <span class="stat-value" id="monthly-night-shifts">0</span>
+                                <span class="stat-unit">天</span>
+                            </div>
+                        </div>
+                        <div id="duplicate-warning" class="warning-message" style="display: none; margin-top: 10px; padding: 10px; background-color: #fff3cd; border: 1px solid #ffc107; border-radius: 4px;">
+                            <span></span>
+                            <button class="btn secondary" style="margin-left: 10px; padding: 5px 10px; font-size: 0.9rem;" onclick="cleanupDuplicates()">清理重复</button>
+                        </div>
+                    </div>
+
+                    <div class="scheduling">
+                        <h2>排班管理</h2>
+                        <div class="scheduling-controls">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="schedule-start-date">开始日期</label>
+                                    <input type="date" id="schedule-start-date">
+                                </div>
+                                <div class="form-group">
+                                    <label for="schedule-end-date">结束日期</label>
+                                    <input type="date" id="schedule-end-date">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="schedule-shift-type">班别</label>
+                                    <select id="schedule-shift-type">
+                                        <option value="白班">白班</option>
+                                        <option value="夜班">夜班</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="schedule-hours">工时</label>
+                                    <input type="number" id="schedule-hours" placeholder="11.5" step="0.5">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="schedule-description">工作描述</label>
+                                <textarea id="schedule-description" placeholder="工作描述"></textarea>
+                            </div>
+                            <button id="add-schedule-btn" class="btn primary">添加排班</button>
+                            <button id="view-schedule-btn" class="btn secondary">查看排班</button>
+                        </div>
+                    </div>
+
+                    <!-- 出勤名单 -->
+                    <div class="attendance-list-section">
+                        <div class="section-header">
+                            <h2>出勤名单</h2>
+                            <div class="date-selector">
+                                <label for="attendance-date">日期：</label>
+                                <input type="date" id="attendance-date">
+                                <select id="shift-filter" style="padding:0.5rem;border:1px solid #b3d8ff;border-radius:4px;margin:0 0.5rem;">
+                                    <option value="all">全部</option>
+                                    <option value="day">白班</option>
+                                    <option value="night">夜班</option>
+                                    <option value="long">长白班</option>
+                                </select>
+                                <button id="refresh-attendance-btn" class="btn secondary">刷新</button>
+                                <button id="import-prev-day-btn" class="btn secondary" style="background-color:#e3f2fd;color:#1565c0;">导入前一天</button>
+                                <button id="batch-add-btn" class="btn secondary" style="background-color:#fff3e0;color:#e65100;">批量添加</button>
+                                <button id="batch-delete-btn" class="btn secondary" style="background-color:#ffebee;color:#c62828;">批量删除</button>
+                                <span id="refresh-status" style="font-size: 0.85rem; color: #666; margin-left: 0.5rem;"></span>
+                            </div>
+                        </div>
+                        <div id="attendance-list" class="attendance-list">
+                            <!-- 出勤名单将通过JavaScript动态生成 -->
+                        </div>
+                    </div>
+
+
+                </div>
+
+                <!-- 排班计划模态框 -->
+                <div id="schedule-modal" class="modal">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h3>排班计划</h3>
+                            <button class="close-btn">&times;</button>
+                        </div>
+                        <div class="modal-body">
+                            <div id="schedule-list" class="schedule-list">
+                                <!-- 排班计划列表将通过JavaScript动态生成 -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 工时记录 -->
+                <div id="records" class="tab-pane">
+                    <div class="records-section">
+                        <div class="section-header">
+                            <h2>工时记录</h2>
+                            <button id="batch-btn" class="btn secondary">批量操作</button>
+                            <button id="shift-settings-btn" class="btn secondary">班别设置</button>
+                            <button id="import-excel-btn" class="btn primary">Excel导入工时</button>
+                        </div>
+
+                        <!-- 日历组件 -->
+                        <div class="calendar-section">
+                            <div class="calendar-header">
+                                <button id="prev-month" class="btn secondary">‹</button>
+                                <h3 id="current-month"></h3>
+                                <button id="next-month" class="btn secondary">›</button>
+                            </div>
+                            <div id="calendar" class="calendar"></div>
+                        </div>
+
+                        <!-- 工时记录列表 -->
+                        <div id="records-list" class="records-list">
+                            <!-- 工时记录列表将通过JavaScript动态生成 -->
+                        </div>
+                    </div>
+
+                    <!-- 工时输入模态框 -->
+                    <div id="time-input-modal" class="modal">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h3>添加工时记录</h3>
+                                <button class="close-btn">&times;</button>
+                            </div>
+                            <div class="modal-body">
+                                <input type="hidden" id="selected-date">
+                                <div class="form-group">
+                                    <label for="input-date">日期</label>
+                                    <input type="date" id="input-date" readonly>
+                                </div>
+                                
+                                <!-- 记录类型选择 -->
+                                <div class="form-group">
+                                    <label for="record-type">记录类型</label>
+                                    <select id="record-type">
+                                        <option value="normal">正常工时</option>
+                                        <option value="leave">请假</option>
+                                        <option value="early-off">下早班</option>
+                                    </select>
+                                </div>
+                                
+                                <!-- 正常工时和下早班共用的字段 -->
+                                <div id="work-hours-section" class="form-group">
+                                    <label for="input-hours">工时</label>
+                                    <input type="number" id="input-hours" placeholder="0.00" step="0.5">
+                                </div>
+                                
+                                <!-- 请假时长字段 -->
+                                <div id="leave-hours-section" class="form-group" style="display: none;">
+                                    <label for="leave-hours">请假时长（小时）</label>
+                                    <input type="number" id="leave-hours" placeholder="0.00" step="0.5">
+                                </div>
+                                
+                                <!-- 班别字段 -->
+                                <div id="shift-type-section" class="form-group">
+                                    <label for="input-shift-type">班别</label>
+                                    <select id="input-shift-type">
+                                        <option value="day">白班</option>
+                                        <option value="night">夜班</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="input-description">描述</label>
+                                    <textarea id="input-description" placeholder="工作描述"></textarea>
+                                </div>
+                                <button id="save-time-btn" class="btn primary">保存</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 班别设置模态框 -->
+                    <div id="shift-settings-modal" class="modal">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h3>班别设置</h3>
+                                <button class="close-btn">&times;</button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="form-group">
+                                    <label for="new-shift-name">新增班别</label>
+                                    <div class="shift-input-group">
+                                        <input type="text" id="new-shift-name" placeholder="班别名称">
+                                        <button id="add-shift-btn" class="btn primary">添加</button>
+                                    </div>
+                                </div>
+                                <div id="shift-list" class="shift-list">
+                                    <!-- 班别列表将通过JavaScript动态生成 -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 批量操作模态框 -->
+                    <div id="batch-modal" class="modal">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h3>批量操作</h3>
+                                <button class="close-btn">&times;</button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="form-group">
+                                <label for="batch-operation-type">操作类型</label>
+                                <select id="batch-operation-type">
+                                    <option value="update">批量更新</option>
+                                    <option value="delete">批量删除</option>
+                                    <option value="add">批量添加</option>
+                                </select>
+                            </div>
+                                
+                                <div id="batch-update-fields">
+                                    <div class="form-group">
+                                        <label for="batch-shift-type">班别</label>
+                                        <select id="batch-shift-type">
+                                            <option value="">不修改</option>
+                                            <option value="day">白班</option>
+                                            <option value="night">夜班</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="batch-hours">工时（留空则不修改）</label>
+                                        <input type="number" id="batch-hours" placeholder="0.00" step="0.5">
+                                    </div>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="batch-date-range">日期范围</label>
+                                    <div class="date-range">
+                                        <input type="date" id="batch-start-date">
+                                        <span>至</span>
+                                        <input type="date" id="batch-end-date">
+                                    </div>
+                                </div>
+                                <button id="batch-apply-btn" class="btn primary">应用</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 复制工时模态框 -->
+                    <div id="copy-time-modal" class="modal">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h3>复制工时</h3>
+                                <button class="close-btn">&times;</button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="form-group">
+                                    <label for="source-date">源日期</label>
+                                    <input type="date" id="source-date" readonly>
+                                </div>
+                                <div class="form-group">
+                                    <label for="copy-start-date">开始日期</label>
+                                    <input type="date" id="copy-start-date">
+                                </div>
+                                <div class="form-group">
+                                    <label for="copy-end-date">结束日期</label>
+                                    <input type="date" id="copy-end-date">
+                                </div>
+                                <button id="copy-time-btn" class="btn primary">复制</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Excel导入工时模态框 -->
+                    <div id="import-excel-modal" class="modal">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h3>Excel导入工时</h3>
+                                <button class="close-btn">&times;</button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="form-group">
+                                    <label for="import-excel-file">选择Excel文件</label>
+                                    <input type="file" id="import-excel-file" accept=".xlsx">
+                                    <p class="hint">支持 .xlsx 格式，列顺序：日期、班次、上班时间、下班时间、工时(小时)</p>
+                                </div>
+                                <div class="form-group">
+                                    <label for="import-sheet-select">选择工作表</label>
+                                    <select id="import-sheet-select" disabled>
+                                        <option value="">请先选择Excel文件</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <button id="submit-import-btn" class="btn primary">开始导入</button>
+                                    <button id="cancel-import-btn" class="btn secondary">取消</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 工资计算 -->
+                <div id="salary" class="tab-pane">
+                    <div class="salary-section">
+                        <h2>工资计算</h2>
+                        
+                        <div class="salary-input">
+                            <div class="form-group">
+                                <label for="salary-month">月份</label>
+                                <input type="month" id="salary-month" value="">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="salary-level">薪资等级</label>
+                                <select id="salary-level">
+                                    <!-- 薪资等级将通过JavaScript动态生成 -->
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="utility-fee">水电费</label>
+                                <input type="number" id="utility-fee" placeholder="0.00" step="0.01">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="insurance">五险一金</label>
+                                <input type="number" id="insurance" placeholder="0.00" step="0.01">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="leave-hours">请假小时数</label>
+                                <input type="number" id="leave-hours" placeholder="0.00" step="0.01">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="night-shifts">夜班天数</label>
+                                <input type="number" id="night-shifts" placeholder="0" step="1">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="simulated-hours">模拟总工时（留空或填0则使用实际工时）</label>
+                                <input type="number" id="simulated-hours" placeholder="0.00" step="0.01">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="performance-bonus">绩效奖励（可输入负数）</label>
+                                <input type="number" id="performance-bonus" placeholder="0.00" step="0.01">
+                            </div>
+                            
+                            <div class="button-group">
+                                <button id="save-salary-btn" class="btn secondary">保存参数</button>
+                                <button id="calculate-salary-btn" class="btn primary">计算工资</button>
+                            </div>
+                        </div>
+                        
+                        <div id="salary-result" class="salary-result">
+                            <!-- 工资计算结果将通过JavaScript动态生成 -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 工资算法配置 -->
+                <div id="salary-config" class="tab-pane">
+                    <div class="salary-config-section">
+                        <h2>工资算法配置</h2>
+                        
+                        <div class="section-header">
+                            <button id="reset-config-btn" class="btn secondary">重置为默认值</button>
+                        </div>
+                        
+                        <div id="config-list" class="config-list">
+                            <!-- 配置项列表将通过JavaScript动态生成 -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 统计分析 -->
+                <div id="stats" class="tab-pane">
+                    <div class="stats-section">
+                        <h2>统计分析</h2>
+                        
+                        <div class="stats-filter">
+                            <select id="stats-type">
+                                <option value="daily">日统计</option>
+                                <option value="weekly">周统计</option>
+                                <option value="monthly">月统计</option>
+                                <option value="project">项目统计</option>
+                                <option value="shift">班别统计</option>
+                                <option value="trend">工时趋势图</option>
+                                <option value="attendance">出勤率统计</option>
+                                <option value="overtime">加班情况分析</option>
+                                <option value="distribution">工时分布分析</option>
+                                <option value="comparison">对比分析</option>
+                                <option value="custom">自定义时间范围</option>
+                            </select>
+                            <div id="date-inputs">
+                                <input type="date" id="stats-date">
+                                <div id="custom-date-range" style="display: none;">
+                                    <input type="date" id="start-date">
+                                    <input type="date" id="end-date">
+                                </div>
+                            </div>
+                            <button id="stats-btn" class="btn secondary">查看统计</button>
+                        </div>
+                        
+                        <div id="stats-chart" class="stats-chart">
+                            <!-- 图表将通过Chart.js动态生成 -->
+                            <canvas id="chart-canvas"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 个人中心 -->
+                <div id="profile" class="tab-pane">
+                    <div class="profile-section">
+                        <h2>个人中心</h2>
+                        
+                        <div id="user-info" class="user-info">
+                            <!-- 用户信息将通过JavaScript动态生成 -->
+                        </div>
+                        
+                        <!-- 管理系统入口 -->
+                        <div class="admin-entry-section" style="display: none;">
+                            <h3>管理系统</h3>
+                            <p>进入管理系统需要管理员账号登录</p>
+                            <button id="admin-entry-btn" class="btn primary">进入管理系统</button>
+                        </div>
+                        
+                        <!-- 修改密码表单 -->
+                        <div id="change-password-form" class="auth-form" style="display: none;">
+                            <h3>修改密码</h3>
+                            <div class="form-group">
+                                <label for="old-password">原密码</label>
+                                <input type="password" id="old-password" placeholder="请输入原密码">
+                            </div>
+                            <div class="form-group">
+                                <label for="new-password">新密码</label>
+                                <input type="password" id="new-password" placeholder="请输入新密码">
+                            </div>
+                            <div class="form-group">
+                                <label for="confirm-password">确认新密码</label>
+                                <input type="password" id="confirm-password" placeholder="请确认新密码">
+                            </div>
+                            <button id="change-password-btn" class="btn primary" type="button">修改密码</button>
+                            <p class="switch-auth"><a href="#" id="cancel-change-password">取消</a></p>
+                        </div>
+                        
+                        <div class="auth-section">
+                            <div id="login-form" class="auth-form">
+                                <h3>登录</h3>
+                                <div class="form-group">
+                                    <label for="login-username">用户名</label>
+                                    <input type="text" id="login-username" placeholder="请输入用户名">
+                                </div>
+                                <div class="form-group">
+                                    <label for="login-password">密码</label>
+                                    <input type="password" id="login-password" placeholder="请输入密码">
+                                </div>
+                                <button id="login-btn" class="btn primary" type="submit">登录</button>
+                                <p class="switch-auth">没有账号？<a href="#" id="show-register">注册</a></p>
+                            </div>
+                            
+                            <div id="register-form" class="auth-form" style="display: none;">
+                                <h3>注册</h3>
+                                <div class="form-group">
+                                    <label for="reg-username">用户名</label>
+                                    <input type="text" id="reg-username" placeholder="请输入用户名">
+                                </div>
+                                <div class="form-group">
+                                    <label for="reg-password">密码</label>
+                                    <input type="password" id="reg-password" placeholder="请输入密码">
+                                </div>
+                                <div class="form-group">
+                                    <label for="reg-email">邮箱</label>
+                                    <input type="email" id="reg-email" placeholder="请输入邮箱">
+                                </div>
+                                <div class="form-group">
+                                    <label for="reg-hire-date">入职日期</label>
+                                    <input type="date" id="reg-hire-date">
+                                </div>
+                                <div class="form-group">
+                                    <label for="reg-roles">角色</label>
+                                    <select id="reg-roles" multiple="multiple" style="height: 100px;">
+                                        <!-- 角色选项将通过JavaScript动态生成 -->
+                                    </select>
+                                    <small>按住Ctrl键可选择多个角色</small>
+                                </div>
+                                <button id="register-btn" class="btn primary" type="submit">注册</button>
+                                <p class="switch-auth">已有账号？<a href="#" id="show-login">登录</a></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 留言墙 -->
+                <div id="message" class="tab-pane">
+                    <div class="message-section">
+                        <h2>留言墙</h2>
+                        
+                        <!-- 子选项卡 -->
+                        <div class="message-subtabs">
+                            <button class="message-subtab-btn active" data-subtab="message-wall">📝 公共留言</button>
+                            <button class="message-subtab-btn" data-subtab="ai-chat">🤖 AI 聊天</button>
+                        </div>
+                        
+                        <!-- 公共留言子选项卡 -->
+                        <div id="message-wall-subtab" class="message-subtab-content active">
+                            <!-- 留言列表 -->
+                            <div id="public-message-list" class="message-list">
+                                <!-- 留言列表将通过JavaScript动态生成 -->
+                            </div>
+                            
+                            <!-- 留言输入框 -->
+                            <div class="message-input-section">
+                                <div class="form-group">
+                                    <textarea id="public-message-input" placeholder="请输入留言内容..." rows="3"></textarea>
+                                </div>
+                                <div class="message-input-actions">
+                                    <button id="send-public-message-btn" class="btn primary">发送</button>
+                                    <button id="refresh-public-message-btn" class="btn secondary">刷新</button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- AI 聊天子选项卡 -->
+                        <div id="ai-chat-subtab" class="message-subtab-content">
+                            <!-- AI 配置区域 -->
+            <div class="ai-config-section">
+                <h3>⚙️ AI 设置</h3>
+                <div class="config-item">
+                    <div class="config-item-left">
+                        <span class="config-label">启用 AI 回复</span>
+                        <span class="config-desc">开启后，AI 助手会自动回复您的消息</span>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="ai-chat-toggle">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                <div class="config-item">
+                    <div class="config-item-left">
+                        <span class="config-label">选择 AI 模型</span>
+                        <span class="config-desc">选择要使用的 AI 模型</span>
+                    </div>
+                    <select id="ai-model-select" class="ai-model-select">
+                        <option value="qwen3:latest">加载中...</option>
+                    </select>
+                </div>
+                <div class="config-item">
+                    <div class="config-item-left">
+                        <span class="config-label">允许 AI 查看考勤</span>
+                        <span class="config-desc">开启后，您可以查询自己的考勤记录</span>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="ai-view-attendance-toggle">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                <div class="config-item">
+                    <div class="config-item-left">
+                        <span class="config-label">允许 AI 分析考勤</span>
+                        <span class="config-desc">开启后，AI 可以为您分析考勤和工时汇总</span>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="ai-analyze-attendance-toggle">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                <div class="config-item">
+                    <div class="config-item-left">
+                        <span class="config-label">允许 AI 搜索网络</span>
+                        <span class="config-desc">开启后，AI 可以联网搜索信息回答您的问题</span>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="ai-search-toggle">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                <div class="config-item">
+                    <div class="config-item-left">
+                        <span class="config-label">允许 AI 修改考勤</span>
+                        <span class="config-desc">开启后，您可以通过自然语言指令让 AI 修改考勤记录</span>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="ai-attendance-toggle">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                <div class="ai-usage-hint">
+                    <h4>💡 使用提示</h4>
+                    <ul>
+                        <li><strong>查看今天考勤：</strong>"查看考勤" 或 "看看出勤"</li>
+                        <li><strong>查看某天考勤：</strong>"查看考勤 2024-05-15"</li>
+                        <li><strong>查看某月考勤：</strong>"查看考勤 2024-05"</li>
+                        <li><strong>考勤分析/汇总：</strong>"分析考勤" 或 "统计工时"</li>
+                        <li><strong>修改考勤命令：</strong>"修改考勤 2024-05-15 白班 08:00 18:00"</li>
+                        <li><strong>添加考勤命令：</strong>"添加考勤 2024-05-15 夜班"</li>
+                        <li><strong>班别选项：</strong>白班、夜班、请假、休息</li>
+                    </ul>
+                </div>
+            </div>
+                            
+                            <!-- AI 聊天列表 -->
+                            <div id="ai-chat-list" class="message-list">
+                                <div class="empty-message">👋 您好！我是AI助手，有什么可以帮您的吗？</div>
+                            </div>
+                            
+                            <!-- 快速指令集 -->
+                            <div class="ai-quick-commands">
+                                <h4>💬 快捷指令</h4>
+                                <div class="quick-commands-container">
+                                    <div class="command-category">
+                                        <span class="category-title">查看考勤</span>
+                                        <div class="command-buttons">
+                                            <button class="quick-command-btn" data-command="查看今天的考勤">今天</button>
+                                            <button class="quick-command-btn" data-command="查看昨天的考勤">昨天</button>
+                                            <button class="quick-command-btn" data-command="查看明天的考勤">明天</button>
+                                        </div>
+                                    </div>
+                                    <div class="command-category">
+                                        <span class="category-title">修改考勤</span>
+                                        <div class="command-buttons">
+                                            <button class="quick-command-btn" data-command="修改今天的考勤为白班">今天白班</button>
+                                            <button class="quick-command-btn" data-command="修改今天的考勤为夜班">今天夜班</button>
+                                            <button class="quick-command-btn" data-command="修改今天的考勤为休息">今天休息</button>
+                                            <button class="quick-command-btn" data-command="修改今天的考勤为请假">今天请假</button>
+                                        </div>
+                                    </div>
+                                    <div class="command-category">
+                                        <span class="category-title">修改明天</span>
+                                        <div class="command-buttons">
+                                            <button class="quick-command-btn" data-command="修改明天的考勤为白班">明天白班</button>
+                                            <button class="quick-command-btn" data-command="修改明天的考勤为夜班">明天夜班</button>
+                                            <button class="quick-command-btn" data-command="修改明天的考勤为休息">明天休息</button>
+                                            <button class="quick-command-btn" data-command="修改明天的考勤为请假">明天请假</button>
+                                        </div>
+                                    </div>
+                                    <div class="command-category">
+                                        <span class="category-title">分析</span>
+                                        <div class="command-buttons">
+                                            <button class="quick-command-btn" data-command="分析一下最近的考勤">分析考勤</button>
+                                            <button class="quick-command-btn" data-command="统计一下最近的工时">统计工时</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- AI 聊天输入框 -->
+                            <div class="message-input-section">
+                                <div class="form-group">
+                                    <textarea id="ai-chat-input" placeholder="请输入消息...&#10;示例：修改考勤 2024-05-15 白班 08:00 18:00" rows="3"></textarea>
+                                </div>
+                                <div class="message-input-actions">
+                                    <button id="send-ai-chat-btn" class="btn primary">发送</button>
+                                    <button id="clear-ai-chat-btn" class="btn secondary">清空</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 电子木鱼 -->
+                <div id="wooden-fish" class="tab-pane">
+                    <div class="wooden-fish-section">
+                        <h2>电子木鱼</h2>
+                        
+                        <div class="wooden-fish-container">
+                            <!-- 木鱼交互区 -->
+                            <div class="wooden-fish-interaction">
+                                <div id="wooden-fish-image" class="wooden-fish-image">
+                                    <!-- 木鱼图片将通过CSS背景图设置 -->
+                                </div>
+                                <div class="wooden-fish-count">
+                                    <span class="count-label">今日功德：</span>
+                                    <span id="daily-count" class="count-value">0</span>
+                                </div>
+                                <div class="wooden-fish-text">
+                                    敲电子木鱼，积累赛博功德
+                                </div>
+                            </div>
+                            
+                            <!-- 排行榜组件 -->
+                            <div class="wooden-fish-leaderboard">
+                                <h3>功德排行榜</h3>
+                                <div id="wooden-fish-leaderboard-list" class="leaderboard-list">
+                                    <!-- 排行榜数据将通过JavaScript动态生成 -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 数独游戏 -->
+                <div id="sudoku" class="tab-pane">
+                    <div class="sudoku-section">
+                        <h2>数独游戏</h2>
+                        
+                        <div class="sudoku-container">
+                            <!-- 游戏信息区 -->
+                            <div class="sudoku-info">
+                                <div class="sudoku-level-info">
+                                    <span class="level-label">当前等级：</span>
+                                    <span id="sudoku-level" class="level-value">LV1</span>
+                                </div>
+                                <div class="sudoku-exp-info">
+                                    <span class="exp-label">经验值：</span>
+                                    <span id="sudoku-exp" class="exp-value">0</span>
+                                </div>
+                                <div class="sudoku-wins-info">
+                                    <span class="wins-label">胜利局数：</span>
+                                    <span id="sudoku-wins" class="wins-value">0</span>
+                                </div>
+                            </div>
+                            
+                            <!-- 游戏控制区 -->
+                            <div class="sudoku-controls">
+                                <div class="difficulty-selector">
+                                    <label for="sudoku-difficulty">难度：</label>
+                                    <select id="sudoku-difficulty">
+                                        <option value="easy">简单</option>
+                                        <option value="medium">中等</option>
+                                        <option value="hard">困难</option>
+                                        <option value="hell">地狱</option>
+                                        <option value="abyss">深渊</option>
+                                    </select>
+                                </div>
+                                <div class="control-buttons">
+                                    <button id="new-game-btn" class="btn primary">新游戏</button>
+                                    <button id="check-answer-btn" class="btn secondary">检查答案</button>
+                                    <button id="hint-btn" class="btn secondary">提示</button>
+                                    <button id="reset-btn" class="btn secondary">重置</button>
+                                </div>
+                            </div>
+                            
+                            <!-- 游戏状态提示 -->
+                            <div id="sudoku-status" class="sudoku-status"></div>
+                            
+                            <!-- 数独棋盘 -->
+                            <div class="sudoku-board-container">
+                                <div id="sudoku-board" class="sudoku-board">
+                                    <!-- 数独棋盘将通过JavaScript动态生成 -->
+                                </div>
+                            </div>
+                            
+                            <!-- 数字输入键盘 -->
+                            <div class="sudoku-keypad">
+                                <button class="keypad-btn" data-num="1">1</button>
+                                <button class="keypad-btn" data-num="2">2</button>
+                                <button class="keypad-btn" data-num="3">3</button>
+                                <button class="keypad-btn" data-num="4">4</button>
+                                <button class="keypad-btn" data-num="5">5</button>
+                                <button class="keypad-btn" data-num="6">6</button>
+                                <button class="keypad-btn" data-num="7">7</button>
+                                <button class="keypad-btn" data-num="8">8</button>
+                                <button class="keypad-btn" data-num="9">9</button>
+                                <button class="keypad-btn keypad-clear" data-num="0">清空</button>
+                            </div>
+                            
+                            <!-- 排行榜 -->
+                            <div class="sudoku-leaderboard">
+                                <h3>排行榜</h3>
+                                <div id="sudoku-leaderboard-list" class="leaderboard-list">
+                                    <!-- 排行榜数据将通过JavaScript动态生成 -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 猜数字游戏 -->
+                <div id="guess-number" class="tab-pane">
+                    <div class="guess-number-section">
+                        <h2>猜数字游戏</h2>
+                        
+                        <div class="guess-number-container">
+                            <!-- 游戏信息区 -->
+                            <div class="guess-number-info">
+                                <div class="game-stats">
+                                    <div class="stat-item">
+                                        <span class="stat-label">总游戏次数：</span>
+                                        <span id="guess-total-games" class="stat-value">0</span>
+                                    </div>
+                                    <div class="stat-item">
+                                        <span class="stat-label">胜利次数：</span>
+                                        <span id="guess-wins" class="stat-value">0</span>
+                                    </div>
+                                    <div class="stat-item">
+                                        <span class="stat-label">胜率：</span>
+                                        <span id="guess-win-rate" class="stat-value">0%</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- 游戏主界面 -->
+                            <div class="game-main">
+                                <div class="game-info">
+                                    <h3>猜数字游戏</h3>
+                                    <p>系统随机生成1-100之间的整数，请在下方输入框中提交猜测的数字。</p>
+                                    <p>你有6次机会猜测，每次猜测后系统会提示"猜大了"或"猜小了"。</p>
+                                </div>
+                                
+                                <div class="game-status">
+                                    <div class="status-message" id="guess-status">游戏未开始，请点击"开始新游戏"按钮。</div>
+                                    <div class="remaining-guesses">剩余猜测次数：<span id="remaining-guesses">6</span>/6</div>
+                                </div>
+                                
+                                <div class="game-input">
+                                    <input type="number" id="guess-input" placeholder="请输入1-100之间的数字" min="1" max="100">
+                                    <button id="submit-guess-btn" class="btn primary">提交猜测</button>
+                                    <button id="new-guess-game-btn" class="btn secondary">开始新游戏</button>
+                                </div>
+                                
+                                <div class="history-section">
+                                    <h4>历史猜测记录</h4>
+                                    <div id="guess-history" class="guess-history"></div>
+                                </div>
+                            </div>
+                            
+                            <!-- 排行榜 -->
+                            <div class="guess-number-leaderboard">
+                                <h3>胜率排行榜</h3>
+                                <div id="guess-number-leaderboard-list" class="leaderboard-list">
+                                    <!-- 排行榜数据将通过JavaScript动态生成 -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 基金持仓 -->
+                <div id="fund" class="tab-pane">
+                    <div class="fund-section">
+                        <h2>基金持仓记录</h2>
+                        
+                        <div class="section-header">
+                            <button id="addFundBtn" class="btn primary">添加持仓</button>
+                            <button id="refreshFundPriceBtn" class="btn secondary">一键刷新全部价格</button>
+                        </div>
+                        
+                        <!-- 收益汇总 -->
+                        <div id="fundSummary" class="fund-summary">
+                            <!-- 汇总将通过JavaScript动态生成 -->
+                        </div>
+                        
+                        <!-- 图表区域 -->
+                        <div class="fund-charts">
+                            <div class="chart-container">
+                                <h3>市值变化</h3>
+                                <div class="chart-wrapper">
+                                    <canvas id="valueChart"></canvas>
+                                </div>
+                            </div>
+                            <div class="chart-container">
+                                <h3>收益变化</h3>
+                                <div class="chart-wrapper">
+                                    <canvas id="profitChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 基金选项卡导航 -->
+                        <div class="fund-tabs" id="fundTabs">
+                            <!-- 基金选项卡将动态生成 -->
+                        </div>
+                        
+                        <!-- 基金详情区域 -->
+                        <div id="fundDetail" class="fund-detail">
+                            <!-- 详情将动态生成 -->
+                            <div class="empty-state">
+                                <p>点击上方基金选项卡查看详情</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 师带徒系统（通过 iframe 嵌入独立页面） -->
+                <div id="mentorship" class="tab-pane">
+                    <div class="mentorship-section">
+                        <h2>👨‍🏫 师带徒管理系统</h2>
+                        <p style="color: #666; margin-bottom: 1rem;">
+                            查看员工师徒关系图谱，建立技能传承链路。可以在以下区域中进行操作。
+                        </p>
+                        <a href="mentorship.html" target="_blank" class="btn primary" style="margin-bottom: 1rem;">
+                            在新窗口打开 →
+                        </a>
+                        <iframe id="mentorship-iframe"
+                            src="mentorship.html"
+                            style="width: 100%; height: 800px; border: 1px solid #e0e0e0; border-radius: 8px; background: #fff;">
+                        </iframe>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- 基金持仓模态框 -->
+    <div id="fundModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="fundModalTitle">添加基金持仓</h3>
+                <button id="closeFundModal" class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="holdingId">
+                <div class="form-group">
+                    <label for="fundName">基金名称 *</label>
+                    <input type="text" id="fundName" placeholder="如：易方达蓝筹精选" required>
+                </div>
+                <div class="form-group">
+                    <label for="fundCode">基金代码</label>
+                    <input type="text" id="fundCode" placeholder="如：005827">
+                </div>
+                <div class="form-group">
+                    <label for="purchaseDate">购买日期 *</label>
+                    <input type="date" id="purchaseDate" required>
+                </div>
+                <div class="form-group">
+                    <label for="purchaseAmount">购买金额(元) *</label>
+                    <input type="number" id="purchaseAmount" step="0.01" placeholder="1000.00" required>
+                </div>
+                <div class="form-group">
+                    <label for="purchaseShares">购买份额 *</label>
+                    <input type="number" id="purchaseShares" step="0.01" placeholder="持有份额" required>
+                </div>
+                <div class="form-group">
+                    <label for="purchasePrice">购买净值 *</label>
+                    <input type="number" id="purchasePrice" step="0.0001" placeholder="购买时的净值" required>
+                </div>
+                <div class="form-group">
+                    <label for="currentPrice">当前净值</label>
+                    <input type="number" id="currentPrice" step="0.0001" placeholder="输入当前净值，可手动更新">
+                </div>
+                <div class="form-group">
+                    <label for="holdingStatus">持仓状态</label>
+                    <select id="holdingStatus">
+                        <option value="持有">持有中</option>
+                        <option value="已卖出">已卖出</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="notes">备注</label>
+                    <textarea id="notes" placeholder="备注信息"></textarea>
+                </div>
+                <button id="saveFundBtn" class="btn primary">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 引入第三方库 -->
+    <!-- Chart.js（CDN 优先，加载失败时回退到本地） -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <script>
+        if (typeof Chart === 'undefined') {
+            document.write('<script src="lib/chart.min.js"><\/script>');
+        }
+    </script>
+    
+    <!-- 引入自定义脚本 -->
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/notification.js"></script>
+    <script src="js/project.js"></script>
+    <script src="js/time_record.js"></script>
+    <script src="js/salary.js"></script>
+    <script src="js/salary_config.js"></script>
+    <script src="js/stats.js"></script>
+    <script src="js/tabs.js"></script>
+    <script src="js/message.js"></script>
+    <script src="js/wooden_fish.js"></script>
+    <script src="js/sudoku.js"></script>
+    <script src="js/guess_number.js"></script>
+    <script src="js/fund.js"></script>
+    <script src="js/attendance.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/boot.js"></script>
+    <script src="js/recover.js"></script>
+</body>
+</html>

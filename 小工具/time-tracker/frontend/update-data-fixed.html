@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>批量更新考勤数据（修正版）</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; max-width: 1200px; margin: 0 auto; }
+        h1 { color: #333; }
+        .section { margin: 20px 0; padding: 20px; border: 1px solid #ddd; border-radius: 8px; background: #f9f9f9; }
+        button { padding: 12px 24px; font-size: 16px; cursor: pointer; background: #4caf50; color: white; border: none; border-radius: 4px; margin: 5px; }
+        button:hover { background: #45a049; }
+        button.danger { background: #f44336; }
+        button.danger:hover { background: #da190b; }
+        .log { background: #333; color: #0f0; font-family: monospace; padding: 15px; height: 400px; overflow-y: scroll; border-radius: 4px; }
+        .log-line { margin: 3px 0; }
+        .success { color: #4caf50; }
+        .error { color: #f44336; }
+        .info { color: #2196f3; }
+        .progress { width: 100%; background: #eee; height: 30px; border-radius: 4px; margin: 10px 0; overflow: hidden; }
+        .progress-bar { background: #4caf50; height: 100%; width: 0%; transition: width 0.3s; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; }
+        .username-hint { background: #fff3cd; padding: 10px; border-radius: 4px; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>考勤数据批量更新工具（修正版）</h1>
+    
+    <div class="section">
+        <h2>重要说明</h2>
+        <p class="username-hint">用户名使用带空格的格式，比如"林 勋"、"吴 家 龙"（两个字中间一个空格，三个字中间两个空格）</p>
+    </div>
+    
+    <div class="section">
+        <h2>操作</h2>
+        <button onclick="checkCurrentData()">1. 检查当前数据</button>
+        <button onclick="updateDayData()">2. 更新白班数据</button>
+        <button onclick="updateNightData()">3. 更新夜班数据</button>
+    </div>
+    
+    <div class="section">
+        <h2>进度</h2>
+        <div class="progress">
+            <div class="progress-bar" id="progress-bar">0%</div>
+        </div>
+    </div>
+    
+    <div class="section">
+        <h2>日志</h2>
+        <div class="log" id="log"></div>
+    </div>
+    
+    <script>
+        const logDiv = document.getElementById('log');
+        const progressBar = document.getElementById('progress-bar');
+        const date = '2026-05-23';
+        
+        function log(message, type = 'info') {
+            const line = document.createElement('div');
+            line.className = `log-line ${type}`;
+            const time = new Date().toLocaleTimeString();
+            line.textContent = `[${time}] ${message}`;
+            logDiv.appendChild(line);
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+        
+        function setProgress(percent) {
+            progressBar.style.width = percent + '%';
+            progressBar.textContent = percent + '%';
+        }
+        
+        // 辅助函数：给用户名加空格
+        function addSpaces(name) {
+            if (name.length === 2) {
+                return name.charAt(0) + ' ' + name.charAt(1);
+            } else if (name.length === 3) {
+                return name.charAt(0) + ' ' + name.charAt(1) + ' ' + name.charAt(2);
+            }
+            return name;
+        }
+        
+        async function getUserId(username) {
+            try {
+                const response = await fetch('/api/users');
+                if (!response.ok) throw new Error('获取用户列表失败');
+                const data = await response.json();
+                
+                // 先尝试精确匹配
+                let user = data.users?.find(u => u.username === username);
+                
+                // 如果没找到，尝试去掉空格匹配
+                if (!user) {
+                    const usernameNoSpace = username.replace(/\s/g, '');
+                    user = data.users?.find(u => u.username.replace(/\s/g, '') === usernameNoSpace);
+                }
+                
+                return user ? user.id : null;
+            } catch (e) {
+                console.error('获取用户ID失败:', e);
+                return null;
+            }
+        }
+        
+        async function saveAttendance(userId, data) {
+            try {
+                const response = await fetch('/api/attendance/save', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                return response.ok;
+            } catch (e) {
+                console.error('保存考勤失败:', e);
+                return false;
+            }
+        }
+        
+        async function checkCurrentData() {
+            log('开始检查当前数据...');
+            try {
+                const response = await fetch(`/api/attendance/list?date=${date}`);
+                if (!response.ok) throw new Error('API请求失败');
+                const data = await response.json();
+                
+                log(`获取到 ${data.roles?.length || 0} 个岗位分类`, 'info');
+                
+                let totalDay = 0, totalNight = 0, totalLong = 0;
+                for (const role of data.roles || []) {
+                    for (const user of role.users || []) {
+                        if (user.shift_type === 'A班白班') totalDay++;
+                        else if (user.shift_type === 'B班夜班') totalNight++;
+                        else if (user.shift_type === '长白班') totalLong++;
+                    }
+                }
+                
+                log(`当前统计: A班${totalDay}人, B班${totalNight}人, 长白班${totalLong}人`, 'info');
+            } catch (e) {
+                log(`检查失败: ${e.message}`, 'error');
+            }
+        }
+        
+        // 白班数据（用户名带空格）
+        const dayRecords = [
+            // 配料
+            ['林 勋', '出勤', 'A班白班', 11, '配料'],
+            ['吴 家 龙', '出勤', 'A班白班', 11, '配料'],
+            ['郑 孟 东', '出勤', 'A班白班', 11, '配料'],
+            ['赵 迎 军', '出勤', 'A班白班', 11, '配料'],
+            ['刘 园 园', '出勤', 'A班白班', 11, '配料'],
+            
+            // 涂布
+            ['杨 一', '出勤', 'A班白班', 11, '正1D326涂布'],
+            ['张 可 豪', '出勤', 'A班白班', 11, '正1D326涂布'],
+            ['杨 邵 坤', '出勤', 'A班白班', 11, '正2D648涂布'],
+            ['郭 帅', '出勤', 'A班白班', 11, '正2D648涂布'],
+            ['李 东 健', '出勤', 'A班白班', 11, '正3A322涂布'],
+            ['李 凤 明', '出勤', 'A班白班', 11, '正3A322涂布'],
+            ['张 梦 阳', '出勤', 'A班白班', 11, '负1D326涂布'],
+            ['晁 先 硕', '出勤', 'A班白班', 11, '负1D326涂布'],
+            ['王 海', '出勤', 'A班白班', 11, '负2D648涂布'],
+            ['周 宏 磊', '出勤', 'A班白班', 11, '负2D648涂布'],
+            ['周 振 上', '出勤', 'A班白班', 11, '负2D648涂布'],
+            ['王 健 儒', '出勤', 'A班白班', 11, '负3A322涂布'],
+            
+            // 辊压
+            ['宋 兴 旺', '出勤', 'A班白班', 11, '正1A322辊压'],
+            ['张 坤', '出勤', 'A班白班', 11, '正2D326辊压'],
+            ['刘 建', '出勤', 'A班白班', 11, '负1D648/D951辊压'],
+            ['马 志 国', '出勤', 'A班白班', 11, '负2A322辊压'],
+            
+            // 激光切
+            ['吕 赛 浦', '出勤', 'A班白班', 11, '正极激光切'],
+            ['毛 春 华', '出勤', 'A班白班', 11, '正极激光切'],
+            ['翟 万 淇', '出勤', 'A班白班', 11, '负极激光切'],
+            
+            // 发片
+            ['范 晓 鹏', '出勤', 'A班白班', 11, '发片'],
+            
+            // 领班
+            ['李 名', '出勤', 'A班白班', 11, '领班'],
+            
+            // 主管、职能、物料
+            ['赵 恩 辉', '出勤', '长白班', 11, '物料'],
+            ['周 雨 馨', '出勤', '长白班', 11, '职能'],
+            ['樊 玉 宝', '出勤', '长白班', 11, '主管'],
+            
+            // 请假
+            ['陈 文', '请假', '长白班', 0, '请假'],
+            ['刘 子 游', '请假', '长白班', 0, '请假'],
+            
+            // 新员工
+            ['程 金 福', '出勤', 'A班白班', 11, '新员工'],
+        ];
+        
+        async function updateDayData() {
+            log('开始更新白班数据...');
+            setProgress(0);
+            
+            let success = 0, fail = 0;
+            const total = dayRecords.length;
+            
+            for (let i = 0; i < total; i++) {
+                const [username, status, shiftType, hours, role] = dayRecords[i];
+                
+                const userId = await getUserId(username);
+                if (!userId) {
+                    log(`❌ ${username} 未找到`, 'error');
+                    fail++;
+                    continue;
+                }
+                
+                const data = {
+                    user_id: userId,
+                    date: date,
+                    status: status,
+                    shift_type: shiftType,
+                    hours: hours,
+                    early_leave: false,
+                    role: role,
+                    remark: ''
+                };
+                
+                const result = await saveAttendance(userId, data);
+                if (result) {
+                    log(`✓ ${username} - ${role} - ${shiftType}`, 'success');
+                    success++;
+                } else {
+                    log(`✗ ${username} 保存失败`, 'error');
+                    fail++;
+                }
+                
+                setProgress(Math.round(((i + 1) / total) * 50));
+                await new Promise(r => setTimeout(r, 50)); // 稍作延迟
+            }
+            
+            log(`白班更新完成: 成功${success}人, 失败${fail}人`, success > 0 ? 'success' : 'error');
+        }
+        
+        // 夜班数据（用户名带空格）
+        const nightRecords = [
+            // 配料
+            ['宁 福', '出勤', 'B班夜班', 11.5, '配料'],
+            ['刘 虎', '出勤', 'B班夜班', 11.5, '配料'],
+            ['蒋 江 坤', '出勤', 'B班夜班', 11.5, '配料'],
+            ['黄 春', '出勤', 'B班夜班', 11.5, '配料'],
+            ['宋 春 祥', '出勤', 'B班夜班', 11.5, '配料'],
+            
+            // 涂布
+            ['林 树 良', '出勤', 'B班夜班', 11.5, '正2D648涂布'],
+            ['姚 艺', '出勤', 'B班夜班', 11.5, '正2D648涂布'],
+            ['李 培 嘉', '出勤', 'B班夜班', 11.5, '正2D648涂布'],
+            ['王 硕', '出勤', 'B班夜班', 11.5, '正3A322涂布'],
+            ['洪 安 飞', '出勤', 'B班夜班', 11.5, '正3A322涂布'],
+            ['尉 李 峰', '出勤', 'B班夜班', 11.5, '负2D648涂布'],
+            ['高 子 昂', '出勤', 'B班夜班', 11.5, '负2D648涂布'],
+            ['李 杰', '出勤', 'B班夜班', 11.5, '负3A322涂布'],
+            ['张 瑞 鼎', '出勤', 'B班夜班', 11.5, '负3A322涂布'],
+            
+            // 辊压
+            ['张 世 运', '出勤', 'B班夜班', 11.5, '正1A322辊压'],
+            ['惠 留 阳', '出勤', 'B班夜班', 11.5, '正1A322辊压'],
+            ['王 腾', '出勤', 'B班夜班', 11.5, '正2D648辊压'],
+            ['任 保 帅', '出勤', 'B班夜班', 11.5, '负1D648/C951辊压'],
+            ['张 治 衡', '出勤', 'B班夜班', 11.5, '负1D648/C951辊压'],
+            ['王 新 龙', '出勤', 'B班夜班', 11.5, '负2A322辊压'],
+            
+            // 激光切
+            ['李 新 杰', '出勤', 'B班夜班', 11.5, '正极激光切'],
+            ['苏 景 航', '出勤', 'B班夜班', 11.5, '正极激光切'],
+            ['韦 承 泽', '出勤', 'B班夜班', 11.5, '负极激光切'],
+            
+            // 发片
+            ['王 忠 江', '出勤', 'B班夜班', 11.5, '发片'],
+            
+            // 领班
+            ['单 文 线', '出勤', 'B班夜班', 11.5, '领班'],
+            ['王 金 浩', '出勤', 'B班夜班', 11.5, '领班'],
+            
+            // 主管
+            ['黎 俊', '出勤', '长白班', 11.5, '主管'],
+            
+            // 支援
+            ['李 景 均', '出勤', 'B班夜班', 11.5, '支援'],
+            ['杨 武', '出勤', 'B班夜班', 11.5, '支援'],
+            ['张 全 忠', '出勤', 'B班夜班', 11.5, '支援'],
+        ];
+        
+        async function updateNightData() {
+            log('开始更新夜班数据...');
+            setProgress(50);
+            
+            let success = 0, fail = 0;
+            const total = nightRecords.length;
+            
+            for (let i = 0; i < total; i++) {
+                const [username, status, shiftType, hours, role] = nightRecords[i];
+                
+                const userId = await getUserId(username);
+                if (!userId) {
+                    log(`❌ ${username} 未找到`, 'error');
+                    fail++;
+                    continue;
+                }
+                
+                const data = {
+                    user_id: userId,
+                    date: date,
+                    status: status,
+                    shift_type: shiftType,
+                    hours: hours,
+                    early_leave: false,
+                    role: role,
+                    remark: ''
+                };
+                
+                const result = await saveAttendance(userId, data);
+                if (result) {
+                    log(`✓ ${username} - ${role} - ${shiftType}`, 'success');
+                    success++;
+                } else {
+                    log(`✗ ${username} 保存失败`, 'error');
+                    fail++;
+                }
+                
+                setProgress(50 + Math.round(((i + 1) / total) * 50));
+                await new Promise(r => setTimeout(r, 50));
+            }
+            
+            log(`夜班更新完成: 成功${success}人, 失败${fail}人`, success > 0 ? 'success' : 'error');
+            setProgress(100);
+            
+            log('', 'info');
+            log('更新完成！请刷新考勤页面查看效果。', 'success');
+        }
+        
+        log('工具已加载，用户名已修正为带空格格式，请按顺序点击按钮。', 'info');
+    </script>
+</body>
+</html>

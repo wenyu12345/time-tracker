@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>考勤系统 - 页面诊断工具</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .container { max-width: 900px; margin: 0 auto; }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+        .header h1 { font-size: 24px; margin-bottom: 10px; }
+        .header p { opacity: 0.9; }
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        .card h2 {
+            font-size: 16px;
+            color: #333;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        .item {
+            display: flex;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #f8f8f8;
+        }
+        .item:last-child { border-bottom: none; }
+        .badge {
+            display: inline-block;
+            width: 22px; height: 22px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 22px;
+            margin-right: 10px;
+            font-size: 12px;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+        .badge.ok { background: #d4edda; color: #155724; }
+        .badge.warn { background: #fff3cd; color: #856404; }
+        .badge.err { background: #f8d7da; color: #721c24; }
+        .status-text { flex: 1; font-size: 14px; color: #333; }
+        .value { color: #667eea; font-weight: bold; }
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-right: 10px;
+            transition: all 0.2s;
+        }
+        button:hover { background: #5568d3; transform: translateY(-1px); }
+        button.secondary { background: #e0e0e0; color: #333; }
+        button.secondary:hover { background: #d0d0d0; }
+        button.danger { background: #dc3545; }
+        button.danger:hover { background: #c82333; }
+        .actions { margin-top: 15px; }
+        .log-box {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 10px;
+        }
+        .log-box .ok { color: #7ec699; }
+        .log-box .warn { color: #f5a623; }
+        .log-box .err { color: #f087bd; }
+        .log-box .info { color: #78a6ff; }
+        .progress-bar {
+            height: 6px;
+            background: #e0e0e0;
+            border-radius: 3px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            transition: width 0.3s;
+            width: 0%;
+        }
+        .summary {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-top: 15px;
+        }
+        .stat-box {
+            text-align: center;
+            padding: 15px;
+            border-radius: 8px;
+        }
+        .stat-box.ok { background: #d4edda; }
+        .stat-box.warn { background: #fff3cd; }
+        .stat-box.err { background: #f8d7da; }
+        .stat-box .num { font-size: 32px; font-weight: bold; }
+        .stat-box .label { font-size: 12px; color: #666; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔧 考勤系统 - 页面诊断工具</h1>
+            <p>检测页面渲染问题，提供一键恢复功能</p>
+        </div>
+
+        <div class="card">
+            <h2>📊 总体状态</h2>
+            <div class="summary">
+                <div class="stat-box ok">
+                    <div class="num" id="stat-ok">0</div>
+                    <div class="label">正常</div>
+                </div>
+                <div class="stat-box warn">
+                    <div class="num" id="stat-warn">0</div>
+                    <div class="label">警告</div>
+                </div>
+                <div class="stat-box err">
+                    <div class="num" id="stat-err">0</div>
+                    <div class="label">错误</div>
+                </div>
+            </div>
+            <div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
+        </div>
+
+        <div class="card">
+            <h2>🧪 快速测试</h2>
+            <div id="quick-tests"></div>
+            <div class="actions">
+                <button onclick="runAllTests()">🔄 重新测试</button>
+                <button class="secondary" onclick="gotoMainPage()">📋 返回主页</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>⚡ 恢复操作</h2>
+            <p style="color:#666; font-size:13px; margin-bottom:15px;">如果检测到问题，可使用以下功能恢复：</p>
+            <div class="actions">
+                <button onclick="initAttendance()">✅ 重新加载考勤列表</button>
+                <button onclick="initTimeRecord()">⏰ 重新加载工时记录</button>
+                <button onclick="initSalaryCalculation()">💰 重新加载工资</button>
+                <button onclick="window.FundModule?.init?.()">💹 重新加载基金</button>
+                <button class="secondary" onclick="reloadAll()">🔄 重新初始化所有模块</button>
+                <button class="danger" onclick="clearStorage()">🗑️ 清除本地缓存</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>📝 详细日志</h2>
+            <div class="log-box" id="log-box">等待测试...</div>
+        </div>
+
+        <div class="card">
+            <h2>💡 常见问题排查</h2>
+            <div style="font-size:13px; color:#555; line-height:2;">
+                <div>❓ <b>数据不显示？</b> 点击上方"重新加载"按钮</div>
+                <div>❓ <b>页面空白？</b> 按 F12 打开开发者工具，查看 Console 中的错误</div>
+                <div>❓ <b>登录状态丢失？</b> 点击"清除本地缓存"后重新登录</div>
+                <div>❓ <b>API 报错？</b> 查看 Network 面板，确认后端服务运行在 http://127.0.0.1:5000</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 先加载核心 JS 模块 -->
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/notification.js"></script>
+    <script src="js/project.js"></script>
+    <script src="js/time_record.js"></script>
+    <script src="js/salary.js"></script>
+    <script src="js/salary_config.js"></script>
+    <script src="js/stats.js"></script>
+    <script src="js/tabs.js"></script>
+    <script src="js/message.js"></script>
+    <script src="js/wooden_fish.js"></script>
+    <script src="js/sudoku.js"></script>
+    <script src="js/guess_number.js"></script>
+    <script src="js/fund.js"></script>
+    <script src="js/attendance.js"></script>
+
+    <script>
+        // 全局计数器
+        let stats = { ok: 0, warn: 0, err: 0 };
+
+        function log(type, msg) {
+            const box = document.getElementById('log-box');
+            const time = new Date().toLocaleTimeString();
+            const prefix = { ok: '✅', warn: '⚠️', err: '❌', info: 'ℹ️' };
+            const line = document.createElement('div');
+            line.className = type;
+            line.textContent = `[${time}] ${prefix[type] || ''} ${msg}`;
+            box.appendChild(line);
+            box.scrollTop = box.scrollHeight;
+        }
+
+        function updateStats() {
+            document.getElementById('stat-ok').textContent = stats.ok;
+            document.getElementById('stat-warn').textContent = stats.warn;
+            document.getElementById('stat-err').textContent = stats.err;
+            const total = stats.ok + stats.warn + stats.err;
+            document.getElementById('progress').style.width = (total > 0 ? (stats.ok / total * 100) : 0) + '%';
+        }
+
+        function renderTest(name, status, detail) {
+            const container = document.getElementById('quick-tests');
+            const div = document.createElement('div');
+            div.className = 'item';
+            const badgeClass = status === 'ok' ? 'ok' : status === 'warn' ? 'warn' : 'err';
+            div.innerHTML = `
+                <span class="badge ${badgeClass}">${status === 'ok' ? '✓' : status === 'warn' ? '!' : '✗'}</span>
+                <span class="status-text">${name}${detail ? ' - <span class="value">' + detail + '</span>' : ''}</span>
+            `;
+            container.appendChild(div);
+            stats[status]++;
+            updateStats();
+        }
+
+        async function runAllTests() {
+            // 重置
+            stats = { ok: 0, warn: 0, err: 0 };
+            document.getElementById('quick-tests').innerHTML = '';
+            document.getElementById('log-box').innerHTML = '';
+            updateStats();
+
+            log('info', '开始诊断...');
+
+            // 1. 检测当前用户
+            const user = getCurrentUser();
+            if (user) {
+                renderTest('用户登录状态', 'ok', `${user.username} (ID=${user.id})`);
+                log('ok', `已登录: ${user.username}`);
+            } else {
+                renderTest('用户登录状态', 'warn', '未登录');
+                log('warn', '未找到登录用户，部分功能会受限');
+            }
+
+            // 2. 检测各模块初始化函数是否暴露
+            const moduleChecks = [
+                ['考勤模块', 'window.initAttendance'],
+                ['工时记录模块', 'window.initTimeRecord'],
+                ['工资计算模块', 'window.initSalaryCalculation'],
+                ['工资配置模块', 'window.initSalaryConfig'],
+                ['统计分析模块', 'window.initStats'],
+                ['留言墙模块', 'window.initMessageWall'],
+                ['基金模块 (FundModule)', 'window.FundModule'],
+            ];
+
+            for (const [name, checkExpr] of moduleChecks) {
+                try {
+                    const result = eval(checkExpr);
+                    const isFunc = typeof result === 'function' || (result && typeof result.init === 'function');
+                    if (isFunc) {
+                        renderTest(name + ' 接口', 'ok', '已就绪');
+                        log('ok', name + ' 接口正常');
+                    } else {
+                        renderTest(name + ' 接口', 'err', '未暴露');
+                        log('err', name + ' 接口未定义！');
+                    }
+                } catch (e) {
+                    renderTest(name + ' 接口', 'err', e.message);
+                    log('err', name + ': ' + e.message);
+                }
+            }
+
+            // 3. 测试关键 API
+            log('info', '开始测试后端 API...');
+            const apiTests = [
+                { name: '考勤列表 API', url: '/api/attendance/list?date=' + new Date().toISOString().split('T')[0] },
+                { name: '工时记录 API', url: '/api/time-records?user_id=' + (user?.id || 39) },
+                { name: '统计 API', url: '/api/stats/shift?user_id=' + (user?.id || 39) },
+                { name: '留言 API', url: '/api/messages?page=1&per_page=3' },
+            ];
+
+            for (const api of apiTests) {
+                try {
+                    const res = await fetch(api.url);
+                    if (res.ok) {
+                        const data = await res.json();
+                        const desc = Array.isArray(data) ? (data.length + ' 条记录') : (Object.keys(data).length + ' 个字段');
+                        renderTest(api.name, 'ok', desc);
+                        log('ok', api.name + ' 正常');
+                    } else {
+                        renderTest(api.name, 'err', 'HTTP ' + res.status);
+                        log('err', api.name + ': HTTP ' + res.status);
+                    }
+                } catch (e) {
+                    renderTest(api.name, 'err', e.message);
+                    log('err', api.name + ': ' + e.message);
+                }
+            }
+
+            // 4. 测试实际执行初始化
+            log('info', '开始模拟模块初始化...');
+            const initTests = [
+                { name: '考勤初始化', fn: () => window.initAttendance() },
+                { name: '工时记录初始化', fn: () => window.initTimeRecord() },
+                { name: '工资计算初始化', fn: () => window.initSalaryCalculation() },
+            ];
+
+            for (const test of initTests) {
+                try {
+                    const result = test.fn();
+                    if (result && typeof result.then === 'function') {
+                        await result;
+                    }
+                    renderTest(test.name, 'ok', '无错误');
+                    log('ok', test.name + ' 成功');
+                } catch (e) {
+                    renderTest(test.name, 'err', e.message.slice(0, 60));
+                    log('err', test.name + ': ' + e.message);
+                }
+            }
+
+            log('info', '诊断完成！共 ' + (stats.ok + stats.warn + stats.err) + ' 项测试，' + stats.ok + ' 项通过，' + stats.err + ' 项错误');
+        }
+
+        function gotoMainPage() {
+            window.location.href = 'index.html';
+        }
+
+        function reloadAll() {
+            log('info', '开始重新初始化所有模块...');
+            try { if (typeof window.initAttendance === 'function') window.initAttendance(); } catch (e) { log('err', '考勤: ' + e.message); }
+            try { if (typeof window.initTimeRecord === 'function') window.initTimeRecord(); } catch (e) { log('err', '工时: ' + e.message); }
+            try { if (typeof window.initSalaryCalculation === 'function') window.initSalaryCalculation(); } catch (e) { log('err', '工资: ' + e.message); }
+            try { if (typeof window.initStats === 'function') window.initStats(); } catch (e) { log('err', '统计: ' + e.message); }
+            try { if (typeof window.initMessageWall === 'function') window.initMessageWall(); } catch (e) { log('err', '留言: ' + e.message); }
+            try { if (window.FundModule?.init) window.FundModule.init(); } catch (e) { log('err', '基金: ' + e.message); }
+            log('ok', '所有模块初始化完成');
+        }
+
+        function clearStorage() {
+            if (confirm('确定清除本地缓存（包括登录状态）？')) {
+                localStorage.clear();
+                log('info', '缓存已清除，3 秒后刷新页面...');
+                setTimeout(() => window.location.reload(), 3000);
+            }
+        }
+
+        // 页面加载后自动运行测试
+        window.addEventListener('load', () => {
+            setTimeout(runAllTests, 500);
+        });
+    </script>
+</body>
+</html>

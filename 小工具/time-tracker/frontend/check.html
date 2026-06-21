@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>检查考勤数据</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; max-width: 1000px; margin: 0 auto; }
+        h1 { color: #333; }
+        .section { margin: 20px 0; padding: 20px; border: 1px solid #ddd; border-radius: 8px; }
+        button { padding: 10px 20px; font-size: 16px; cursor: pointer; background: #4caf50; color: white; border: none; border-radius: 4px; }
+        button:hover { background: #45a049; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background: #f2f2f2; }
+        .good { color: green; }
+        .bad { color: red; }
+        .sample { font-family: monospace; background: #f5f5f5; padding: 10px; margin: 10px 0; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <h1>考勤数据检查工具</h1>
+    
+    <div class="section">
+        <h2>1. 检查后端API</h2>
+        <button onclick="checkApi()">检查API返回数据</button>
+        <div id="api-result"></div>
+    </div>
+    
+    <div class="section">
+        <h2>2. 检查数据库中的考勤记录</h2>
+        <button onclick="checkDb()">直接检查数据库（需要服务器）</button>
+        <div id="db-result"></div>
+    </div>
+    
+    <div class="section">
+        <h2>3. 快速说明</h2>
+        <p>现在请你先看浏览器Console（F12）输出了什么，应该能看到：</p>
+        <ul>
+            <li>API返回的数据</li>
+            <li>getShiftBadge被调用时的参数</li>
+        </ul>
+        <p>如果所有的shiftType都是"长白班"，那说明数据库数据有问题，需要运行数据更新脚本。</p>
+    </div>
+    
+    <script>
+        async function checkApi() {
+            const resultDiv = document.getElementById('api-result');
+            try {
+                const response = await fetch('/api/attendance/list?date=2026-05-23');
+                const data = await response.json();
+                console.log('完整API数据:', data);
+                
+                let html = '<h3 class="good">✓ API正常</h3>';
+                
+                html += '<h4>样本数据:</h4>';
+                html += '<div class="sample">' + JSON.stringify(data, null, 2) + '</div>';
+                
+                html += '<table>';
+                html += '<tr><th>用户名</th><th>班别</th><th>岗位</th></tr>';
+                
+                let sampleCount = 0;
+                for (const role of data.roles) {
+                    for (const user of role.users) {
+                        html += `<tr><td>${user.username}</td><td>${user.shift_type}</td><td>${role.role_name}</td></tr>`;
+                        sampleCount++;
+                        if (sampleCount >= 10) break;
+                    }
+                    if (sampleCount >= 10) break;
+                }
+                html += '</table>';
+                
+                resultDiv.innerHTML = html;
+            } catch (e) {
+                resultDiv.innerHTML = `<h3 class="bad">✗ API检查失败: ${e.message}</h3>`;
+                console.error(e);
+            }
+        }
+    </script>
+</body>
+</html>

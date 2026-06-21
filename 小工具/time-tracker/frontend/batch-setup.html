@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>数据库用户清单 & 批量设置考勤</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; max-width: 1400px; margin: 0 auto; }
+        h1 { color: #333; }
+        .section { margin: 20px 0; padding: 20px; border: 1px solid #ddd; border-radius: 8px; background: #f9f9f9; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background: #f2f2f2; }
+        button { padding: 8px 16px; font-size: 14px; cursor: pointer; margin: 2px; }
+        .btn-green { background: #4caf50; color: white; border: none; border-radius: 4px; }
+        .btn-blue { background: #2196f3; color: white; border: none; border-radius: 4px; }
+        .btn-orange { background: #ff9800; color: white; border: none; border-radius: 4px; }
+        .user-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }
+        .user-card { border: 1px solid #ddd; padding: 10px; border-radius: 6px; background: white; }
+        .user-card h4 { margin: 0 0 8px 0; }
+        .selected { background: #e3f2fd; border-color: #2196f3; }
+        .controls { margin-bottom: 10px; }
+        select, input { padding: 8px; margin-right: 10px; }
+        .log { background: #333; color: #0f0; font-family: monospace; padding: 10px; height: 200px; overflow-y: scroll; border-radius: 4px; margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <h1>数据库用户清单 & 批量考勤设置</h1>
+    
+    <div class="section">
+        <h2>步骤1: 加载用户</h2>
+        <button class="btn-blue" onclick="loadUsers()">加载所有用户</button>
+        <p>加载后请查看下方会列出数据库中所有用户</p>
+    </div>
+
+    <div class="section">
+        <h2>步骤2: 批量设置</h2>
+        <div class="controls">
+            <label>日期: <input type="date" id="date-input" value="2026-05-23"></label>
+            <label>班别: 
+                <select id="shift-select">
+                    <option value="A班白班">A班白班</option>
+                    <option value="B班夜班">B班夜班</option>
+                    <option value="长白班">长白班</option>
+                </select>
+            </label>
+            <label>岗位: <input type="text" id="role-input" placeholder="输入岗位"></label>
+            <button class="btn-green" onclick="applyToSelected()">应用到选中用户</button>
+            <button class="btn-blue" onclick="selectAll()">全选</button>
+            <button class="btn-orange" onclick="deselectAll()">取消全选</button>
+        </div>
+        <div class="log" id="log">日志输出...</div>
+    </div>
+
+    <div class="section">
+        <h2>数据库中的所有用户</h2>
+        <div class="user-grid" id="user-grid">
+            <p>点击"加载所有用户"按钮...</p>
+        </div>
+    </div>
+
+    <script>
+        let allUsers = [];
+        const logDiv = document.getElementById('log');
+        
+        function log(message) {
+            const time = new Date().toLocaleTimeString();
+            logDiv.innerHTML = `[${time}] ${message}<br>` + logDiv.innerHTML;
+        }
+        
+        async function loadUsers() {
+            try {
+                const response = await fetch('/api/users');
+                if (!response.ok) throw new Error('获取用户列表失败');
+                const data = await response.json();
+                allUsers = data.users || [];
+                renderUsers(allUsers);
+                log(`加载成功，共 ${allUsers.length} 个用户`);
+            } catch (e) {
+                log('错误: ' + e.message);
+            }
+        }
+        
+        function renderUsers(users) {
+            const grid = document.getElementById('user-grid');
+            grid.innerHTML = users.map(u => `
+                <div class="user-card" data-user-id="${u.id}" onclick="toggleUser(${u.id})" id="user-${u.id}">
+                    <h4>${u.username}</h4>
+                    <small>ID: ${u.id}</small>
+                </div>
+            `).join('');
+        }
+        
+        function toggleUser(userId) {
+            const el = document.getElementById(`user-${userId}`);
+            el.classList.toggle('selected');
+        }
+        
+        function selectAll() {
+            allUsers.forEach(u => {
+                document.getElementById(`user-${u.id}`).classList.add('selected');
+            });
+        }
+        
+        function deselectAll() {
+            allUsers.forEach(u => {
+                document.getElementById(`user-${u.id}`).classList.remove('selected');
+            });
+        }
+        
+        async function applyToSelected() {
+            const date = document.getElementById('date-input').value;
+            const shiftType = document.getElementById('shift-select').value;
+            const role = document.getElementById('role-input').value;
+            
+            const selectedEls = document.querySelectorAll('.user-card.selected');
+            if (selectedEls.length === 0) {
+                log('请先选择用户！');
+                return;
+            }
+            
+            log(`开始设置 ${selectedEls.length} 个用户...`);
+            
+            let success = 0;
+            for (const el of selectedEls) {
+                const userId = parseInt(el.dataset.userId);
+                const user = allUsers.find(u => u.id === userId);
+                
+                const data = {
+                    user_id: userId,
+                    date: date,
+                    status: '出勤',
+                    shift_type: shiftType,
+                    hours: shiftType === 'B班夜班' ? 11.5 : 11,
+                    early_leave: false,
+                    role: role,
+                    remark: ''
+                };
+                
+                try {
+                    const response = await fetch('/api/attendance/save', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data)
+                    });
+                    if (response.ok) {
+                        log(`✓ ${user.username} 设置成功`);
+                        success++;
+                    } else {
+                        log(`✗ ${user.username} 设置失败`);
+                    }
+                } catch (e) {
+                    log(`✗ ${user.username} 错误: ${e.message}`);
+                }
+                
+                await new Promise(r => setTimeout(r, 50));
+            }
+            
+            log(`完成！成功 ${success}/${selectedEls.length} 个用户`);
+        }
+        
+        window.onload = loadUsers;
+    </script>
+</body>
+</html>

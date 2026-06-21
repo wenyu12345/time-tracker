@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>猜数字游戏测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .btn {
+            margin: 5px;
+            padding: 10px 20px;
+            cursor: pointer;
+        }
+        .status-message {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+        }
+        .guess-history {
+            margin: 10px 0;
+        }
+        .guess-history-item {
+            display: inline-block;
+            margin: 5px;
+            padding: 5px 10px;
+            border-radius: 5px;
+        }
+        .correct {
+            background-color: #28a745;
+            color: white;
+        }
+        .high {
+            background-color: #dc3545;
+            color: white;
+        }
+        .low {
+            background-color: #17a2b8;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>猜数字游戏测试</h1>
+        
+        <div class="guess-number-container">
+            <div class="game-main">
+                <div class="game-status">
+                    <div class="status-message" id="guess-status">游戏未开始，请点击"开始新游戏"按钮。</div>
+                    <div class="remaining-guesses">剩余猜测次数：<span id="remaining-guesses">6</span>/6</div>
+                </div>
+                
+                <div class="game-input">
+                    <input type="number" id="guess-input" placeholder="请输入1-100之间的数字" min="1" max="100">
+                    <button id="submit-guess-btn" class="btn primary">提交猜测</button>
+                    <button id="new-guess-game-btn" class="btn secondary">开始新游戏</button>
+                </div>
+                
+                <div class="history-section">
+                    <h4>历史猜测记录</h4>
+                    <div id="guess-history" class="guess-history"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 引入自定义脚本 -->
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/guess_number.js"></script>
+</body>
+</html>

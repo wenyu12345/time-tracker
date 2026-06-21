@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>师带徒管理系统</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/mentorship.css">
+</head>
+<body>
+    <div class="app-container">
+        <header class="header">
+            <h1>👨‍🏫 师带徒管理系统</h1>
+        </header>
+
+        <main class="main-content">
+            <!-- 顶部控制栏：搜索 + 统计信息 -->
+            <div class="mentorship-topbar">
+                <div class="search-box">
+                    <input type="text" id="searchInput" placeholder="🔍 搜索员工姓名，查看完整传承链路...">
+                    <button id="searchBtn" class="btn primary">搜索</button>
+                </div>
+                <div class="stats-info" id="statsInfo"></div>
+                <button id="refreshBtn" class="btn secondary">🔄 刷新</button>
+                <button id="newRelationBtn" class="btn primary">➕ 新建师徒关系</button>
+            </div>
+
+            <!-- 搜索结果区域 -->
+            <div id="searchResult" class="search-result" style="display: none;"></div>
+
+            <!-- 树状图谱区域 -->
+            <div id="treeContainer" class="tree-container">
+                <div class="tree-loading" id="treeLoading">加载中...</div>
+                <div id="treeContent" class="tree-content"></div>
+            </div>
+        </main>
+    </div>
+
+    <!-- 员工选择弹窗 -->
+    <div id="userPickerModal" class="mentorship-modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="pickerTitle">选择员工</h3>
+                <button class="close-btn" id="closePicker">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="text" id="pickerSearch" placeholder="输入姓名搜索..." class="search-input">
+                <div id="pickerList" class="picker-list"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 通用确认弹窗 -->
+    <div id="confirmModal" class="mentorship-modal" style="display: none;">
+        <div class="modal-content small">
+            <div class="modal-header">
+                <h3 id="confirmTitle">确认操作</h3>
+            </div>
+            <div class="modal-body">
+                <p id="confirmMessage"></p>
+                <div class="confirm-actions">
+                    <button class="btn secondary" id="confirmCancel">取消</button>
+                    <button class="btn primary" id="confirmOk">确认</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 提示消息 -->
+    <div id="toast" class="toast" style="display: none;"></div>
+
+    <script src="js/mentorship.js"></script>
+</body>
+</html>

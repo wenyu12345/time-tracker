@@ -1,0 +1,78 @@
+
+<!-- 请将以下内容添加到index.html中 -->
+
+<!-- 1. 在第29行后添加选项卡按钮 -->
+<button class="tab-btn" data-tab="mentorship">师带徒</button>
+
+<!-- 2. 在第903行（</div>）之前，基金选项卡结束后添加选项卡内容 -->
+                <!-- 师带徒 -->
+                <div id="mentorship" class="tab-pane">
+                    <div class="mentorship-section">
+                        <h2>师徒传承</h2>
+                        
+                        <div class="section-header">
+                            <button id="addMentorshipBtn" class="btn primary">添加关系</button>
+                            <button id="refreshTreeBtn" class="btn secondary">刷新</button>
+                        </div>
+                        
+                        <!-- 统计信息 -->
+                        <div id="mentorshipStats" class="mentorship-stats">
+                            <!-- 统计将通过JavaScript动态生成 -->
+                        </div>
+                        
+                        <!-- 师徒关系树状图 -->
+                        <div id="mentorshipTree" class="mentorship-tree">
+                            <!-- 树状图将通过JavaScript动态生成 -->
+                        </div>
+                    </div>
+                </div>
+
+<!-- 3. 在</body>前添加模态框 -->
+    <!-- 师徒传承模态框 -->
+    <div id="mentorshipModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="mentorshipModalTitle">添加师徒关系</h3>
+                <button id="closeMentorshipModal" class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="mentorSelect">师父 *</label>
+                    <select id="mentorSelect" required>
+                        <option value="">请选择师父</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="apprenticeSelect">徒弟 *</label>
+                    <select id="apprenticeSelect" required>
+                        <option value="">请选择徒弟</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="relationshipType">关系类型</label>
+                    <select id="relationshipType">
+                        <option value="direct">直接师徒</option>
+                        <option value="indirect">再传弟子</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="startDate">开始日期</label>
+                    <input type="date" id="startDate">
+                </div>
+                <div class="form-group">
+                    <label for="mentorshipNotes">备注</label>
+                    <textarea id="mentorshipNotes" placeholder="备注信息"></textarea>
+                </div>
+                <button id="saveMentorshipBtn" class="btn primary">保存</button>
+            </div>
+        </div>
+    </div>
+
+<!-- 4. 在<script>标签最后添加引用 -->
+    <script src="js/mentorship.js"></script>
+
+<!-- 5. 在tabs.js的tabChanged事件触发处添加以下代码，使mentorship模块能响应选项卡切换 -->
+    // 在 tabs.js 的 tabChanged 事件触发处添加：
+    if (targetTab === 'mentorship') {
+        MentorshipModule.init();
+    }

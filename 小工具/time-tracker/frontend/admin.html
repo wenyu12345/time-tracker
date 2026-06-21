@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>管理系统</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/admin.css">
+    <link rel="stylesheet" href="css/modal.css">
+</head>
+<body>
+    <div class="admin-container">
+        <!-- 顶部导航栏 -->
+        <header class="admin-header">
+            <h1>管理系统</h1>
+            <div class="header-right">
+                <span id="admin-username"></span>
+                <button id="logout-btn" class="btn secondary">退出登录</button>
+            </div>
+        </header>
+
+        <!-- 主内容区 -->
+        <main class="admin-main">
+            <!-- 侧边栏导航 -->
+            <aside class="admin-sidebar">
+                <nav class="sidebar-nav">
+                    <div class="nav-section">
+                        <h3>系统管理</h3>
+                        <ul>
+                            <li><a href="#" class="nav-link active" data-tab="dashboard">仪表盘</a></li>
+                            <li><a href="#" class="nav-link" data-tab="users">用户管理</a></li>
+                            <li><a href="#" class="nav-link" data-tab="roles">角色管理</a></li>
+                            <li><a href="#" class="nav-link" data-tab="permissions">权限管理</a></li>
+                            <li><a href="#" class="nav-link" data-tab="schedules">排班管理</a></li>
+                        </ul>
+                    </div>
+                    <div class="nav-section">
+                        <h3>工资管理</h3>
+                        <ul>
+                            <li><a href="#" class="nav-link" data-tab="salary-config">工资算法配置</a></li>
+                            <li><a href="#" class="nav-link" data-tab="salary-calculation">工资计算</a></li>
+                        </ul>
+                    </div>
+                    <div class="nav-section">
+                        <h3>统计分析</h3>
+                        <ul>
+                            <li><a href="#" class="nav-link" data-tab="stats">统计汇总</a></li>
+                            <li><a href="#" class="nav-link" data-tab="time-records">工时记录管理</a></li>
+                        </ul>
+                    </div>
+                    <div class="nav-section">
+                        <h3>报表管理</h3>
+                        <ul>
+                            <li><a href="#" class="nav-link" data-tab="daily-attendance-report">每日出勤报表</a></li>
+                            <li><a href="#" class="nav-link" data-tab="personal-attendance-report">个人出勤报表</a></li>
+                            <li><a href="#" class="nav-link" data-tab="scheduler-report">定时任务报表</a></li>
+                            <li><a href="#" class="nav-link" data-tab="login-report">登录报表</a></li>
+                            <li><a href="#" class="nav-link" data-tab="online-users-report">在线用户报表</a></li>
+                        </ul>
+                    </div>
+                    <div class="nav-section">
+                        <h3>系统设置</h3>
+                        <ul>
+                            <li><a href="#" class="nav-link" data-tab="operation-logs">操作日志</a></li>
+                            <li><a href="#" class="nav-link" data-tab="scheduler">自动任务管理器</a></li>
+                            <li><a href="#" class="nav-link" data-tab="backup">数据备份</a></li>
+                        </ul>
+                    </div>
+                </nav>
+            </aside>
+
+            <!-- 主内容 -->
+            <section class="admin-content">
+                <!-- 登录页面 -->
+                <div id="login-page" class="page active">
+                    <div class="login-container">
+                        <h2>管理员登录</h2>
+                        <p>进入管理系统需要管理员账号登录，不支持注册</p>
+                        <form id="admin-login-form" class="login-form">
+                            <div class="form-group">
+                                <label for="admin-username-input">用户名</label>
+                                <input type="text" id="admin-username-input" placeholder="请输入用户名" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="admin-password-input">密码</label>
+                                <input type="password" id="admin-password-input" placeholder="请输入密码" required>
+                            </div>
+                            <button type="submit" class="btn primary">登录</button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- 仪表盘 -->
+                <div id="dashboard" class="page">
+                    <div class="page-header">
+                        <h2>仪表盘</h2>
+                    </div>
+                    <div class="dashboard-stats">
+                        <div class="stat-card">
+                            <h3>总用户数</h3>
+                            <div class="stat-value" id="total-users">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <h3>今日新增</h3>
+                            <div class="stat-value" id="today-users">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <h3>本月工时</h3>
+                            <div class="stat-value" id="monthly-hours">0.00</div>
+                            <div class="stat-unit">小时</div>
+                        </div>
+                        <div class="stat-card">
+                            <h3>活跃角色</h3>
+                            <div class="stat-value" id="active-roles">0</div>
+                        </div>
+                    </div>
+                    
+                    <!-- 出勤名单 -->
+                    <div class="dashboard-section">
+                        <div class="section-header">
+                            <h3>出勤名单</h3>
+                            <div class="date-selector">
+                                <label for="admin-attendance-date">日期：</label>
+                                <input type="date" id="admin-attendance-date">
+                                <select id="admin-shift-filter" style="padding:0.5rem;border:1px solid #b3d8ff;border-radius:4px;margin:0 0.5rem;">
+                                    <option value="all">全部</option>
+                                    <option value="day">白班</option>
+                                    <option value="night">夜班</option>
+                                    <option value="long">长白班</option>
+                                </select>
+                                <button id="admin-refresh-attendance-btn" class="btn secondary">刷新</button>
+                                <span id="admin-refresh-status" style="font-size: 0.85rem; color: #666; margin-left: 0.5rem;"></span>
+                            </div>
+                        </div>
+                        <div id="admin-attendance-list" class="attendance-list">
+                            <!-- 出勤名单将通过JavaScript动态生成 -->
+                        </div>
+                    </div>
+                    
+                    <div class="dashboard-section">
+                        <h3>最近操作日志</h3>
+                        <div id="recent-logs" class="recent-logs">
+                            <!-- 最近操作日志将通过JavaScript动态生成 -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 用户管理 -->
+                <div id="users" class="page">
+                    <div class="page-header">
+                        <h2>用户管理</h2>
+                        <button id="add-user-btn" class="btn primary">添加用户</button>
+                    </div>
+                    <div class="search-section">
+                        <input type="text" id="user-search" placeholder="搜索用户名...">
+                        <button id="search-user-btn" class="btn secondary">搜索</button>
+                    </div>
+                    <div id="user-list" class="user-list">
+                        <!-- 用户列表将通过JavaScript动态生成 -->
+                    </div>
+                </div>
+
+                <!-- 角色管理 -->
+                <div id="roles" class="page">
+                    <div class="page-header">
+                        <h2>角色管理</h2>
+                        <button id="add-role-btn" class="btn primary">添加角色</button>
+                    </div>
+                    <div id="role-list" class="role-list">
+                        <!-- 角色列表将通过JavaScript动态生成 -->
+                    </div>
+                </div>
+
+                <!-- 权限管理 -->
+                <div id="permissions" class="page">
+                    <div class="page-header">
+                        <h2>权限管理</h2>
+                        <button id="add-permission-btn" class="btn primary">添加权限</button>
+                    </div>
+                    <div id="permission-list" class="permission-list">
+                        <!-- 权限列表将通过JavaScript动态生成 -->
+                    </div>
+                </div>
+
+                <!-- 排班管理 -->
+                <div id="schedules" class="page">
+                    <div class="page-header">
+                        <h2>排班管理</h2>
+                        <div class="header-actions">
+                            <button id="add-schedule-btn" class="btn primary">添加排班</button>
+                            <button id="batch-schedule-btn" class="btn secondary">批量排班</button>
+                            <button id="arrange-leave-btn" class="btn secondary">批量安排调休</button>
+                            <button id="delete-expired-schedules-btn" class="btn secondary">一键删除过期排班</button>
+                            <button id="schedules-to-time-records-btn" class="btn primary">一键生成工时记录</button>
+                        </div>
+                    </div>
+                    <div id="schedule-list" class="schedule-list">
+                        <!-- 排班列表将通过JavaScript动态生成 -->
+                    </div>
+                </div>
+
+                <!-- 工资算法配置 -->
+                <div id="salary-config" class="page">
+                    <div class="page-header">
+                        <h2>工资算法配置</h2>
+                        <button id="reset-salary-config-btn" class="btn secondary">重置为默认值</button>
+                    </div>
+                    <div id="salary-config-list" class="config-list">
+                        <!-- 工资算法配置将通过JavaScript动态生成 -->
+                    </div>
+                </div>
+
+                <!-- 工资计算 -->
+                <div id="salary-calculation" class="page">
+                    <div class="page-header">
+                        <h2>工资计算</h2>
+                    </div>
+                    <div class="salary-calculation-section">
+                        <div class="form-group">
+                            <label for="salary-user-select">选择用户</label>
+                            <select id="salary-user-select">
+                                <!-- 用户列表将通过JavaScript动态生成 -->
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="salary-month-input">月份</label>
+                            <input type="month" id="salary-month-input" value="">
+                        </div>
+                        <button id="calculate-salary-btn" class="btn primary">计算工资</button>
+                        <div id="salary-result" class="salary-result">
+                            <!-- 工资计算结果将通过JavaScript动态生成 -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 统计汇总 -->
+                <div id="stats" class="page">
+                    <div class="page-header">
+                        <h2>统计汇总</h2>
+                    </div>
+                    <div class="stats-filter">
+                        <select id="admin-stats-type">
+                            <option value="today">今日统计</option>
+                            <option value="week">本周统计</option>
+                            <option value="month">本月统计</option>
+                            <option value="custom">自定义时间范围</option>
+                        </select>
+                        <div id="admin-date-inputs">
+                            <div id="admin-custom-date-range" style="display: none;">
+                                <input type="date" id="admin-start-date">
+                                <span>至</span>
+                                <input type="date" id="admin-end-date">
+                            </div>
+                        </div>
+                        <button id="admin-stats-btn" class="btn secondary">查看统计</button>
+                    </div>
+                    <div id="admin-stats-chart" class="stats-chart">
+                        <canvas id="admin-chart-canvas"></canvas>
+                    </div>
+                </div>
+
+                <!-- 工时记录管理 -->
+                <div id="time-records" class="page">
+                    <div class="page-header">
+                        <h2>工时记录管理</h2>
+                        <div class="header-actions">
+                            <button id="check-duplicate-records-btn" class="btn secondary">检查重复工时记录</button>
+                            <button id="import-excel-btn" class="btn primary">Excel导入工时记录</button>
+                        </div>
+                    </div>
+                    <div class="search-section">
+                        <input type="text" id="record-search" placeholder="搜索记录...">
+                        <button id="search-record-btn" class="btn secondary">搜索</button>
+                    </div>
+                    <div id="admin-record-list" class="record-list">
+                        <!-- 工时记录列表将通过JavaScript动态生成 -->
+                    </div>
+                </div>
+
+                <!-- 操作日志 -->
+                <div id="operation-logs" class="page">
+                    <div class="page-header">
+                        <h2>操作日志</h2>
+                    </div>
+                    <div id="operation-log-list" class="log-list">
+                        <!-- 操作日志列表将通过JavaScript动态生成 -->
+                    </div>
+                </div>
+
+                <!-- 自动任务管理器 -->
+                <div id="scheduler" class="page">
+                    <div class="page-header">
+                        <h2>自动任务管理器</h2>
+                    </div>
+                    <div class="scheduler-section">
+                        <h3>定时任务列表</h3>
+                        <div id="scheduler-job-list" class="job-list">
+                            <!-- 定时任务列表将通过JavaScript动态生成 -->
+                        </div>
+                        <h3>任务执行日志</h3>
+                        <div id="scheduler-log-list" class="log-list">
+                            <!-- 任务执行日志将通过JavaScript动态生成 -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 数据备份 -->
+                <div id="backup" class="page">
+                    <div class="page-header">
+                        <h2>数据备份</h2>
+                    </div>
+                    <div class="backup-section">
+                        <div class="backup-actions">
+                            <button id="create-backup-btn" class="btn primary">创建备份</button>
+                            <button id="auto-backup-btn" class="btn secondary">执行自动备份</button>
+                        </div>
+                        <div id="backup-list" class="backup-list">
+                            <!-- 备份列表将通过JavaScript动态生成 -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 每日出勤报表 -->
+                <div id="daily-attendance-report" class="page">
+                    <div class="page-header">
+                        <h2>每日出勤报表</h2>
+                    </div>
+                    <div class="report-filter">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="daily-report-start-date">开始日期</label>
+                                <input type="date" id="daily-report-start-date">
+                            </div>
+                            <div class="form-group">
+                                <label for="daily-report-end-date">结束日期</label>
+                                <input type="date" id="daily-report-end-date">
+                            </div>
+                            <div class="form-group">
+                                <label for="daily-report-role-select">角色筛选</label>
+                                <select id="daily-report-role-select">
+                                    <option value="">所有角色</option>
+                                    <!-- 角色选项将通过JavaScript动态生成 -->
+                                </select>
+                            </div>
+                        </div>
+                        <button id="generate-daily-report-btn" class="btn primary">生成报表</button>
+                        <button id="batch-edit-records-btn" class="btn secondary">批量修改记录</button>
+                        <button id="batch-delete-records-btn" class="btn danger">批量删除记录</button>
+                        <button id="batch-add-records-btn" class="btn success">批量添加记录</button>
+                    </div>
+                    <div class="report-content">
+                        <div id="daily-report-list" class="report-list">
+                            <!-- 每日出勤报表将通过JavaScript动态生成 -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 个人出勤报表 -->
+                <div id="personal-attendance-report" class="page">
+                    <div class="page-header">
+                        <h2>个人出勤报表</h2>
+                    </div>
+                    <div class="report-filter">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="personal-report-user">用户</label>
+                                <select id="personal-report-user">
+                                    <!-- 用户列表将通过JavaScript动态生成 -->
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="personal-report-start-date">开始日期</label>
+                                <input type="date" id="personal-report-start-date">
+                            </div>
+                            <div class="form-group">
+                                <label for="personal-report-end-date">结束日期</label>
+                                <input type="date" id="personal-report-end-date">
+                            </div>
+                        </div>
+                        <button id="generate-personal-report-btn" class="btn primary">生成报表</button>
+                    </div>
+                    <div class="report-content">
+                        <div id="personal-report-list" class="report-list">
+                            <!-- 个人出勤报表将通过JavaScript动态生成 -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 定时任务报表 -->
+                <div id="scheduler-report" class="page">
+                    <div class="page-header">
+                        <h2>定时任务报表</h2>
+                    </div>
+                    <div class="report-content">
+                        <div class="stats-cards">
+                            <!-- 统计卡片将通过JavaScript动态生成 -->
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="scheduler-chart"></canvas>
+                        </div>
+                        <div id="scheduler-report-list" class="report-list">
+                            <!-- 定时任务报表将通过JavaScript动态生成 -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 登录报表 -->
+                <div id="login-report" class="page">
+                    <div class="page-header">
+                        <h2>登录报表</h2>
+                    </div>
+                    <div class="report-content">
+                        <div class="stats-cards">
+                            <!-- 统计卡片将通过JavaScript动态生成 -->
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="login-chart"></canvas>
+                        </div>
+                        <div id="login-report-list" class="report-list">
+                            <!-- 登录报表将通过JavaScript动态生成 -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 在线用户报表 -->
+                <div id="online-users-report" class="page">
+                    <div class="page-header">
+                        <h2>在线用户报表</h2>
+                        <button id="refresh-online-users-btn" class="btn secondary">刷新</button>
+                    </div>
+                    <div class="report-content">
+                        <div class="stats-cards">
+                            <!-- 统计卡片将通过JavaScript动态生成 -->
+                        </div>
+                        <div id="online-users-list" class="report-list">
+                            <!-- 在线用户列表将通过JavaScript动态生成 -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- 模态框 -->
+    <div id="admin-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modal-title">模态框标题</h3>
+                <button class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body" id="modal-body">
+                <!-- 模态框内容将通过JavaScript动态生成 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 引入第三方库 -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    
+    <!-- 引入自定义脚本 -->
+    <script src="js/api.js"></script>
+    <script src="js/attendance.js"></script>
+    <script src="js/admin.js"></script>
+</body>
+</html>

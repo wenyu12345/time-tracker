@@ -1,0 +1,144 @@
+## 师带徒功能 - 手动添加到 index.html 的步骤
+
+### 步骤1：添加选项卡按钮
+在 index.html 第29行后添加：
+```html
+                <button class="tab-btn" data-tab="mentorship">师带徒</button>
+```
+
+替换第29-32行：
+```html
+                <button class="tab-btn" data-tab="fund">基金持仓</button>
+                <button class="tab-btn" data-tab="mentorship">师带徒</button>
+                <button class="tab-btn" data-tab="wooden-fish">电子木鱼</button>
+                <button class="tab-btn" data-tab="sudoku">数独游戏</button>
+                <button class="tab-btn" data-tab="guess-number">猜数字游戏</button>
+```
+
+### 步骤2：添加CSS引用
+在 `</head>` 标签前添加：
+```html
+    <link rel="stylesheet" href="css/mentorship.css">
+```
+
+### 步骤3：添加选项卡内容
+在 `</div>` (tab-content结束标签，约第904行) 前添加：
+```html
+                <!-- 师带徒 -->
+                <div id="mentorship" class="tab-pane">
+                    <div class="mentorship-section">
+                        <h2>师徒传承</h2>
+                        
+                        <div class="section-header">
+                            <button id="addMentorshipBtn" class="btn primary">添加关系</button>
+                            <button id="refreshTreeBtn" class="btn secondary">刷新</button>
+                        </div>
+                        
+                        <!-- 统计信息 -->
+                        <div id="mentorshipStats" class="mentorship-stats">
+                            <!-- 统计将通过JavaScript动态生成 -->
+                        </div>
+                        
+                        <!-- 师徒关系树状图 -->
+                        <div id="mentorshipTree" class="mentorship-tree">
+                            <!-- 树状图将通过JavaScript动态生成 -->
+                        </div>
+                    </div>
+                </div>
+```
+
+### 步骤4：添加模态框
+在 `</body>` 标签前添加：
+```html
+    <!-- 师徒传承模态框 -->
+    <div id="mentorshipModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="mentorshipModalTitle">添加师徒关系</h3>
+                <button id="closeMentorshipModal" class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="mentorSelect">师父 *</label>
+                    <select id="mentorSelect" required>
+                        <option value="">请选择师父</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="apprenticeSelect">徒弟 *</label>
+                    <select id="apprenticeSelect" required>
+                        <option value="">请选择徒弟</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="relationshipType">关系类型</label>
+                    <select id="relationshipType">
+                        <option value="direct">直接师徒</option>
+                        <option value="indirect">再传弟子</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="startDate">开始日期</label>
+                    <input type="date" id="startDate">
+                </div>
+                <div class="form-group">
+                    <label for="mentorshipNotes">备注</label>
+                    <textarea id="mentorshipNotes" placeholder="备注信息"></textarea>
+                </div>
+                <button id="saveMentorshipBtn" class="btn primary">保存</button>
+            </div>
+        </div>
+    </div>
+```
+
+### 步骤5：添加JS引用
+在最后一个 `<script>` 标签前添加：
+```html
+    <script src="js/mentorship.js"></script>
+```
+
+### 步骤6：更新tabs.js（可选）
+在 `tabs.js` 中找到 `document.dispatchEvent(new CustomEvent('tabChanged'` 行，在其前添加：
+```javascript
+if (targetTab === 'mentorship') {
+    MentorshipModule.init();
+}
+```
+
+---
+
+## 后端配置
+
+### 步骤7：创建数据库表
+在 MyDB Browser 或命令行中执行以下 SQL：
+
+```sql
+CREATE TABLE IF NOT EXISTS mentorship (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    mentor_id INTEGER NOT NULL,
+    apprentice_id INTEGER NOT NULL,
+    relationship_type TEXT DEFAULT 'direct',
+    start_date TEXT,
+    end_date TEXT,
+    status TEXT DEFAULT 'active',
+    notes TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(mentor_id, apprentice_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_mentorship_mentor ON mentorship(mentor_id);
+CREATE INDEX IF NOT EXISTS idx_mentorship_apprentice ON mentorship(apprentice_id);
+CREATE INDEX IF NOT EXISTS idx_mentorship_status ON mentorship(status);
+```
+
+### 步骤8：在 app.py 中添加蓝图
+在 app.py 的导入部分添加：
+```python
+from routes.mentorship import mentorship_bp
+```
+
+在蓝图注册部分添加：
+```python
+app.register_blueprint(mentorship_bp, url_prefix='/api/mentorship')
+```

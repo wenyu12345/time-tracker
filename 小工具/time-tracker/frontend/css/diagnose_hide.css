@@ -1,0 +1,53 @@
+/* 隐藏诊断相关的加载弹窗/提示 */
+div:has(> .diagnose-title),
+div:has(> .diagnose-loading),
+div:has(> #diagnose-loading),
+div:has(> .diagnose-modal),
+div:has(> [class*="diagnose"]),
+div:has(> [id*="diagnose"]),
+div:has(> [data-diagnose]),
+div:has(> [data-modal*="diagnose"]),
+div:has(> [data-modal*="diagnostic"]),
+div:has(> .diagnose-status),
+div:has(> .diagnostic-status),
+div:has(> #diagnose-status),
+div:has(> .diagnose-progress),
+div:has(> .diagnostic-progress),
+div:has(> #diagnose-progress),
+div:has(> .diagnose-bar),
+div:has(> .diagnostic-bar),
+div:has(> #diagnose-bar),
+div:has(> .diagnose-indicator),
+div:has(> .diagnostic-indicator),
+div:has(> #diagnose-indicator),
+div:has(> .diagnose-widget),
+div:has(> .diagnostic-widget),
+div:has(> #diagnose-widget),
+div:has(> .diagnose-overlay),
+div:has(> .diagnostic-overlay),
+div:has(> #diagnose-overlay),
+div:has(> .diagnose-popup),
+div:has(> .diagnostic-popup),
+div:has(> #diagnose-popup),
+div:has(> .diagnose-toast),
+div:has(> .diagnostic-toast),
+div:has(> #diagnose-toast),
+div:has(> [onclick*="diagnose"]),
+div:has(> [onclick*="diagnostic"]) {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
+
+/* 隐藏诊断按钮/触发按钮 */
+button:has(> [class*="diagnose"]),
+button:has(> [id*="diagnose"]),
+button:has(> [data-diagnose]),
+button:has(> [data-modal*="diagnose"]),
+button.diagnose-btn,
+button.diagnostic-btn,
+#diagnose-btn,
+#diagnostic-btn {
+    display: none !important;
+}
